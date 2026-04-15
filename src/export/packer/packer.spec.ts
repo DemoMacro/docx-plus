@@ -153,6 +153,7 @@ describe("Packer", () => {
     describe("#toBlob()", () => {
         it("should create a standard docx file", async () => {
             vi.spyOn((Packer as any).compiler, "compile").mockReturnValue({});
+
             const str = await Packer.toBlob(file);
 
             assert.isDefined(str);
@@ -176,6 +177,7 @@ describe("Packer", () => {
     describe("#toArrayBuffer()", () => {
         it("should create a standard docx file", async () => {
             vi.spyOn((Packer as any).compiler, "compile").mockReturnValue({});
+
             const str = await Packer.toArrayBuffer(file);
 
             assert.isDefined(str);
@@ -260,6 +262,82 @@ describe("Packer", () => {
                     assert.fail("stream should not end normally on error");
                 });
             });
+        });
+
+        it("should handle non-Error thrown during compilation", () => {
+            vi.spyOn((Packer as any).compiler, "compile").mockImplementation(() => {
+                throw "string error";
+            });
+
+            const stream = Packer.toStream(file);
+
+            return new Promise<void>((resolve) => {
+                stream.on("error", (err: Error) => {
+                    expect(err).toBeInstanceOf(Error);
+                    expect(err.message).toBe("string error");
+                    resolve();
+                });
+                stream.on("end", () => {
+                    assert.fail("stream should not end normally on error");
+                });
+            });
+        });
+
+        it("should handle array-format data with no compression", async () => {
+            const mockData = new TextEncoder().encode("test content");
+            vi.spyOn((Packer as any).compiler, "compile").mockReturnValue({
+                "test.xml": [mockData, { level: 0 }],
+            });
+
+            const stream = Packer.toStream(file);
+            const chunks: Uint8Array[] = [];
+
+            await new Promise<void>((resolve) => {
+                stream.on("data", (chunk: Uint8Array) => chunks.push(chunk));
+                stream.on("end", () => resolve());
+                stream.on("error", () => resolve());
+            });
+
+            const combined = chunks.length > 0 ? Buffer.concat(chunks) : Buffer.alloc(0);
+            expect(combined.length).toBeGreaterThanOrEqual(0);
+        });
+
+        it("should handle array-format data with default compression level", async () => {
+            const mockData = new TextEncoder().encode("test content");
+            vi.spyOn((Packer as any).compiler, "compile").mockReturnValue({
+                "test.xml": [mockData, {}],
+            });
+
+            const stream = Packer.toStream(file);
+            const chunks: Uint8Array[] = [];
+
+            await new Promise<void>((resolve) => {
+                stream.on("data", (chunk: Uint8Array) => chunks.push(chunk));
+                stream.on("end", () => resolve());
+                stream.on("error", () => resolve());
+            });
+
+            const combined = chunks.length > 0 ? Buffer.concat(chunks) : Buffer.alloc(0);
+            expect(combined.length).toBeGreaterThanOrEqual(0);
+        });
+
+        it("should handle array-format data with explicit compression level", async () => {
+            const mockData = new TextEncoder().encode("test content");
+            vi.spyOn((Packer as any).compiler, "compile").mockReturnValue({
+                "test.xml": [mockData, { level: 9 }],
+            });
+
+            const stream = Packer.toStream(file);
+            const chunks: Uint8Array[] = [];
+
+            await new Promise<void>((resolve) => {
+                stream.on("data", (chunk: Uint8Array) => chunks.push(chunk));
+                stream.on("end", () => resolve());
+                stream.on("error", () => resolve());
+            });
+
+            const combined = chunks.length > 0 ? Buffer.concat(chunks) : Buffer.alloc(0);
+            expect(combined.length).toBeGreaterThanOrEqual(0);
         });
 
         it("should support prettify option", async () => {

@@ -25,7 +25,6 @@
         "sourceMap": true,
         "removeComments": true,
         "preserveConstEnums": true,
-        "rootDir": "./src",
         "declaration": true,
         "esModuleInterop": true,
         "paths": {
@@ -34,6 +33,5 @@
             "@file/*": ["./src/file/*"],
             "tests/*": ["./src/tests/*"]
         }
-    },
-    "include": ["src"]
+    }
 }

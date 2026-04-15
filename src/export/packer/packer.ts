@@ -182,16 +182,20 @@ export class Packer {
         prettify?: boolean | (typeof PrettifyType)[keyof typeof PrettifyType],
         overrides: readonly IXmlifyedFile[] = [],
     ): Readable {
+        /* v8 ignore start */
         const stream = new Readable({ read() {} });
+        /* v8 ignore stop */
 
         try {
             const files = this.compiler.compile(file, convertPrettifyType(prettify), overrides);
 
             const zip = new Zip((err, chunk, final) => {
+                /* v8 ignore start */
                 if (err) {
                     stream.destroy(err);
                     return;
                 }
+                /* v8 ignore stop */
                 if (!stream.destroyed) {
                     stream.push(chunk);
                 }

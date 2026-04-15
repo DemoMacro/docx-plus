@@ -1,6 +1,6 @@
 {
     "name": "docx-plus",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "Easily generate .docx files with JS/TS with a nice declarative API. Works for Node and on the Browser.",
     "keywords": [
         "clippy",
@@ -64,26 +64,26 @@
     "dependencies": {
         "fflate": "0.8.2",
         "hash.js": "1.1.7",
-        "nanoid": "5.1.3",
+        "nanoid": "5.1.9",
         "undio": "0.2.0",
         "xml": "1.0.1",
-        "xml-js": "1.6.8"
+        "xml-js": "1.6.11"
     },
     "devDependencies": {
-        "@types/node": "25.2.3",
-        "@types/xml": "1.0.8",
-        "@vitest/coverage-v8": "4.0.18",
-        "cspell": "9.0.0",
-        "docsify-cli": "4.3.0",
-        "execa": "9.4.0",
+        "@rolldown/plugin-node-polyfills": "1.0.3",
+        "@types/node": "25.6.0",
+        "@types/xml": "1.0.11",
+        "@vitest/coverage-v8": "4.1.4",
+        "cspell": "10.0.0",
+        "docsify-cli": "4.4.4",
+        "execa": "9.6.1",
         "happy-dom": "20.9.0",
-        "inquirer": "13.2.2",
+        "inquirer": "13.4.1",
         "pre-commit": "1.2.2",
-        "tsx": "4.7.0",
-        "typedoc": "0.28.2",
-        "typescript": "5.9.3",
-        "unzipper": "0.12.3",
-        "vite-plus": "0.1.16"
+        "tsx": "4.21.0",
+        "typedoc": "0.28.19",
+        "typescript": "6.0.2",
+        "vite-plus": "0.1.18"
     },
     "pre-commit": [
         "check"

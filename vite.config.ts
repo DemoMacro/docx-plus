@@ -1,5 +1,6 @@
 import { fileURLToPath, URL } from "node:url";
 
+import nodePolyfills from "@rolldown/plugin-node-polyfills";
 import { configDefaults, defineConfig } from "vite-plus";
 
 export default defineConfig({
@@ -14,8 +15,8 @@ export default defineConfig({
     pack: {
         entry: ["src/index.ts"],
         format: ["esm", "cjs", "iife", "umd"],
-        globalName: "docxPlus",
-        target: "es2015",
+        globalName: "docx",
+        plugins: [nodePolyfills()],
     },
     fmt: {
         sortImports: {
