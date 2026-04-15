@@ -1,3 +1,5 @@
+import { Readable } from "stream";
+
 import { File } from "@file/file";
 import { HeadingLevel, Paragraph } from "@file/paragraph";
 import { afterEach, assert, beforeEach, describe, expect, it, vi } from "vite-plus/test";
@@ -191,6 +193,90 @@ describe("Packer", () => {
 
         afterEach(() => {
             vi.resetAllMocks();
+        });
+    });
+
+    describe("#toStream()", () => {
+        it("should return a Readable stream", () => {
+            const stream = Packer.toStream(file);
+
+            expect(stream).toBeInstanceOf(Readable);
+        });
+
+        it("should emit data chunks that form a valid docx archive", async () => {
+            const stream = Packer.toStream(file);
+            const chunks: Buffer[] = [];
+
+            await new Promise<void>((resolve, reject) => {
+                stream.on("data", (chunk: Buffer) => {
+                    chunks.push(chunk);
+                });
+                stream.on("end", () => resolve());
+                stream.on("error", (err: Error) => reject(err));
+            });
+
+            const totalBytes = chunks.reduce((sum, c) => sum + c.length, 0);
+            expect(totalBytes).toBeGreaterThan(0);
+
+            // Combined buffer should start with ZIP magic bytes (PK\x03\x04)
+            const combined = Buffer.concat(chunks);
+            expect(combined[0]).toBe(0x50); // P
+            expect(combined[1]).toBe(0x4b); // K
+            expect(combined[2]).toBe(0x03);
+            expect(combined[3]).toBe(0x04);
+        });
+
+        it("should produce a valid ZIP archive", async () => {
+            const stream = Packer.toStream(file);
+            const chunks: Buffer[] = [];
+
+            await new Promise<void>((resolve, reject) => {
+                stream.on("data", (chunk: Buffer) => chunks.push(chunk));
+                stream.on("end", () => resolve());
+                stream.on("error", (err: Error) => reject(err));
+            });
+
+            const data = Buffer.concat(chunks);
+            // ZIP local file header magic: PK\x03\x04
+            expect(data[0] | (data[1] << 8)).toBe(0x4b50);
+            // End of central directory record: PK\x05\x06
+            const eocd = data.indexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
+            expect(eocd).toBeGreaterThanOrEqual(0);
+        });
+
+        it("should destroy the stream if compilation fails", () => {
+            vi.spyOn((Packer as any).compiler, "compile").mockImplementation(() => {
+                throw new Error("compile failed");
+            });
+
+            const stream = Packer.toStream(file);
+
+            return new Promise<void>((resolve) => {
+                stream.on("error", (err: Error) => {
+                    expect(err).toBeDefined();
+                    resolve();
+                });
+                stream.on("end", () => {
+                    assert.fail("stream should not end normally on error");
+                });
+            });
+        });
+
+        it("should support prettify option", async () => {
+            const stream = Packer.toStream(file, PrettifyType.WITH_TAB);
+            const chunks: Buffer[] = [];
+
+            await new Promise<void>((resolve, reject) => {
+                stream.on("data", (chunk: Buffer) => chunks.push(chunk));
+                stream.on("end", () => resolve());
+                stream.on("error", (err: Error) => reject(err));
+            });
+
+            expect(chunks.length).toBeGreaterThan(0);
+        });
+
+        afterEach(() => {
+            vi.restoreAllMocks();
         });
     });
 

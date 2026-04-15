@@ -1,3 +1,5 @@
+import { Readable } from "stream";
+
 import type { File } from "@file/file";
 import { convertOutput } from "@util/output-type";
 import type { OutputByType, OutputType } from "@util/output-type";
@@ -6,7 +8,7 @@ import type { OutputByType, OutputType } from "@util/output-type";
  *
  * @module
  */
-import { zipSync } from "fflate";
+import { type ZipOptions, Zip, ZipDeflate, ZipPassThrough, zipSync } from "fflate";
 
 import { Compiler } from "./next-compiler";
 import type { IXmlifyedFile } from "./next-compiler";
@@ -155,6 +157,64 @@ export class Packer {
         overrides: readonly IXmlifyedFile[] = [],
     ): Promise<ArrayBuffer> {
         return Packer.pack(file, "arraybuffer", prettify, overrides);
+    }
+
+    /**
+     * Exports a document to a Node.js Readable stream.
+     *
+     * Uses fflate's streaming Zip API to emit compressed chunks incrementally,
+     * avoiding buffering the entire archive in memory before the first byte
+     * is available to the consumer.
+     *
+     * @param file - The document to export
+     * @param prettify - Whether to prettify the XML output
+     * @param overrides - Optional array of file overrides
+     * @returns A readable stream containing the compressed .docx data
+     *
+     * @example
+     * ```typescript
+     * import { createWriteStream } from "fs";
+     * Packer.toStream(doc).pipe(createWriteStream("output.docx"));
+     * ```
+     */
+    public static toStream(
+        file: File,
+        prettify?: boolean | (typeof PrettifyType)[keyof typeof PrettifyType],
+        overrides: readonly IXmlifyedFile[] = [],
+    ): Readable {
+        const stream = new Readable({ read() {} });
+
+        try {
+            const files = this.compiler.compile(file, convertPrettifyType(prettify), overrides);
+
+            const zip = new Zip((err, chunk, final) => {
+                if (err) {
+                    stream.destroy(err);
+                    return;
+                }
+                if (!stream.destroyed) {
+                    stream.push(chunk);
+                }
+                if (final) {
+                    stream.push(null);
+                }
+            });
+
+            for (const [name, data] of Object.entries(files)) {
+                const raw = Array.isArray(data) ? (data[0] as Uint8Array) : (data as Uint8Array);
+                const level = Array.isArray(data) ? ((data[1] as ZipOptions).level ?? 6) : 6;
+                const entry =
+                    level === 0 ? new ZipPassThrough(name) : new ZipDeflate(name, { level });
+                zip.add(entry);
+                entry.push(raw, true);
+            }
+
+            zip.end();
+        } catch (err) {
+            stream.destroy(err instanceof Error ? err : new Error(String(err)));
+        }
+
+        return stream;
     }
 
     private static readonly compiler = new Compiler();

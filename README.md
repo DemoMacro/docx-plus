@@ -21,11 +21,12 @@
 
 ## What's Different from docx?
 
-|                       | docx                                      | docx-plus                            |
-| --------------------- | ----------------------------------------- | ------------------------------------ |
-| ZIP handling          | jszip                                     | **fflate** (faster, smaller)         |
-| Data conversion       | Manual env detection (`Buffer.from` etc.) | **undio** (universal `toUint8Array`) |
-| Test environment      | jsdom                                     | happy-dom                            |
+|                     | docx                                      | docx-plus                            |
+| ------------------- | ----------------------------------------- | ------------------------------------ |
+| ZIP handling        | jszip                                     | **fflate** (faster, smaller)         |
+| Data conversion     | Manual env detection (`Buffer.from` etc.) | **undio** (universal `toUint8Array`) |
+| `Packer.toStream()` | Removed (pseudo-streaming)                | **Restored** with real streaming ZIP |
+| Test environment    | jsdom                                     | happy-dom                            |
 
 ## Installation
 

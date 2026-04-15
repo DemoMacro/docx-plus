@@ -54,9 +54,7 @@ Packer.toArrayBuffer(doc).then((arrayBuffer) => {
 ### Export as a Stream
 
 ```ts
-Packer.toStream(doc).then((stream) => {
-    // read from stream
-});
+Packer.toStream(doc).pipe(fs.createWriteStream("document.docx"));
 ```
 
 ### Export using optional arguments
