@@ -7,6 +7,8 @@
  * @module
  */
 
+import { strFromU8 } from "fflate";
+
 /* V8 ignore start */
 // Simply type definitions. Can ignore testing and coverage
 
@@ -97,14 +99,12 @@ export const convertOutput = <T extends OutputType>(data: Uint8Array, type: T): 
             return data as OutputByType[T];
         }
         case "base64": {
-            return Buffer.from(data).toString("base64") as OutputByType[T];
+            return btoa(strFromU8(data, true)) as OutputByType[T];
         }
         case "string":
-        case "text": {
-            return Buffer.from(data).toString("binary") as OutputByType[T];
-        }
+        case "text":
         case "binarystring": {
-            return Buffer.from(data).toString("binary") as OutputByType[T];
+            return strFromU8(data, true) as OutputByType[T];
         }
         case "array": {
             return [...data] as unknown as OutputByType[T];
