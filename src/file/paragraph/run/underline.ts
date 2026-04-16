@@ -9,7 +9,8 @@
  */
 import { BuilderElement } from "@file/xml-components";
 import type { XmlComponent } from "@file/xml-components";
-import { hexColorValue } from "@util/values";
+import { hexColorValue, uCharHexNumber } from "@util/values";
+import type { ThemeColor } from "@util/values";
 
 /**
  * Underline style types for text.
@@ -88,6 +89,9 @@ export const UnderlineType = {
 interface IUnderlineAttributes {
     readonly val: (typeof UnderlineType)[keyof typeof UnderlineType];
     readonly color?: string;
+    readonly themeColor?: (typeof ThemeColor)[keyof typeof ThemeColor];
+    readonly themeTint?: string;
+    readonly themeShade?: string;
 }
 
 /**
@@ -124,12 +128,24 @@ interface IUnderlineAttributes {
 export const createUnderline = (
     underlineType: (typeof UnderlineType)[keyof typeof UnderlineType] = UnderlineType.SINGLE,
     color?: string,
+    themeColor?: (typeof ThemeColor)[keyof typeof ThemeColor],
+    themeTint?: string,
+    themeShade?: string,
 ): XmlComponent =>
     new BuilderElement<IUnderlineAttributes>({
         attributes: {
             color: {
                 key: "w:color",
                 value: color === undefined ? undefined : hexColorValue(color),
+            },
+            themeColor: { key: "w:themeColor", value: themeColor },
+            themeShade: {
+                key: "w:themeShade",
+                value: themeShade === undefined ? undefined : uCharHexNumber(themeShade),
+            },
+            themeTint: {
+                key: "w:themeTint",
+                value: themeTint === undefined ? undefined : uCharHexNumber(themeTint),
             },
             val: { key: "w:val", value: underlineType },
         },

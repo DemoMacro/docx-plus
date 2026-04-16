@@ -20,5 +20,21 @@ describe("Spacing", () => {
                 "w:spacing": { _attr: { "w:before": 100 } },
             });
         });
+
+        it("should support beforeLines and afterLines", () => {
+            const spacing = createSpacing({ beforeLines: 2, afterLines: 1 });
+            const tree = new Formatter().format(spacing);
+            expect(tree).to.deep.equal({
+                "w:spacing": { _attr: { "w:afterLines": 1, "w:beforeLines": 2 } },
+            });
+        });
+
+        it("should convert beforeLines and afterLines to integers", () => {
+            const spacing = createSpacing({ beforeLines: 2.7, afterLines: 1.3 });
+            const tree = new Formatter().format(spacing);
+            expect(tree).to.deep.equal({
+                "w:spacing": { _attr: { "w:afterLines": 1, "w:beforeLines": 2 } },
+            });
+        });
     });
 });

@@ -1,5 +1,6 @@
 import { Formatter } from "@export/formatter";
 import { BorderStyle } from "@file/border";
+import { ThemeColor } from "@util/values";
 import { describe, expect, it } from "vite-plus/test";
 
 import { createBorderElement } from "./border";
@@ -44,6 +45,42 @@ describe("BorderElement", () => {
                 "w:top": {
                     _attr: {
                         "w:space": 22,
+                        "w:val": "single",
+                    },
+                },
+            });
+        });
+        it("should support theme color with tint and shade", () => {
+            const border = createBorderElement("w:bottom", {
+                style: BorderStyle.SINGLE,
+                themeColor: ThemeColor.ACCENT2,
+                themeTint: "99",
+                themeShade: "BF",
+            });
+            const tree = new Formatter().format(border);
+            expect(tree).to.deep.equal({
+                "w:bottom": {
+                    _attr: {
+                        "w:themeColor": "accent2",
+                        "w:themeShade": "BF",
+                        "w:themeTint": "99",
+                        "w:val": "single",
+                    },
+                },
+            });
+        });
+        it("should support shadow and frame attributes", () => {
+            const border = createBorderElement("w:top", {
+                style: BorderStyle.SINGLE,
+                shadow: true,
+                frame: true,
+            });
+            const tree = new Formatter().format(border);
+            expect(tree).to.deep.equal({
+                "w:top": {
+                    _attr: {
+                        "w:frame": true,
+                        "w:shadow": true,
                         "w:val": "single",
                     },
                 },

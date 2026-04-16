@@ -47,3 +47,27 @@ describe("RightTabStop", () => {
         });
     });
 });
+
+describe("HeavyLeaderTabStop", () => {
+    describe("#createTabStop()", () => {
+        it("should create a Tab Stop with heavy leader", () => {
+            const tabStop = createTabStop([
+                { leader: LeaderType.HEAVY, position: 500, type: TabStopType.RIGHT },
+            ]);
+            const tree = new Formatter().format(tabStop);
+            expect(tree).to.deep.equal({
+                "w:tabs": [
+                    {
+                        "w:tab": {
+                            _attr: {
+                                "w:leader": "heavy",
+                                "w:pos": 500,
+                                "w:val": "right",
+                            },
+                        },
+                    },
+                ],
+            });
+        });
+    });
+});

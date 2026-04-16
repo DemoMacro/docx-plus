@@ -10,6 +10,7 @@
  */
 import { BuilderElement } from "@file/xml-components";
 import type { XmlComponent } from "@file/xml-components";
+import { decimalNumber } from "@util/values";
 
 /**
  * Line spacing rule types.
@@ -54,6 +55,10 @@ export interface ISpacingProperties {
     readonly beforeAutoSpacing?: boolean;
     /** Use automatic spacing after the paragraph */
     readonly afterAutoSpacing?: boolean;
+    /** Spacing before the paragraph in line units */
+    readonly beforeLines?: number;
+    /** Spacing after the paragraph in line units */
+    readonly afterLines?: number;
 }
 
 /**
@@ -97,13 +102,23 @@ export const createSpacing = ({
     lineRule,
     beforeAutoSpacing,
     afterAutoSpacing,
+    beforeLines,
+    afterLines,
 }: ISpacingProperties): XmlComponent =>
     new BuilderElement<ISpacingProperties>({
         attributes: {
             after: { key: "w:after", value: after },
             afterAutoSpacing: { key: "w:afterAutospacing", value: afterAutoSpacing },
+            afterLines: {
+                key: "w:afterLines",
+                value: afterLines === undefined ? undefined : decimalNumber(afterLines),
+            },
             before: { key: "w:before", value: before },
             beforeAutoSpacing: { key: "w:beforeAutospacing", value: beforeAutoSpacing },
+            beforeLines: {
+                key: "w:beforeLines",
+                value: beforeLines === undefined ? undefined : decimalNumber(beforeLines),
+            },
             line: { key: "w:line", value: line },
             lineRule: { key: "w:lineRule", value: lineRule },
         },

@@ -33,8 +33,16 @@ import type { XmlComponent } from "@file/xml-components";
  * @publicApi
  */
 export const EmphasisMarkType = {
+    /** No emphasis mark */
+    NONE: "none",
+    /** Comma emphasis mark */
+    COMMA: "comma",
+    /** Circle emphasis mark */
+    CIRCLE: "circle",
     /** Dot emphasis mark */
     DOT: "dot",
+    /** Under dot emphasis mark */
+    UNDER_DOT: "underDot",
 } as const;
 
 interface IEmphasisMarkAttributes {

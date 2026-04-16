@@ -67,6 +67,12 @@ export class Attributes extends XmlAttributeComponent<{
     readonly linePitch?: string;
     /** Position value (w:pos). */
     readonly pos?: string | number;
+    /** Theme color reference (w:themeColor). */
+    readonly themeColor?: string;
+    /** Theme color tint (w:themeTint). */
+    readonly themeTint?: string;
+    /** Theme color shade (w:themeShade). */
+    readonly themeShade?: string;
 }> {
     protected readonly xmlKeys = {
         bottom: "w:bottom",
@@ -85,6 +91,9 @@ export class Attributes extends XmlAttributeComponent<{
         rsidSect: "w:rsidSect",
         space: "w:space",
         sz: "w:sz",
+        themeColor: "w:themeColor",
+        themeShade: "w:themeShade",
+        themeTint: "w:themeTint",
         top: "w:top",
         type: "w:type",
         val: "w:val",

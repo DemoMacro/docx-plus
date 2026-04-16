@@ -9,8 +9,23 @@
  * @module
  */
 import { Attributes, XmlComponent } from "@file/xml-components";
-import { hexColorValue, signedTwipsMeasureValue } from "@util/values";
-import type { UniversalMeasure } from "@util/values";
+import { hexColorValue, signedTwipsMeasureValue, uCharHexNumber } from "@util/values";
+import type { ThemeColor, UniversalMeasure } from "@util/values";
+
+/**
+ * Options for theme color configuration.
+ *
+ * @property val - Explicit hex color value (e.g., "FF0000" or "auto")
+ * @property themeColor - Theme color reference
+ * @property themeTint - Theme color tint (2-char hex, e.g., "99")
+ * @property themeShade - Theme color shade (2-char hex, e.g., "BF")
+ */
+export interface IColorOptions {
+    readonly val?: string;
+    readonly themeColor?: (typeof ThemeColor)[keyof typeof ThemeColor];
+    readonly themeTint?: string;
+    readonly themeShade?: string;
+}
 
 /**
  * Represents character spacing (tracking) in a run.
@@ -58,18 +73,35 @@ export class CharacterSpacing extends XmlComponent {
  *
  * @example
  * ```typescript
- * new Color("FF0000"); // Red text
+ * new Color("FF0000"); // Red text (backward compatible)
  * new Color("auto"); // Automatic color
+ * new Color({ themeColor: ThemeColor.ACCENT1, themeTint: "99" }); // Theme color with tint
  * ```
  *
  * @internal
  */
 export class Color extends XmlComponent {
-    public constructor(color: string) {
+    public constructor(colorOrOptions: string | IColorOptions) {
         super("w:color");
+
+        if (typeof colorOrOptions === "string") {
+            this.root.push(
+                new Attributes({
+                    val: hexColorValue(colorOrOptions),
+                }),
+            );
+            return;
+        }
+
+        const opts = colorOrOptions;
         this.root.push(
             new Attributes({
-                val: hexColorValue(color),
+                val: opts.val === undefined ? undefined : hexColorValue(opts.val),
+                themeColor: opts.themeColor,
+                themeTint:
+                    opts.themeTint === undefined ? undefined : uCharHexNumber(opts.themeTint),
+                themeShade:
+                    opts.themeShade === undefined ? undefined : uCharHexNumber(opts.themeShade),
             }),
         );
     }

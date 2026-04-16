@@ -66,6 +66,8 @@ export const TabStopType = {
 export const LeaderType = {
     /** Dot leader (....) */
     DOT: "dot",
+    /** Heavy leader */
+    HEAVY: "heavy",
     /** Hyphen leader (----) */
     HYPHEN: "hyphen",
     /** Middle dot leader (····) */

@@ -11,6 +11,7 @@
  */
 import { BuilderElement } from "@file/xml-components";
 import type { XmlComponent } from "@file/xml-components";
+import type { ThemeFont } from "@util/values";
 
 /**
  * Options for font attributes across different character sets.
@@ -20,6 +21,10 @@ import type { XmlComponent } from "@file/xml-components";
  * @property eastAsia - Font for East Asian characters
  * @property hAnsi - Font for high ANSI characters (0x80-0xFF)
  * @property hint - Hint for font selection algorithm
+ * @property asciiTheme - Theme font for ASCII characters
+ * @property hAnsiTheme - Theme font for high ANSI characters
+ * @property eastAsiaTheme - Theme font for East Asian characters
+ * @property cstheme - Theme font for complex script characters
  */
 export interface IFontAttributesProperties {
     /** Font for ASCII characters (0x00-0x7F) */
@@ -32,6 +37,14 @@ export interface IFontAttributesProperties {
     readonly hAnsi?: string;
     /** Hint for font selection algorithm */
     readonly hint?: string;
+    /** Theme font for ASCII characters */
+    readonly asciiTheme?: (typeof ThemeFont)[keyof typeof ThemeFont];
+    /** Theme font for high ANSI characters */
+    readonly hAnsiTheme?: (typeof ThemeFont)[keyof typeof ThemeFont];
+    /** Theme font for East Asian characters */
+    readonly eastAsiaTheme?: (typeof ThemeFont)[keyof typeof ThemeFont];
+    /** Theme font for complex script characters */
+    readonly cstheme?: (typeof ThemeFont)[keyof typeof ThemeFont];
 }
 
 /**
@@ -94,9 +107,13 @@ export const createRunFonts = (
     return new BuilderElement<IFontAttributesProperties>({
         attributes: {
             ascii: { key: "w:ascii", value: attrs.ascii },
+            asciiTheme: { key: "w:asciiTheme", value: attrs.asciiTheme },
             cs: { key: "w:cs", value: attrs.cs },
+            cstheme: { key: "w:cstheme", value: attrs.cstheme },
             eastAsia: { key: "w:eastAsia", value: attrs.eastAsia },
+            eastAsiaTheme: { key: "w:eastAsiaTheme", value: attrs.eastAsiaTheme },
             hAnsi: { key: "w:hAnsi", value: attrs.hAnsi },
+            hAnsiTheme: { key: "w:hAnsiTheme", value: attrs.hAnsiTheme },
             hint: { key: "w:hint", value: attrs.hint },
         },
         name: "w:rFonts",

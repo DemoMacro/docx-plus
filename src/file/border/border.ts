@@ -30,7 +30,13 @@
  */
 import { BuilderElement } from "@file/xml-components";
 import type { XmlComponent } from "@file/xml-components";
-import { eighthPointMeasureValue, hexColorValue, pointMeasureValue } from "@util/values";
+import {
+    eighthPointMeasureValue,
+    hexColorValue,
+    pointMeasureValue,
+    uCharHexNumber,
+} from "@util/values";
+import type { ThemeColor } from "@util/values";
 
 /**
  * Options for configuring a border element.
@@ -44,6 +50,16 @@ export interface IBorderOptions {
     readonly style: (typeof BorderStyle)[keyof typeof BorderStyle];
     /** Border color, in hex (eg 'FF00AA') */
     readonly color?: string;
+    /** Theme color reference */
+    readonly themeColor?: (typeof ThemeColor)[keyof typeof ThemeColor];
+    /** Theme color tint (2-char hex) */
+    readonly themeTint?: string;
+    /** Theme color shade (2-char hex) */
+    readonly themeShade?: string;
+    /** Border shadow */
+    readonly shadow?: boolean;
+    /** Border frame */
+    readonly frame?: boolean;
     /** Size of the border in 1/8 pt */
     readonly size?: number;
     /** Spacing offset. Values are specified in pt */
@@ -70,7 +86,7 @@ export interface IBorderOptions {
  */
 export const createBorderElement = (
     elementName: string,
-    { color, size, space, style }: IBorderOptions,
+    { color, size, space, style, themeColor, themeTint, themeShade, shadow, frame }: IBorderOptions,
 ): XmlComponent =>
     new BuilderElement<IBorderOptions>({
         attributes: {
@@ -78,6 +94,8 @@ export const createBorderElement = (
                 key: "w:color",
                 value: color === undefined ? undefined : hexColorValue(color),
             },
+            frame: { key: "w:frame", value: frame },
+            shadow: { key: "w:shadow", value: shadow },
             size: {
                 key: "w:sz",
                 value: size === undefined ? undefined : eighthPointMeasureValue(size),
@@ -87,6 +105,15 @@ export const createBorderElement = (
                 value: space === undefined ? undefined : pointMeasureValue(space),
             },
             style: { key: "w:val", value: style },
+            themeColor: { key: "w:themeColor", value: themeColor },
+            themeShade: {
+                key: "w:themeShade",
+                value: themeShade === undefined ? undefined : uCharHexNumber(themeShade),
+            },
+            themeTint: {
+                key: "w:themeTint",
+                value: themeTint === undefined ? undefined : uCharHexNumber(themeTint),
+            },
         },
         name: elementName,
     });

@@ -30,6 +30,7 @@ import type { PositiveUniversalMeasure, UniversalMeasure } from "@util/values";
 import { createEmphasisMark } from "./emphasis-mark";
 import type { EmphasisMarkType } from "./emphasis-mark";
 import { CharacterSpacing, Color, Highlight, HighlightComplexScript } from "./formatting";
+import type { IColorOptions } from "./formatting";
 import { createLanguageComponent } from "./language";
 import type { ILanguageOptions } from "./language";
 import { createRunFonts } from "./run-fonts";
@@ -176,7 +177,7 @@ export interface IRunStylePropertiesOptions {
     readonly emphasisMark?: {
         readonly type?: (typeof EmphasisMarkType)[keyof typeof EmphasisMarkType];
     };
-    readonly color?: string;
+    readonly color?: string | IColorOptions;
     readonly kern?: number | PositiveUniversalMeasure;
     readonly position?: UniversalMeasure;
     readonly size?: number | PositiveUniversalMeasure;
@@ -203,6 +204,11 @@ export interface IRunStylePropertiesOptions {
     readonly specVanish?: boolean;
     readonly scale?: number;
     readonly math?: boolean;
+    readonly outline?: boolean;
+    readonly shadow?: boolean;
+    readonly webHidden?: boolean;
+    readonly fitText?: number;
+    readonly complexScript?: boolean;
 }
 
 /**
@@ -316,6 +322,18 @@ export class RunProperties extends IgnoreIfEmptyXmlComponent {
             this.push(new OnOffElement("w:imprint", options.imprint));
         }
 
+        if (options.outline !== undefined) {
+            this.push(new OnOffElement("w:outline", options.outline));
+        }
+
+        if (options.shadow !== undefined) {
+            this.push(new OnOffElement("w:shadow", options.shadow));
+        }
+
+        if (options.webHidden !== undefined) {
+            this.push(new OnOffElement("w:webHidden", options.webHidden));
+        }
+
         if (options.noProof !== undefined) {
             this.push(new OnOffElement("w:noProof", options.noProof));
         }
@@ -415,6 +433,14 @@ export class RunProperties extends IgnoreIfEmptyXmlComponent {
 
         if (options.math) {
             this.push(new OnOffElement("w:oMath", options.math));
+        }
+
+        if (options.fitText !== undefined) {
+            this.push(new NumberValueElement("w:fitText", options.fitText));
+        }
+
+        if (options.complexScript !== undefined) {
+            this.push(new OnOffElement("w:cs", options.complexScript));
         }
 
         if (options.revision) {

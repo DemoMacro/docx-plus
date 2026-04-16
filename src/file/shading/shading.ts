@@ -28,7 +28,8 @@
  */
 import { BuilderElement } from "@file/xml-components";
 import type { XmlComponent } from "@file/xml-components";
-import { hexColorValue } from "@util/values";
+import { hexColorValue, uCharHexNumber } from "@util/values";
+import type { ThemeColor } from "@util/values";
 
 /**
  * Properties for configuring shading.
@@ -41,6 +42,18 @@ export interface IShadingAttributesProperties {
     readonly fill?: string;
     readonly color?: string;
     readonly type?: (typeof ShadingType)[keyof typeof ShadingType];
+    /** Theme color reference */
+    readonly themeColor?: (typeof ThemeColor)[keyof typeof ThemeColor];
+    /** Theme color tint (2-char hex) */
+    readonly themeTint?: string;
+    /** Theme color shade (2-char hex) */
+    readonly themeShade?: string;
+    /** Theme fill color reference */
+    readonly themeFill?: (typeof ThemeColor)[keyof typeof ThemeColor];
+    /** Theme fill tint (2-char hex) */
+    readonly themeFillTint?: string;
+    /** Theme fill shade (2-char hex) */
+    readonly themeFillShade?: string;
 }
 
 /**
@@ -51,7 +64,17 @@ export interface IShadingAttributesProperties {
  *
  * Reference: http://officeopenxml.com/WPshading.php
  */
-export const createShading = ({ fill, color, type }: IShadingAttributesProperties): XmlComponent =>
+export const createShading = ({
+    fill,
+    color,
+    type,
+    themeColor,
+    themeTint,
+    themeShade,
+    themeFill,
+    themeFillTint,
+    themeFillShade,
+}: IShadingAttributesProperties): XmlComponent =>
     new BuilderElement<IShadingAttributesProperties>({
         attributes: {
             color: {
@@ -59,6 +82,24 @@ export const createShading = ({ fill, color, type }: IShadingAttributesPropertie
                 value: color === undefined ? undefined : hexColorValue(color),
             },
             fill: { key: "w:fill", value: fill === undefined ? undefined : hexColorValue(fill) },
+            themeColor: { key: "w:themeColor", value: themeColor },
+            themeFill: { key: "w:themeFill", value: themeFill },
+            themeFillShade: {
+                key: "w:themeFillShade",
+                value: themeFillShade === undefined ? undefined : uCharHexNumber(themeFillShade),
+            },
+            themeFillTint: {
+                key: "w:themeFillTint",
+                value: themeFillTint === undefined ? undefined : uCharHexNumber(themeFillTint),
+            },
+            themeShade: {
+                key: "w:themeShade",
+                value: themeShade === undefined ? undefined : uCharHexNumber(themeShade),
+            },
+            themeTint: {
+                key: "w:themeTint",
+                value: themeTint === undefined ? undefined : uCharHexNumber(themeTint),
+            },
             type: { key: "w:val", value: type },
         },
         name: "w:shd",
