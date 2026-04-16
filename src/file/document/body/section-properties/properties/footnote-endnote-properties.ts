@@ -89,7 +89,7 @@ export const NumberRestartType = {
 /**
  * Common options for footnote and endnote number properties.
  */
-interface INumberPropertiesOptions {
+interface NumberPropertiesOptions {
     /** Number format (decimal, roman, letter, etc.) */
     readonly formatType?: (typeof NumberFormat)[keyof typeof NumberFormat];
     /** Custom number format string (overrides formatType when specified) */
@@ -103,7 +103,7 @@ interface INumberPropertiesOptions {
 /**
  * Options for footnote properties.
  */
-export interface IFootnotePropertiesOptions extends INumberPropertiesOptions {
+export interface FootnotePropertiesOptions extends NumberPropertiesOptions {
     /** Footnote placement */
     readonly pos?: (typeof FootnotePositionType)[keyof typeof FootnotePositionType];
 }
@@ -111,7 +111,7 @@ export interface IFootnotePropertiesOptions extends INumberPropertiesOptions {
 /**
  * Options for endnote properties.
  */
-export interface IEndnotePropertiesOptions extends INumberPropertiesOptions {
+export interface EndnotePropertiesOptions extends NumberPropertiesOptions {
     /** Endnote placement */
     readonly pos?: (typeof EndnotePositionType)[keyof typeof EndnotePositionType];
 }
@@ -136,7 +136,7 @@ export const createFootnoteProperties = ({
     format,
     numStart,
     numRestart,
-}: IFootnotePropertiesOptions): XmlComponent => {
+}: FootnotePropertiesOptions): XmlComponent => {
     const container = new FootnoteProperties();
 
     if (pos !== undefined) {
@@ -212,7 +212,7 @@ export const createEndnoteProperties = ({
     format,
     numStart,
     numRestart,
-}: IEndnotePropertiesOptions): XmlComponent => {
+}: EndnotePropertiesOptions): XmlComponent => {
     const container = new EndnoteProperties();
 
     if (pos !== undefined) {

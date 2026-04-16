@@ -28,11 +28,11 @@ import {
 import type { PositiveUniversalMeasure, UniversalMeasure } from "@util/values";
 
 import { createEastAsianLayout } from "./east-asian-layout";
-import type { IEastAsianLayoutOptions } from "./east-asian-layout";
+import type { EastAsianLayoutOptions } from "./east-asian-layout";
 import { createEmphasisMark } from "./emphasis-mark";
 import type { EmphasisMarkType } from "./emphasis-mark";
 import { CharacterSpacing, Color, Highlight, HighlightComplexScript } from "./formatting";
-import type { IColorOptions } from "./formatting";
+import type { ColorOptions } from "./formatting";
 import { createLanguageComponent } from "./language";
 import type { ILanguageOptions } from "./language";
 import { createRunFonts } from "./run-fonts";
@@ -165,7 +165,7 @@ export const HighlightColor = {
  *
  * Reference: http://officeopenxml.com/WPtextFormatting.php
  */
-export interface IRunStylePropertiesOptions {
+export interface RunStylePropertiesOptions {
     readonly noProof?: boolean;
     readonly bold?: boolean;
     readonly boldComplexScript?: boolean;
@@ -179,7 +179,7 @@ export interface IRunStylePropertiesOptions {
     readonly emphasisMark?: {
         readonly type?: (typeof EmphasisMarkType)[keyof typeof EmphasisMarkType];
     };
-    readonly color?: string | IColorOptions;
+    readonly color?: string | ColorOptions;
     readonly kern?: number | PositiveUniversalMeasure;
     readonly position?: UniversalMeasure;
     readonly size?: number | PositiveUniversalMeasure;
@@ -211,18 +211,18 @@ export interface IRunStylePropertiesOptions {
     readonly webHidden?: boolean;
     readonly fitText?: number;
     readonly complexScript?: boolean;
-    readonly eastAsianLayout?: IEastAsianLayoutOptions;
+    readonly eastAsianLayout?: EastAsianLayoutOptions;
 }
 
 /**
  * Options for configuring run properties.
  *
- * Extends IRunStylePropertiesOptions with a style reference.
+ * Extends RunStylePropertiesOptions with a style reference.
  */
 export type IRunPropertiesOptions = {
     /** Reference to a character style by name */
     readonly style?: string;
-} & IRunStylePropertiesOptions;
+} & RunStylePropertiesOptions;
 
 /**
  * Options for run properties change tracking.

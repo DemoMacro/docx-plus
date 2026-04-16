@@ -1,5 +1,5 @@
 import { RunProperties } from "@file/paragraph/run/properties";
-import type { IRunStylePropertiesOptions } from "@file/paragraph/run/properties";
+import type { RunStylePropertiesOptions } from "@file/paragraph/run/properties";
 import { XmlComponent } from "@file/xml-components";
 
 /**
@@ -29,7 +29,7 @@ import { XmlComponent } from "@file/xml-components";
  * ```
  */
 export class RunPropertiesDefaults extends XmlComponent {
-    public constructor(options?: IRunStylePropertiesOptions) {
+    public constructor(options?: RunStylePropertiesOptions) {
         super("w:rPrDefault");
 
         this.root.push(new RunProperties(options));

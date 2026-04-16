@@ -177,7 +177,7 @@ describe("createGradientFill", () => {
                     { position: 0, color: { value: "FF0000" } },
                     { position: 100000, color: { value: "0000FF" } },
                 ],
-                shade: {} as import("./gradient-fill").IPathShadeOptions,
+                shade: {} as import("./gradient-fill").PathShadeOptions,
             }),
         );
         expect(tree).to.deep.equal({

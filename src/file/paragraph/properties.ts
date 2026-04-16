@@ -89,7 +89,7 @@ export const TextboxTightWrapType = {
  *
  * These properties are used when defining paragraph styles within numbering level definitions.
  */
-export interface ILevelParagraphStylePropertiesOptions {
+export interface LevelParagraphStylePropertiesOptions {
     /** Paragraph text alignment (left, right, center, justified, etc.) */
     readonly alignment?: (typeof AlignmentType)[keyof typeof AlignmentType];
     /** Whether to display a horizontal line (thematic break) below the paragraph */
@@ -140,7 +140,7 @@ export type IParagraphStylePropertiesOptions = {
               readonly custom?: boolean;
           }
         | false;
-} & ILevelParagraphStylePropertiesOptions;
+} & LevelParagraphStylePropertiesOptions;
 
 export type IParagraphPropertiesOptionsBase = {
     /** Heading level (Heading1, Heading2, etc.) - applies predefined heading style */

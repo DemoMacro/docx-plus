@@ -38,7 +38,7 @@ export const PathShadeType = {
 /**
  * Options for linear gradient shading.
  */
-export interface ILinearShadeOptions {
+export interface LinearShadeOptions {
     /** Angle in 60,000ths of a degree (e.g., 5400000 = 90°) */
     readonly angle?: number;
     /** Whether the angle scales with the shape */
@@ -48,7 +48,7 @@ export interface ILinearShadeOptions {
 /**
  * Options for path (radial) gradient shading.
  */
-export interface IPathShadeOptions {
+export interface PathShadeOptions {
     /** Path type */
     readonly path?: keyof typeof PathShadeType;
 }
@@ -56,7 +56,7 @@ export interface IPathShadeOptions {
 /**
  * Gradient shade options (linear or path).
  */
-export type GradientShadeOptions = ILinearShadeOptions | IPathShadeOptions;
+export type GradientShadeOptions = LinearShadeOptions | PathShadeOptions;
 
 /**
  * Options for gradient fill.
@@ -74,7 +74,7 @@ export type GradientShadeOptions = ILinearShadeOptions | IPathShadeOptions;
  * </xsd:complexType>
  * ```
  */
-export interface IGradientFillOptions {
+export interface GradientFillOptions {
     /** Gradient color stops (minimum 2) */
     readonly stops: readonly IGradientStop[];
     /** Shade type (linear or path) */
@@ -114,7 +114,7 @@ const createShadeElement = (shade: GradientShadeOptions): XmlComponent => {
             name: "a:lin",
         });
     }
-    const pathShade = shade as IPathShadeOptions;
+    const pathShade = shade as PathShadeOptions;
     return new BuilderElement<{ readonly path?: string }>({
         attributes: {
             path: {
@@ -152,7 +152,7 @@ const createShadeElement = (shade: GradientShadeOptions): XmlComponent => {
  * });
  * ```
  */
-export const createGradientFill = (options: IGradientFillOptions): XmlComponent => {
+export const createGradientFill = (options: GradientFillOptions): XmlComponent => {
     const children: XmlComponent[] = [];
 
     // Gradient stop list

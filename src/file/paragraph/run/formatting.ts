@@ -20,7 +20,7 @@ import type { ThemeColor, UniversalMeasure } from "@util/values";
  * @property themeTint - Theme color tint (2-char hex, e.g., "99")
  * @property themeShade - Theme color shade (2-char hex, e.g., "BF")
  */
-export interface IColorOptions {
+export interface ColorOptions {
     readonly val?: string;
     readonly themeColor?: (typeof ThemeColor)[keyof typeof ThemeColor];
     readonly themeTint?: string;
@@ -81,7 +81,7 @@ export class CharacterSpacing extends XmlComponent {
  * @internal
  */
 export class Color extends XmlComponent {
-    public constructor(colorOrOptions: string | IColorOptions) {
+    public constructor(colorOrOptions: string | ColorOptions) {
         super("w:color");
 
         if (typeof colorOrOptions === "string") {

@@ -18,9 +18,9 @@ import { decimalNumber } from "@util/values";
 
 import { AlignmentType } from "../paragraph/formatting";
 import { ParagraphProperties } from "../paragraph/properties";
-import type { ILevelParagraphStylePropertiesOptions } from "../paragraph/properties";
+import type { LevelParagraphStylePropertiesOptions } from "../paragraph/properties";
 import { RunProperties } from "../paragraph/run/properties";
-import type { IRunStylePropertiesOptions } from "../paragraph/run/properties";
+import type { RunStylePropertiesOptions } from "../paragraph/run/properties";
 
 /**
  * Number format types for list levels.
@@ -293,9 +293,9 @@ export interface ILevelsOptions {
     /** Run and paragraph style properties. */
     readonly style?: {
         /** Run style properties for the numbering text. */
-        readonly run?: IRunStylePropertiesOptions;
+        readonly run?: RunStylePropertiesOptions;
         /** Paragraph style properties for the level. */
-        readonly paragraph?: ILevelParagraphStylePropertiesOptions;
+        readonly paragraph?: LevelParagraphStylePropertiesOptions;
     };
 }
 

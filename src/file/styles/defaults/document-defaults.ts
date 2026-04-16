@@ -6,7 +6,7 @@
  * @module
  */
 import type { IParagraphStylePropertiesOptions } from "@file/paragraph/properties";
-import type { IRunStylePropertiesOptions } from "@file/paragraph/run/properties";
+import type { RunStylePropertiesOptions } from "@file/paragraph/run/properties";
 import { XmlComponent } from "@file/xml-components";
 
 import { ParagraphPropertiesDefaults } from "./paragraph-properties";
@@ -22,7 +22,7 @@ export interface IDocumentDefaultsOptions {
     /** Default paragraph properties applied to all paragraphs */
     readonly paragraph?: IParagraphStylePropertiesOptions;
     /** Default run properties applied to all text runs */
-    readonly run?: IRunStylePropertiesOptions;
+    readonly run?: RunStylePropertiesOptions;
 }
 
 /**

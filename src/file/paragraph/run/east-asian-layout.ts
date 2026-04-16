@@ -46,7 +46,7 @@ export const CombineBracketsType = {
 /**
  * Options for East Asian layout properties.
  */
-export interface IEastAsianLayoutOptions {
+export interface EastAsianLayoutOptions {
     /** Character combination ID (referencing a combined character entry) */
     readonly id?: number;
     /** Whether to combine characters */
@@ -79,8 +79,8 @@ export const createEastAsianLayout = ({
     combineBrackets,
     vert,
     vertCompress,
-}: IEastAsianLayoutOptions): XmlComponent =>
-    new BuilderElement<IEastAsianLayoutOptions>({
+}: EastAsianLayoutOptions): XmlComponent =>
+    new BuilderElement<EastAsianLayoutOptions>({
         attributes: {
             combine: { key: "w:combine", value: combine },
             combineBrackets: { key: "w:combineBrackets", value: combineBrackets },

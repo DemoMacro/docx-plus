@@ -26,7 +26,7 @@ import type { LengthUnit } from "../types";
  * @property children - Array of paragraph children to include in the textbox
  * @property inset - Custom inset margins for the textbox content
  */
-export interface IVTextboxOptions {
+export interface VTextboxOptions {
     /** CSS-style string for textbox styling */
     readonly style?: string;
     /** Array of paragraph children to include in the textbox */
@@ -82,7 +82,7 @@ export interface IVTextboxOptions {
  * });
  * ```
  */
-export const createVmlTextbox = ({ style, children, inset }: IVTextboxOptions): XmlComponent =>
+export const createVmlTextbox = ({ style, children, inset }: VTextboxOptions): XmlComponent =>
     new BuilderElement<{
         readonly style?: string;
         readonly inset?: string;

@@ -8,7 +8,7 @@
  * @module
  */
 import { ParagraphProperties } from "@file/paragraph";
-import type { IParagraphStylePropertiesOptions, IRunStylePropertiesOptions } from "@file/paragraph";
+import type { IParagraphStylePropertiesOptions, RunStylePropertiesOptions } from "@file/paragraph";
 import { RunProperties } from "@file/paragraph/run/properties";
 
 import { Style } from "./style";
@@ -24,7 +24,7 @@ export type IBaseParagraphStyleOptions = {
     /** Paragraph properties (alignment, spacing, indentation, etc.) */
     readonly paragraph?: IParagraphStylePropertiesOptions;
     /** Run properties that apply to text within this paragraph style */
-    readonly run?: IRunStylePropertiesOptions;
+    readonly run?: RunStylePropertiesOptions;
 } & IStyleOptions;
 
 /**

@@ -15,7 +15,7 @@ import { XmlComponent } from "@file/xml-components";
 import { createEffectList } from "./effects/effect-list";
 import type { EffectListOptions } from "./effects/effect-list";
 import { createGradientFill } from "./fill/gradient-fill";
-import type { IGradientFillOptions } from "./fill/gradient-fill";
+import type { GradientFillOptions } from "./fill/gradient-fill";
 import { Form } from "./form";
 import { createNoFill } from "./outline/no-fill";
 import { createOutline } from "./outline/outline";
@@ -78,7 +78,7 @@ export class ShapeProperties extends XmlComponent {
         readonly element: string;
         readonly outline?: OutlineOptions;
         readonly solidFill?: SolidFillOptions;
-        readonly gradientFill?: IGradientFillOptions;
+        readonly gradientFill?: GradientFillOptions;
         readonly noFill?: boolean;
         readonly effects?: EffectListOptions;
         readonly shape3d?: Shape3DOptions;

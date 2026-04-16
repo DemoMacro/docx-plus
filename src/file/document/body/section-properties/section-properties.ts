@@ -59,8 +59,8 @@ import {
     createFootnoteProperties,
 } from "./properties/footnote-endnote-properties";
 import type {
-    IEndnotePropertiesOptions,
-    IFootnotePropertiesOptions,
+    EndnotePropertiesOptions,
+    FootnotePropertiesOptions,
 } from "./properties/footnote-endnote-properties";
 import {
     HeaderFooterReferenceType,
@@ -143,9 +143,9 @@ export interface ISectionPropertiesOptionsBase {
         readonly other?: number;
     };
     /** Footnote properties for the section */
-    readonly footnotePr?: IFootnotePropertiesOptions;
+    readonly footnotePr?: FootnotePropertiesOptions;
     /** Endnote properties for the section */
-    readonly endnotePr?: IEndnotePropertiesOptions;
+    readonly endnotePr?: EndnotePropertiesOptions;
 }
 
 export type ISectionPropertiesChangeOptions = IChangedAttributesProperties &

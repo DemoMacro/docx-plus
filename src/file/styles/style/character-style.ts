@@ -8,7 +8,7 @@
  * @module
  */
 import { RunProperties } from "@file/paragraph/run/properties";
-import type { IRunStylePropertiesOptions } from "@file/paragraph/run/properties";
+import type { RunStylePropertiesOptions } from "@file/paragraph/run/properties";
 
 import { Style } from "./style";
 import type { IStyleOptions } from "./style";
@@ -20,7 +20,7 @@ import type { IStyleOptions } from "./style";
  */
 export type IBaseCharacterStyleOptions = {
     /** Run properties (font, size, color, etc.) for this character style */
-    readonly run?: IRunStylePropertiesOptions;
+    readonly run?: RunStylePropertiesOptions;
 } & IStyleOptions;
 
 /**
