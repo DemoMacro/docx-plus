@@ -10,7 +10,7 @@
  */
 import { BuilderElement } from "@file/xml-components";
 import type { XmlComponent } from "@file/xml-components";
-import { signedTwipsMeasureValue, twipsMeasureValue } from "@util/values";
+import { decimalNumber, signedTwipsMeasureValue, twipsMeasureValue } from "@util/values";
 import type { PositiveUniversalMeasure, UniversalMeasure } from "@util/values";
 
 /**
@@ -20,11 +20,15 @@ import type { PositiveUniversalMeasure, UniversalMeasure } from "@util/values";
  */
 export interface IIndentAttributesProperties {
     readonly start?: number | UniversalMeasure;
+    readonly startChars?: number;
     readonly end?: number | UniversalMeasure;
+    readonly endChars?: number;
     readonly left?: number | UniversalMeasure;
     readonly right?: number | UniversalMeasure;
     readonly hanging?: number | PositiveUniversalMeasure;
+    readonly hangingChars?: number;
     readonly firstLine?: number | PositiveUniversalMeasure;
+    readonly firstLineChars?: number;
 }
 
 /**
@@ -54,11 +58,15 @@ export interface IIndentAttributesProperties {
  */
 export const createIndent = ({
     start,
+    startChars,
     end,
+    endChars,
     left,
     right,
     hanging,
+    hangingChars,
     firstLine,
+    firstLineChars,
 }: IIndentAttributesProperties): XmlComponent =>
     new BuilderElement<IIndentAttributesProperties>({
         attributes: {
@@ -66,13 +74,25 @@ export const createIndent = ({
                 key: "w:end",
                 value: end === undefined ? undefined : signedTwipsMeasureValue(end),
             },
+            endChars: {
+                key: "w:endChars",
+                value: endChars === undefined ? undefined : decimalNumber(endChars),
+            },
             firstLine: {
                 key: "w:firstLine",
                 value: firstLine === undefined ? undefined : twipsMeasureValue(firstLine),
             },
+            firstLineChars: {
+                key: "w:firstLineChars",
+                value: firstLineChars === undefined ? undefined : decimalNumber(firstLineChars),
+            },
             hanging: {
                 key: "w:hanging",
                 value: hanging === undefined ? undefined : twipsMeasureValue(hanging),
+            },
+            hangingChars: {
+                key: "w:hangingChars",
+                value: hangingChars === undefined ? undefined : decimalNumber(hangingChars),
             },
             left: {
                 key: "w:left",
@@ -85,6 +105,10 @@ export const createIndent = ({
             start: {
                 key: "w:start",
                 value: start === undefined ? undefined : signedTwipsMeasureValue(start),
+            },
+            startChars: {
+                key: "w:startChars",
+                value: startChars === undefined ? undefined : decimalNumber(startChars),
             },
         },
         name: "w:ind",
