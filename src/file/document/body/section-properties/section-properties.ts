@@ -55,6 +55,14 @@ import type { IColumnsAttributes } from "./properties/columns";
 import { createDocumentGrid } from "./properties/doc-grid";
 import type { IDocGridAttributesProperties } from "./properties/doc-grid";
 import {
+    createEndnoteProperties,
+    createFootnoteProperties,
+} from "./properties/footnote-endnote-properties";
+import type {
+    IEndnotePropertiesOptions,
+    IFootnotePropertiesOptions,
+} from "./properties/footnote-endnote-properties";
+import {
     HeaderFooterReferenceType,
     HeaderFooterType,
     createHeaderFooterReference,
@@ -134,6 +142,10 @@ export interface ISectionPropertiesOptionsBase {
         /** Paper tray for subsequent pages */
         readonly other?: number;
     };
+    /** Footnote properties for the section */
+    readonly footnotePr?: IFootnotePropertiesOptions;
+    /** Endnote properties for the section */
+    readonly endnotePr?: IEndnotePropertiesOptions;
 }
 
 export type ISectionPropertiesChangeOptions = IChangedAttributesProperties &
@@ -293,6 +305,8 @@ export class SectionProperties extends XmlComponent {
         bidi,
         rtlGutter,
         paperSrc,
+        footnotePr,
+        endnotePr,
     }: ISectionPropertiesOptions = {}) {
         super("w:sectPr");
 
@@ -370,6 +384,14 @@ export class SectionProperties extends XmlComponent {
                     name: "w:paperSrc",
                 }),
             );
+        }
+
+        if (footnotePr) {
+            this.root.push(createFootnoteProperties(footnotePr));
+        }
+
+        if (endnotePr) {
+            this.root.push(createEndnoteProperties(endnotePr));
         }
 
         this.root.push(createDocumentGrid({ charSpace, linePitch, type: gridType }));

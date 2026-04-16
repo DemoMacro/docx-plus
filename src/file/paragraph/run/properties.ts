@@ -27,6 +27,8 @@ import {
 } from "@file/xml-components";
 import type { PositiveUniversalMeasure, UniversalMeasure } from "@util/values";
 
+import { createEastAsianLayout } from "./east-asian-layout";
+import type { IEastAsianLayoutOptions } from "./east-asian-layout";
 import { createEmphasisMark } from "./emphasis-mark";
 import type { EmphasisMarkType } from "./emphasis-mark";
 import { CharacterSpacing, Color, Highlight, HighlightComplexScript } from "./formatting";
@@ -209,6 +211,7 @@ export interface IRunStylePropertiesOptions {
     readonly webHidden?: boolean;
     readonly fitText?: number;
     readonly complexScript?: boolean;
+    readonly eastAsianLayout?: IEastAsianLayoutOptions;
 }
 
 /**
@@ -441,6 +444,10 @@ export class RunProperties extends IgnoreIfEmptyXmlComponent {
 
         if (options.complexScript !== undefined) {
             this.push(new OnOffElement("w:cs", options.complexScript));
+        }
+
+        if (options.eastAsianLayout) {
+            this.push(createEastAsianLayout(options.eastAsianLayout));
         }
 
         if (options.revision) {

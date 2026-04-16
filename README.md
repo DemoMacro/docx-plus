@@ -11,21 +11,24 @@ Easily generate and modify .docx files with JS/TS. Works for Node and on the Bro
 
 ## What's Different from docx?
 
-|                     | docx                                                  | docx-plus                                                                                                 |
-| ------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| ZIP handling        | jszip                                                 | **fflate** (faster, smaller)                                                                              |
-| Data conversion     | Manual env detection (`Buffer.from` etc.)             | **undio** (universal `toUint8Array`)                                                                      |
-| `Packer.toStream()` | Removed (pseudo-streaming)                            | **Restored** with real streaming ZIP                                                                      |
-| Test environment    | jsdom                                                 | happy-dom                                                                                                 |
-| OOXML compliance    | ECMA-376 (legacy)                                     | **ISO/IEC 29500-4** (latest)                                                                              |
-| Theme support       | Partial (missing `ThemeColor`/`ThemeFont`)            | **Full** (`ThemeColor`, `ThemeFont` enums, theme attributes on `Color`, `Underline`, `Border`, `Shading`) |
-| CT_Ind              | Twips-only indent                                     | **Character-based** (`startChars`, `endChars`, `hangingChars`, `firstLineChars`)                          |
-| CT_Spacing          | Missing `beforeLines`/`afterLines`                    | **Complete** (both twips & line-unit spacing)                                                             |
-| CT_Border           | Missing `shadow`/`frame`/theme attrs                  | **Complete** (`shadow`, `frame`, `themeColor`, `themeTint`, `themeShade`)                                 |
-| CT_Shd              | Missing theme fill/color attrs                        | **Complete** (`themeColor`, `themeFill`, `themeTint`/`themeShade`)                                        |
-| EG_RPrBase          | Missing `outline`/`shadow`/`webHidden`/`fitText`/`cs` | **Complete** (all spec-defined elements)                                                                  |
-| ST_Em               | `dot` only                                            | **Complete** (`none`, `comma`, `circle`, `dot`, `underDot`)                                               |
-| ST_TabTlc           | Missing `heavy`                                       | **Complete** (`none`, `dot`, `hyphen`, `middleDot`, `underscore`, `heavy`)                                |
+|                     | docx                                                                       | docx-plus                                                                                                                                         |
+| ------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ZIP handling        | jszip                                                                      | **fflate** (faster, smaller)                                                                                                                      |
+| Data conversion     | Manual env detection (`Buffer.from` etc.)                                  | **undio** (universal `toUint8Array`)                                                                                                              |
+| `Packer.toStream()` | Removed (pseudo-streaming)                                                 | **Restored** with real streaming ZIP                                                                                                              |
+| Test environment    | jsdom                                                                      | happy-dom                                                                                                                                         |
+| OOXML compliance    | ECMA-376 (legacy)                                                          | **ISO/IEC 29500-4** (latest)                                                                                                                      |
+| Theme support       | Partial (missing `ThemeColor`/`ThemeFont`)                                 | **Full** (`ThemeColor`, `ThemeFont` enums, theme attributes on `Color`, `Underline`, `Border`, `Shading`)                                         |
+| CT_Ind              | Twips-only indent                                                          | **Character-based** (`startChars`, `endChars`, `hangingChars`, `firstLineChars`)                                                                  |
+| CT_Spacing          | Missing `beforeLines`/`afterLines`                                         | **Complete** (both twips & line-unit spacing)                                                                                                     |
+| CT_Border           | Missing `shadow`/`frame`/theme attrs                                       | **Complete** (`shadow`, `frame`, `themeColor`, `themeTint`, `themeShade`)                                                                         |
+| CT_Shd              | Missing theme fill/color attrs                                             | **Complete** (`themeColor`, `themeFill`, `themeTint`/`themeShade`)                                                                                |
+| EG_RPrBase          | Missing `outline`/`shadow`/`webHidden`/`fitText`/`cs`                      | **Complete** (all spec-defined elements)                                                                                                          |
+| ST_Em               | `dot` only                                                                 | **Complete** (`none`, `comma`, `circle`, `dot`, `underDot`)                                                                                       |
+| ST_TabTlc           | Missing `heavy`                                                            | **Complete** (`none`, `dot`, `hyphen`, `middleDot`, `underscore`, `heavy`)                                                                        |
+| CT_PPrBase          | Missing 9 paragraph props                                                  | **Complete** (`suppressAutoHyphens`, `adjustRightInd`, `snapToGrid`, `mirrorIndents`, East Asian typography, `textAlignment`, `textboxTightWrap`) |
+| CT_SectPr           | Missing `noEndnote`/`bidi`/`rtlGutter`/`paperSrc`/`footnotePr`/`endnotePr` | **Complete** (all spec-defined elements)                                                                                                          |
+| EG_RPrBase          | Missing `eastAsianLayout`                                                  | **Complete** (`eastAsianLayout` with `combine`, `combineBrackets`, `vert`, `vertCompress`)                                                        |
 
 ## Installation
 

@@ -9,6 +9,11 @@ import { describe, expect, it } from "vite-plus/test";
 
 import { PageOrientation } from "./properties";
 import { DocumentGridType } from "./properties/doc-grid";
+import {
+    FootnotePositionType,
+    EndnotePositionType,
+    NumberRestartType,
+} from "./properties/footnote-endnote-properties";
 import { LineNumberRestartFormat } from "./properties/line-number";
 import { PageBorderOffsetFrom } from "./properties/page-borders";
 import { PageTextDirectionType } from "./properties/page-text-direction";
@@ -354,9 +359,7 @@ describe("SectionProperties", () => {
         it("should create section properties with bidi", () => {
             const properties = new SectionProperties({ bidi: true });
             const tree = new Formatter().format(properties);
-            const bidi = tree["w:sectPr"].find(
-                (item: any) => item["w:bidi"] !== undefined,
-            );
+            const bidi = tree["w:sectPr"].find((item: any) => item["w:bidi"] !== undefined);
             expect(bidi).to.deep.equal({ "w:bidi": {} });
         });
 
@@ -372,11 +375,45 @@ describe("SectionProperties", () => {
         it("should create section properties with paperSrc", () => {
             const properties = new SectionProperties({ paperSrc: { first: 1, other: 2 } });
             const tree = new Formatter().format(properties);
-            const paperSrc = tree["w:sectPr"].find(
-                (item: any) => item["w:paperSrc"] !== undefined,
-            );
+            const paperSrc = tree["w:sectPr"].find((item: any) => item["w:paperSrc"] !== undefined);
             expect(paperSrc).to.deep.equal({
                 "w:paperSrc": { _attr: { "w:first": 1, "w:other": 2 } },
+            });
+        });
+
+        it("should create section properties with footnotePr", () => {
+            const properties = new SectionProperties({
+                footnotePr: {
+                    pos: FootnotePositionType.BENEATH_TEXT,
+                    numStart: 1,
+                    numRestart: NumberRestartType.EACH_PAGE,
+                },
+            });
+            const tree = new Formatter().format(properties);
+            const footnotePr = tree["w:sectPr"].find(
+                (item: any) => item["w:footnotePr"] !== undefined,
+            );
+            expect(footnotePr).to.deep.equal({
+                "w:footnotePr": [
+                    { "w:pos": { _attr: { "w:val": "beneathText" } } },
+                    { "w:numStart": { _attr: { "w:val": 1 } } },
+                    { "w:numRestart": { _attr: { "w:val": "eachPage" } } },
+                ],
+            });
+        });
+
+        it("should create section properties with endnotePr", () => {
+            const properties = new SectionProperties({
+                endnotePr: {
+                    pos: EndnotePositionType.SECT_END,
+                },
+            });
+            const tree = new Formatter().format(properties);
+            const endnotePr = tree["w:sectPr"].find(
+                (item: any) => item["w:endnotePr"] !== undefined,
+            );
+            expect(endnotePr).to.deep.equal({
+                "w:endnotePr": [{ "w:pos": { _attr: { "w:val": "sectEnd" } } }],
             });
         });
     });
