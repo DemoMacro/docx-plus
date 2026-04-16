@@ -1,13 +1,12 @@
 import type { File } from "@file/file";
 import { obfuscate } from "@file/fonts/obfuscate-ttf-to-odttf";
-import { encodeUtf8 } from "@util/convenience-functions";
 /**
  * Compiler module for converting File objects into OOXML ZIP archives.
  *
  * @module
  */
 import type { Zippable } from "fflate";
-import { toUint8Array } from "undio";
+import { textToUint8Array, toUint8Array } from "undio";
 import xml from "xml";
 
 import { Formatter } from "../formatter";
@@ -153,29 +152,24 @@ export class Compiler {
         for (const [, obj] of map) {
             if (Array.isArray(obj)) {
                 for (const subFile of obj as readonly IXmlifyedFile[]) {
-                    files[subFile.path] = encodeUtf8(subFile.data);
+                    files[subFile.path] = textToUint8Array(subFile.data);
                 }
             } else {
-                files[(obj as IXmlifyedFile).path] = encodeUtf8((obj as IXmlifyedFile).data);
+                files[(obj as IXmlifyedFile).path] = textToUint8Array((obj as IXmlifyedFile).data);
             }
         }
 
         for (const subFile of overrides) {
-            files[subFile.path] = encodeUtf8(subFile.data);
+            files[subFile.path] = textToUint8Array(subFile.data);
         }
 
         // Media files: use STORE (level 0) for already-compressed formats
         for (const mediaData of file.Media.Array) {
-            if (mediaData.type !== "svg") {
-                files[`word/media/${mediaData.fileName}`] = [
-                    toUint8Array(mediaData.data),
-                    { level: 0 },
-                ];
-            } else {
-                files[`word/media/${mediaData.fileName}`] = [
-                    toUint8Array(mediaData.data),
-                    { level: 0 },
-                ];
+            files[`word/media/${mediaData.fileName}`] = [
+                toUint8Array(mediaData.data),
+                { level: 0 },
+            ];
+            if (mediaData.type === "svg") {
                 files[`word/media/${mediaData.fallback.fileName}`] = [
                     toUint8Array(mediaData.fallback.data),
                     { level: 0 },

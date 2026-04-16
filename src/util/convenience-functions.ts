@@ -186,17 +186,3 @@ const generateUuidPart = (count: number): string => customAlphabet("1234567890ab
  */
 export const uniqueUuid = (): string =>
     `${generateUuidPart(8)}-${generateUuidPart(4)}-${generateUuidPart(4)}-${generateUuidPart(4)}-${generateUuidPart(12)}`;
-
-/**
- * Encode a string to UTF-8 bytes.
- *
- * This is used to pre-encode XML content before passing to fflate's zipSync,
- * which expects Uint8Array input for text content.
- *
- * The copy via `new Uint8Array()` ensures the returned array uses the
- * current module's Uint8Array constructor, avoiding cross-realm issues
- * in test environments (happy-dom) where TextEncoder returns a different
- * realm's Uint8Array.
- */
-export const encodeUtf8 = (str: string): Uint8Array =>
-    new Uint8Array(new TextEncoder().encode(str));
