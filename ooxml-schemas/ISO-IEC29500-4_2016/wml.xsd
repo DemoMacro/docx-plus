@@ -1,24 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-  xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math"
-  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
-  xmlns:sl="http://schemas.openxmlformats.org/schemaLibrary/2006/main"
-  xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
-  xmlns="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
-  xmlns:s="http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes"
-  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-  elementFormDefault="qualified" attributeFormDefault="qualified" blockDefault="#all"
-  targetNamespace="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-  <xsd:import namespace="http://schemas.openxmlformats.org/markup-compatibility/2006" schemaLocation="../mce/mc.xsd"/>
-  <xsd:import namespace="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+  xmlns:m="http://purl.oclc.org/ooxml/officeDocument/math"
+  xmlns:r="http://purl.oclc.org/ooxml/officeDocument/relationships"
+  xmlns:sl="http://purl.oclc.org/ooxml/schemaLibrary/main"
+  xmlns:wp="http://purl.oclc.org/ooxml/drawingml/wordprocessingDrawing"
+  xmlns="http://purl.oclc.org/ooxml/wordprocessingml/main"
+  xmlns:s="http://purl.oclc.org/ooxml/officeDocument/sharedTypes" elementFormDefault="qualified"
+  attributeFormDefault="qualified" blockDefault="#all"
+  targetNamespace="http://purl.oclc.org/ooxml/wordprocessingml/main">
+  <xsd:import namespace="http://purl.oclc.org/ooxml/drawingml/wordprocessingDrawing"
     schemaLocation="dml-wordprocessingDrawing.xsd"/>
-  <xsd:import namespace="http://schemas.openxmlformats.org/officeDocument/2006/math"
+  <xsd:import namespace="http://purl.oclc.org/ooxml/officeDocument/math"
     schemaLocation="shared-math.xsd"/>
-  <xsd:import namespace="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+  <xsd:import namespace="http://purl.oclc.org/ooxml/officeDocument/relationships"
     schemaLocation="shared-relationshipReference.xsd"/>
-  <xsd:import namespace="http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes"
+  <xsd:import namespace="http://purl.oclc.org/ooxml/officeDocument/sharedTypes"
     schemaLocation="shared-commonSimpleTypes.xsd"/>
-  <xsd:import namespace="http://schemas.openxmlformats.org/schemaLibrary/2006/main"
+  <xsd:import namespace="http://purl.oclc.org/ooxml/schemaLibrary/main"
     schemaLocation="shared-customXmlSchemaProperties.xsd"/>
   <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
   <xsd:complexType name="CT_Empty"/>
@@ -44,14 +42,10 @@
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:complexType name="CT_Charset">
-    <xsd:attribute name="val" type="ST_UcharHexNumber" use="optional"/>
     <xsd:attribute name="characterSet" type="s:ST_String" use="optional" default="ISO-8859-1"/>
   </xsd:complexType>
   <xsd:simpleType name="ST_DecimalNumberOrPercent">
-    <xsd:union memberTypes="ST_UnqualifiedPercentage s:ST_Percentage"/>
-  </xsd:simpleType>
-  <xsd:simpleType name="ST_UnqualifiedPercentage">
-    <xsd:restriction base="xsd:integer"/>
+    <xsd:union memberTypes="s:ST_Percentage"/>
   </xsd:simpleType>
   <xsd:simpleType name="ST_DecimalNumber">
     <xsd:restriction base="xsd:integer"/>
@@ -113,17 +107,11 @@
     <xsd:attribute name="val" type="s:ST_String" use="required"/>
   </xsd:complexType>
   <xsd:simpleType name="ST_TextScale">
-    <xsd:union memberTypes="ST_TextScalePercent ST_TextScaleDecimal"/>
+    <xsd:union memberTypes="ST_TextScalePercent"/>
   </xsd:simpleType>
   <xsd:simpleType name="ST_TextScalePercent">
     <xsd:restriction base="xsd:string">
       <xsd:pattern value="0*(600|([0-5]?[0-9]?[0-9]))%"/>
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="ST_TextScaleDecimal">
-    <xsd:restriction base="xsd:integer">
-      <xsd:minInclusive value="0"/>
-      <xsd:maxInclusive value="600"/>
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:complexType name="CT_TextScale">
@@ -581,8 +569,6 @@
       <xsd:enumeration value="decimal"/>
       <xsd:enumeration value="bar"/>
       <xsd:enumeration value="num"/>
-      <xsd:enumeration value="left"/>
-      <xsd:enumeration value="right"/>
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:simpleType name="ST_TabTlc">
@@ -622,10 +608,6 @@
     <xsd:attribute name="startChars" type="ST_DecimalNumber" use="optional"/>
     <xsd:attribute name="end" type="ST_SignedTwipsMeasure" use="optional"/>
     <xsd:attribute name="endChars" type="ST_DecimalNumber" use="optional"/>
-    <xsd:attribute name="left" type="ST_SignedTwipsMeasure" use="optional"/>
-    <xsd:attribute name="leftChars" type="ST_DecimalNumber" use="optional"/>
-    <xsd:attribute name="right" type="ST_SignedTwipsMeasure" use="optional"/>
-    <xsd:attribute name="rightChars" type="ST_DecimalNumber" use="optional"/>
     <xsd:attribute name="hanging" type="s:ST_TwipsMeasure" use="optional"/>
     <xsd:attribute name="hangingChars" type="ST_DecimalNumber" use="optional"/>
     <xsd:attribute name="firstLine" type="s:ST_TwipsMeasure" use="optional"/>
@@ -643,16 +625,12 @@
       <xsd:enumeration value="highKashida"/>
       <xsd:enumeration value="lowKashida"/>
       <xsd:enumeration value="thaiDistribute"/>
-      <xsd:enumeration value="left"/>
-      <xsd:enumeration value="right"/>
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:simpleType name="ST_JcTable">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="center"/>
       <xsd:enumeration value="end"/>
-      <xsd:enumeration value="left"/>
-      <xsd:enumeration value="right"/>
       <xsd:enumeration value="start"/>
     </xsd:restriction>
   </xsd:simpleType>
@@ -726,26 +704,11 @@
     <xsd:attribute name="saltValue" type="xsd:base64Binary" use="optional"/>
     <xsd:attribute name="spinCount" type="ST_DecimalNumber" use="optional"/>
   </xsd:attributeGroup>
-  <xsd:attributeGroup name="AG_TransitionalPassword">
-    <xsd:attribute name="cryptProviderType" type="s:ST_CryptProv"/>
-    <xsd:attribute name="cryptAlgorithmClass" type="s:ST_AlgClass"/>
-    <xsd:attribute name="cryptAlgorithmType" type="s:ST_AlgType"/>
-    <xsd:attribute name="cryptAlgorithmSid" type="ST_DecimalNumber"/>
-    <xsd:attribute name="cryptSpinCount" type="ST_DecimalNumber"/>
-    <xsd:attribute name="cryptProvider" type="s:ST_String"/>
-    <xsd:attribute name="algIdExt" type="ST_LongHexNumber"/>
-    <xsd:attribute name="algIdExtSource" type="s:ST_String"/>
-    <xsd:attribute name="cryptProviderTypeExt" type="ST_LongHexNumber"/>
-    <xsd:attribute name="cryptProviderTypeExtSource" type="s:ST_String"/>
-    <xsd:attribute name="hash" type="xsd:base64Binary"/>
-    <xsd:attribute name="salt" type="xsd:base64Binary"/>
-  </xsd:attributeGroup>
   <xsd:complexType name="CT_DocProtect">
     <xsd:attribute name="edit" type="ST_DocProtect" use="optional"/>
     <xsd:attribute name="formatting" type="s:ST_OnOff" use="optional"/>
     <xsd:attribute name="enforcement" type="s:ST_OnOff"/>
     <xsd:attributeGroup ref="AG_Password"/>
-    <xsd:attributeGroup ref="AG_TransitionalPassword"/>
   </xsd:complexType>
   <xsd:simpleType name="ST_MailMergeDocType">
     <xsd:restriction base="xsd:string">
@@ -805,12 +768,6 @@
       <xsd:enumeration value="tbV"/>
       <xsd:enumeration value="rlV"/>
       <xsd:enumeration value="lrV"/>
-      <xsd:enumeration value="btLr"/>
-      <xsd:enumeration value="lrTb"/>
-      <xsd:enumeration value="lrTbV"/>
-      <xsd:enumeration value="tbLrV"/>
-      <xsd:enumeration value="tbRl"/>
-      <xsd:enumeration value="tbRlV"/>
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:complexType name="CT_TextDirection">
@@ -903,13 +860,6 @@
           <xsd:group ref="EG_BlockLevelElts" minOccurs="0" maxOccurs="unbounded"/>
         </xsd:sequence>
         <xsd:attribute name="initials" type="s:ST_String" use="optional"/>
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-  <xsd:complexType name="CT_TrackChangeNumbering">
-    <xsd:complexContent>
-      <xsd:extension base="CT_TrackChange">
-        <xsd:attribute name="original" type="s:ST_String" use="optional"/>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -1055,7 +1005,6 @@
     <xsd:sequence>
       <xsd:element name="ilvl" type="CT_DecimalNumber" minOccurs="0"/>
       <xsd:element name="numId" type="CT_DecimalNumber" minOccurs="0"/>
-      <xsd:element name="numberingChange" type="CT_TrackChangeNumbering" minOccurs="0"/>
       <xsd:element name="ins" type="CT_TrackChange" minOccurs="0"/>
     </xsd:sequence>
   </xsd:complexType>
@@ -1085,6 +1034,17 @@
   </xsd:simpleType>
   <xsd:complexType name="CT_TextboxTightWrap">
     <xsd:attribute name="val" type="ST_TextboxTightWrap" use="required"/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_PPr">
+    <xsd:complexContent>
+      <xsd:extension base="CT_PPrBase">
+        <xsd:sequence>
+          <xsd:element name="rPr" type="CT_ParaRPr" minOccurs="0"/>
+          <xsd:element name="sectPr" type="CT_SectPr" minOccurs="0"/>
+          <xsd:element name="pPrChange" type="CT_PPrChange" minOccurs="0"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
   </xsd:complexType>
   <xsd:complexType name="CT_PPrBase">
     <xsd:sequence>
@@ -1123,17 +1083,6 @@
       <xsd:element name="cnfStyle" type="CT_Cnf" minOccurs="0" maxOccurs="1"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:complexType name="CT_PPr">
-    <xsd:complexContent>
-      <xsd:extension base="CT_PPrBase">
-        <xsd:sequence>
-          <xsd:element name="rPr" type="CT_ParaRPr" minOccurs="0"/>
-          <xsd:element name="sectPr" type="CT_SectPr" minOccurs="0"/>
-          <xsd:element name="pPrChange" type="CT_PPrChange" minOccurs="0"/>
-        </xsd:sequence>
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
   <xsd:complexType name="CT_PPrGeneral">
     <xsd:complexContent>
       <xsd:extension base="CT_PPrBase">
@@ -1150,12 +1099,6 @@
   </xsd:complexType>
   <xsd:complexType name="CT_Background">
     <xsd:sequence>
-      <xsd:sequence maxOccurs="unbounded">
-        <xsd:any processContents="lax" namespace="urn:schemas-microsoft-com:vml" minOccurs="0"
-          maxOccurs="unbounded"/>
-        <xsd:any processContents="lax" namespace="urn:schemas-microsoft-com:office:office"
-          minOccurs="0" maxOccurs="unbounded"/>
-      </xsd:sequence>
       <xsd:element name="drawing" type="CT_Drawing" minOccurs="0"/>
     </xsd:sequence>
     <xsd:attribute name="color" type="ST_HexColor" use="optional" default="auto"/>
@@ -1168,12 +1111,6 @@
   </xsd:complexType>
   <xsd:complexType name="CT_Object">
     <xsd:sequence>
-      <xsd:sequence maxOccurs="unbounded">
-        <xsd:any processContents="lax" namespace="urn:schemas-microsoft-com:vml" minOccurs="0"
-          maxOccurs="unbounded"/>
-        <xsd:any processContents="lax" namespace="urn:schemas-microsoft-com:office:office"
-          minOccurs="0" maxOccurs="unbounded"/>
-      </xsd:sequence>
       <xsd:element name="drawing" type="CT_Drawing" minOccurs="0"/>
       <xsd:choice minOccurs="0">
         <xsd:element name="control" type="CT_Control"/>
@@ -1184,18 +1121,6 @@
     </xsd:sequence>
     <xsd:attribute name="dxaOrig" type="s:ST_TwipsMeasure" use="optional"/>
     <xsd:attribute name="dyaOrig" type="s:ST_TwipsMeasure" use="optional"/>
-  </xsd:complexType>
-  <xsd:complexType name="CT_Picture">
-    <xsd:sequence>
-      <xsd:sequence maxOccurs="unbounded">
-        <xsd:any processContents="lax" namespace="urn:schemas-microsoft-com:vml" minOccurs="0"
-          maxOccurs="unbounded"/>
-        <xsd:any processContents="lax" namespace="urn:schemas-microsoft-com:office:office"
-          minOccurs="0" maxOccurs="unbounded"/>
-      </xsd:sequence>
-      <xsd:element name="movie" type="CT_Rel" minOccurs="0"/>
-      <xsd:element name="control" type="CT_Control" minOccurs="0"/>
-    </xsd:sequence>
   </xsd:complexType>
   <xsd:complexType name="CT_ObjectEmbed">
     <xsd:attribute name="drawAspect" type="ST_ObjectDrawAspect" use="optional"/>
@@ -1232,7 +1157,6 @@
   </xsd:complexType>
   <xsd:complexType name="CT_SimpleField">
     <xsd:sequence>
-      <xsd:element name="fldData" type="CT_Text" minOccurs="0" maxOccurs="1"/>
       <xsd:group ref="EG_PContent" minOccurs="0" maxOccurs="unbounded"/>
     </xsd:sequence>
     <xsd:attribute name="instr" type="s:ST_String" use="required"/>
@@ -1285,9 +1209,7 @@
   </xsd:complexType>
   <xsd:complexType name="CT_FldChar">
     <xsd:choice>
-      <xsd:element name="fldData" type="CT_Text" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="ffData" type="CT_FFData" minOccurs="0" maxOccurs="1"/>
-      <xsd:element name="numberingChange" type="CT_TrackChangeNumbering" minOccurs="0"/>
     </xsd:choice>
     <xsd:attribute name="fldCharType" type="ST_FldCharType" use="required"/>
     <xsd:attribute name="fldLock" type="s:ST_OnOff"/>
@@ -1573,7 +1495,7 @@
   <xsd:complexType name="CT_DocGrid">
     <xsd:attribute name="type" type="ST_DocGrid"/>
     <xsd:attribute name="linePitch" type="ST_DecimalNumber"/>
-    <xsd:attribute name="charSpace" type="ST_DecimalNumber"/>
+    <xsd:attribute name="charSpace" type="ST_DecimalNumber" use="optional" default="0"/>
   </xsd:complexType>
   <xsd:simpleType name="ST_HdrFtr">
     <xsd:restriction base="xsd:string">
@@ -1768,7 +1690,6 @@
       <xsd:element name="cr" type="CT_Empty" minOccurs="0"/>
       <xsd:element name="tab" type="CT_Empty" minOccurs="0"/>
       <xsd:element name="object" type="CT_Object"/>
-      <xsd:element name="pict" type="CT_Picture"/>
       <xsd:element name="fldChar" type="CT_FldChar"/>
       <xsd:element name="ruby" type="CT_Ruby"/>
       <xsd:element name="footnoteReference" type="CT_FtnEdnRef"/>
@@ -2286,10 +2207,8 @@
     <xsd:sequence>
       <xsd:element name="top" type="CT_Border" minOccurs="0"/>
       <xsd:element name="start" type="CT_Border" minOccurs="0"/>
-      <xsd:element name="left" type="CT_Border" minOccurs="0"/>
       <xsd:element name="bottom" type="CT_Border" minOccurs="0"/>
       <xsd:element name="end" type="CT_Border" minOccurs="0"/>
-      <xsd:element name="right" type="CT_Border" minOccurs="0"/>
       <xsd:element name="insideH" type="CT_Border" minOccurs="0"/>
       <xsd:element name="insideV" type="CT_Border" minOccurs="0"/>
       <xsd:element name="tl2br" type="CT_Border" minOccurs="0"/>
@@ -2300,10 +2219,8 @@
     <xsd:sequence>
       <xsd:element name="top" type="CT_TblWidth" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="start" type="CT_TblWidth" minOccurs="0" maxOccurs="1"/>
-      <xsd:element name="left" type="CT_TblWidth" minOccurs="0"/>
       <xsd:element name="bottom" type="CT_TblWidth" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="end" type="CT_TblWidth" minOccurs="0" maxOccurs="1"/>
-      <xsd:element name="right" type="CT_TblWidth" minOccurs="0"/>
     </xsd:sequence>
   </xsd:complexType>
   <xsd:simpleType name="ST_Merge">
@@ -2315,15 +2232,11 @@
   <xsd:complexType name="CT_VMerge">
     <xsd:attribute name="val" type="ST_Merge"/>
   </xsd:complexType>
-  <xsd:complexType name="CT_HMerge">
-    <xsd:attribute name="val" type="ST_Merge"/>
-  </xsd:complexType>
   <xsd:complexType name="CT_TcPrBase">
     <xsd:sequence>
       <xsd:element name="cnfStyle" type="CT_Cnf" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="tcW" type="CT_TblWidth" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="gridSpan" type="CT_DecimalNumber" minOccurs="0"/>
-      <xsd:element name="hMerge" type="CT_HMerge" minOccurs="0"/>
       <xsd:element name="vMerge" type="CT_VMerge" minOccurs="0"/>
       <xsd:element name="tcBorders" type="CT_TcBorders" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="shd" type="CT_Shd" minOccurs="0"/>
@@ -2361,14 +2274,7 @@
     </xsd:sequence>
     <xsd:attribute name="id" type="s:ST_String" use="optional"/>
   </xsd:complexType>
-  <xsd:simpleType name="ST_Cnf">
-    <xsd:restriction base="xsd:string">
-      <xsd:length value="12"/>
-      <xsd:pattern value="[01]*"/>
-    </xsd:restriction>
-  </xsd:simpleType>
   <xsd:complexType name="CT_Cnf">
-    <xsd:attribute name="val" type="ST_Cnf"/>
     <xsd:attribute name="firstRow" type="s:ST_OnOff"/>
     <xsd:attribute name="lastRow" type="s:ST_OnOff"/>
     <xsd:attribute name="firstColumn" type="s:ST_OnOff"/>
@@ -2459,20 +2365,16 @@
     <xsd:sequence>
       <xsd:element name="top" type="CT_TblWidth" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="start" type="CT_TblWidth" minOccurs="0" maxOccurs="1"/>
-      <xsd:element name="left" type="CT_TblWidth" minOccurs="0"/>
       <xsd:element name="bottom" type="CT_TblWidth" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="end" type="CT_TblWidth" minOccurs="0" maxOccurs="1"/>
-      <xsd:element name="right" type="CT_TblWidth" minOccurs="0"/>
     </xsd:sequence>
   </xsd:complexType>
   <xsd:complexType name="CT_TblBorders">
     <xsd:sequence>
       <xsd:element name="top" type="CT_Border" minOccurs="0"/>
       <xsd:element name="start" type="CT_Border" minOccurs="0"/>
-      <xsd:element name="left" type="CT_Border" minOccurs="0"/>
       <xsd:element name="bottom" type="CT_Border" minOccurs="0"/>
       <xsd:element name="end" type="CT_Border" minOccurs="0"/>
-      <xsd:element name="right" type="CT_Border" minOccurs="0"/>
       <xsd:element name="insideH" type="CT_Border" minOccurs="0"/>
       <xsd:element name="insideV" type="CT_Border" minOccurs="0"/>
     </xsd:sequence>
@@ -2544,7 +2446,6 @@
     <xsd:attribute name="lastColumn" type="s:ST_OnOff"/>
     <xsd:attribute name="noHBand" type="s:ST_OnOff"/>
     <xsd:attribute name="noVBand" type="s:ST_OnOff"/>
-    <xsd:attribute name="val" type="ST_ShortHexNumber"/>
   </xsd:complexType>
   <xsd:simpleType name="ST_FtnPos">
     <xsd:restriction base="xsd:string">
@@ -2728,71 +2629,13 @@
   </xsd:complexType>
   <xsd:complexType name="CT_Compat">
     <xsd:sequence>
-      <xsd:element name="useSingleBorderforContiguousCells" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="wpJustification" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="noTabHangInd" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="noLeading" type="CT_OnOff" minOccurs="0"/>
       <xsd:element name="spaceForUL" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="noColumnBalance" type="CT_OnOff" minOccurs="0"/>
       <xsd:element name="balanceSingleByteDoubleByteWidth" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="noExtraLineSpacing" type="CT_OnOff" minOccurs="0"/>
       <xsd:element name="doNotLeaveBackslashAlone" type="CT_OnOff" minOccurs="0"/>
       <xsd:element name="ulTrailSpace" type="CT_OnOff" minOccurs="0"/>
       <xsd:element name="doNotExpandShiftReturn" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="spacingInWholePoints" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="lineWrapLikeWord6" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="printBodyTextBeforeHeader" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="printColBlack" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="wpSpaceWidth" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="showBreaksInFrames" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="subFontBySize" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="suppressBottomSpacing" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="suppressTopSpacing" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="suppressSpacingAtTopOfPage" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="suppressTopSpacingWP" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="suppressSpBfAfterPgBrk" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="swapBordersFacingPages" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="convMailMergeEsc" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="truncateFontHeightsLikeWP6" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="mwSmallCaps" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="usePrinterMetrics" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="doNotSuppressParagraphBorders" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="wrapTrailSpaces" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="footnoteLayoutLikeWW8" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="shapeLayoutLikeWW8" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="alignTablesRowByRow" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="forgetLastTabAlignment" type="CT_OnOff" minOccurs="0"/>
       <xsd:element name="adjustLineHeightInTable" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="autoSpaceLikeWord95" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="noSpaceRaiseLower" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="doNotUseHTMLParagraphAutoSpacing" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="layoutRawTableWidth" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="layoutTableRowsApart" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="useWord97LineBreakRules" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="doNotBreakWrappedTables" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="doNotSnapToGridInCell" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="selectFldWithFirstOrLastChar" type="CT_OnOff" minOccurs="0"/>
       <xsd:element name="applyBreakingRules" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="doNotWrapTextWithPunct" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="doNotUseEastAsianBreakRules" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="useWord2002TableStyleRules" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="growAutofit" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="useFELayout" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="useNormalStyleForList" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="doNotUseIndentAsNumberingTabStop" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="useAltKinsokuLineBreakRules" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="allowSpaceOfSameStyleInTable" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="doNotSuppressIndentation" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="doNotAutofitConstrainedTables" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="autofitToFirstFixedWidthCell" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="underlineTabInNumList" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="displayHangulFixedWidth" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="splitPgBreakAndParaMark" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="doNotVertAlignCellWithSp" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="doNotBreakConstrainedForcedTable" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="doNotVertAlignInTxbx" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="useAnsiKerningPairs" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="cachedColBalance" type="CT_OnOff" minOccurs="0"/>
       <xsd:element name="compatSetting" type="CT_CompatSetting" minOccurs="0" maxOccurs="unbounded"
       />
     </xsd:sequence>
@@ -2886,7 +2729,6 @@
   <xsd:complexType name="CT_WriteProtection">
     <xsd:attribute name="recommended" type="s:ST_OnOff" use="optional"/>
     <xsd:attributeGroup ref="AG_Password"/>
-    <xsd:attributeGroup ref="AG_TransitionalPassword"/>
   </xsd:complexType>
   <xsd:complexType name="CT_Settings">
     <xsd:sequence>
@@ -2968,7 +2810,6 @@
       <xsd:element name="showXMLTags" type="CT_OnOff" minOccurs="0"/>
       <xsd:element name="alwaysMergeEmptyNamespace" type="CT_OnOff" minOccurs="0"/>
       <xsd:element name="updateFields" type="CT_OnOff" minOccurs="0"/>
-      <xsd:element name="hdrShapeDefaults" type="CT_ShapeDefaults" minOccurs="0"/>
       <xsd:element name="footnotePr" type="CT_FtnDocProps" minOccurs="0"/>
       <xsd:element name="endnotePr" type="CT_EdnDocProps" minOccurs="0"/>
       <xsd:element name="compat" type="CT_Compat" minOccurs="0"/>
@@ -2985,7 +2826,6 @@
       <xsd:element name="readModeInkLockDown" type="CT_ReadingModeInkLockDown" minOccurs="0"/>
       <xsd:element name="smartTagType" type="CT_SmartTagType" minOccurs="0" maxOccurs="unbounded"/>
       <xsd:element ref="sl:schemaLibrary" minOccurs="0" maxOccurs="1"/>
-      <xsd:element name="shapeDefaults" type="CT_ShapeDefaults" minOccurs="0"/>
       <xsd:element name="doNotEmbedSmartTags" type="CT_OnOff" minOccurs="0"/>
       <xsd:element name="decimalSymbol" type="CT_String" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="listSeparator" type="CT_String" minOccurs="0" maxOccurs="1"/>
@@ -3010,7 +2850,6 @@
     <xsd:attribute name="top3HeadingStyles" type="s:ST_OnOff"/>
     <xsd:attribute name="visibleStyles" type="s:ST_OnOff"/>
     <xsd:attribute name="alternateStyleNames" type="s:ST_OnOff"/>
-    <xsd:attribute name="val" type="ST_ShortHexNumber"/>
   </xsd:complexType>
   <xsd:simpleType name="ST_StyleSort">
     <xsd:restriction base="xsd:string">
@@ -3020,12 +2859,6 @@
       <xsd:enumeration value="font"/>
       <xsd:enumeration value="basedOn"/>
       <xsd:enumeration value="type"/>
-      <xsd:enumeration value="0000"/>
-      <xsd:enumeration value="0001"/>
-      <xsd:enumeration value="0002"/>
-      <xsd:enumeration value="0003"/>
-      <xsd:enumeration value="0004"/>
-      <xsd:enumeration value="0005"/>
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:complexType name="CT_WebSettings">
@@ -3034,7 +2867,6 @@
       <xsd:element name="divs" type="CT_Divs" minOccurs="0"/>
       <xsd:element name="encoding" type="CT_String" minOccurs="0"/>
       <xsd:element name="optimizeForBrowser" type="CT_OptimizeForBrowser" minOccurs="0"/>
-      <xsd:element name="relyOnVML" type="CT_OnOff" minOccurs="0"/>
       <xsd:element name="allowPNG" type="CT_OnOff" minOccurs="0"/>
       <xsd:element name="doNotRelyOnCSS" type="CT_OnOff" minOccurs="0"/>
       <xsd:element name="doNotSaveAsSingleFile" type="CT_OnOff" minOccurs="0"/>
@@ -3108,7 +2940,6 @@
   </xsd:complexType>
   <xsd:complexType name="CT_NumPicBullet">
     <xsd:choice>
-      <xsd:element name="pict" type="CT_Picture"/>
       <xsd:element name="drawing" type="CT_Drawing"/>
     </xsd:choice>
     <xsd:attribute name="numPicBulletId" type="ST_DecimalNumber" use="required"/>
@@ -3127,11 +2958,6 @@
     <xsd:attribute name="val" type="s:ST_String" use="optional"/>
     <xsd:attribute name="null" type="s:ST_OnOff" use="optional"/>
   </xsd:complexType>
-  <xsd:complexType name="CT_LvlLegacy">
-    <xsd:attribute name="legacy" type="s:ST_OnOff" use="optional"/>
-    <xsd:attribute name="legacySpace" type="s:ST_TwipsMeasure" use="optional"/>
-    <xsd:attribute name="legacyIndent" type="ST_SignedTwipsMeasure" use="optional"/>
-  </xsd:complexType>
   <xsd:complexType name="CT_Lvl">
     <xsd:sequence>
       <xsd:element name="start" type="CT_DecimalNumber" minOccurs="0"/>
@@ -3142,7 +2968,6 @@
       <xsd:element name="suff" type="CT_LevelSuffix" minOccurs="0"/>
       <xsd:element name="lvlText" type="CT_LevelText" minOccurs="0"/>
       <xsd:element name="lvlPicBulletId" type="CT_DecimalNumber" minOccurs="0"/>
-      <xsd:element name="legacy" type="CT_LvlLegacy" minOccurs="0"/>
       <xsd:element name="lvlJc" type="CT_Jc" minOccurs="0"/>
       <xsd:element name="pPr" type="CT_PPrGeneral" minOccurs="0"/>
       <xsd:element name="rPr" type="CT_RPr" minOccurs="0"/>
@@ -3375,10 +3200,6 @@
       <xsd:element name="div" type="CT_Div"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:complexType name="CT_TxbxContent">
-    <xsd:group ref="EG_BlockLevelElts" minOccurs="1" maxOccurs="unbounded"/>
-  </xsd:complexType>
-  <xsd:element name="txbxContent" type="CT_TxbxContent"/>
   <xsd:group name="EG_MathContent">
     <xsd:choice>
       <xsd:element ref="m:oMathPara"/>
@@ -3414,12 +3235,6 @@
       <xsd:group ref="EG_BlockLevelElts" minOccurs="0" maxOccurs="unbounded"/>
       <xsd:element name="sectPr" minOccurs="0" maxOccurs="1" type="CT_SectPr"/>
     </xsd:sequence>
-  </xsd:complexType>
-  <xsd:complexType name="CT_ShapeDefaults">
-    <xsd:choice maxOccurs="unbounded">
-      <xsd:any processContents="lax" namespace="urn:schemas-microsoft-com:office:office"
-        minOccurs="0" maxOccurs="unbounded"/>
-    </xsd:choice>
   </xsd:complexType>
   <xsd:complexType name="CT_Comments">
     <xsd:sequence>
@@ -3628,7 +3443,6 @@
           <xsd:element name="body" type="CT_Body" minOccurs="0" maxOccurs="1"/>
         </xsd:sequence>
         <xsd:attribute name="conformance" type="s:ST_ConformanceClass"/>
-        <xsd:attribute ref="mc:Ignorable" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

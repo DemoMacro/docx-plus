@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-  xmlns="http://schemas.openxmlformats.org/officeDocument/2006/math"
-  xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math"
-  xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
-  xmlns:s="http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes"
-  elementFormDefault="qualified" attributeFormDefault="qualified" blockDefault="#all"
-  targetNamespace="http://schemas.openxmlformats.org/officeDocument/2006/math">
-  <xsd:import namespace="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+  xmlns="http://purl.oclc.org/ooxml/officeDocument/math"
+  xmlns:m="http://purl.oclc.org/ooxml/officeDocument/math"
+  xmlns:w="http://purl.oclc.org/ooxml/wordprocessingml/main"
+  xmlns:s="http://purl.oclc.org/ooxml/officeDocument/sharedTypes" elementFormDefault="qualified"
+  attributeFormDefault="qualified" blockDefault="#all"
+  targetNamespace="http://purl.oclc.org/ooxml/officeDocument/math">
+  <xsd:import namespace="http://purl.oclc.org/ooxml/wordprocessingml/main"
     schemaLocation="wml.xsd"/>
-  <xsd:import namespace="http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes"
+  <xsd:import namespace="http://purl.oclc.org/ooxml/officeDocument/sharedTypes"
     schemaLocation="shared-commonSimpleTypes.xsd"/>
-  <xsd:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="xml.xsd"/>
+  <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
   <xsd:simpleType name="ST_Integer255">
     <xsd:restriction base="xsd:integer">
       <xsd:minInclusive value="1"/>

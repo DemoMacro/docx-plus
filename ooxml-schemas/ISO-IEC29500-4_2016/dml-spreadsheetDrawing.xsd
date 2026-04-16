@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-  xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
-  xmlns="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"
-  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
-  targetNamespace="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"
+  xmlns:a="http://purl.oclc.org/ooxml/drawingml/main"
+  xmlns="http://purl.oclc.org/ooxml/drawingml/spreadsheetDrawing"
+  xmlns:r="http://purl.oclc.org/ooxml/officeDocument/relationships"
+  targetNamespace="http://purl.oclc.org/ooxml/drawingml/spreadsheetDrawing"
   elementFormDefault="qualified">
-  <xsd:import namespace="http://schemas.openxmlformats.org/drawingml/2006/main"
-    schemaLocation="dml-main.xsd"/>
+  <xsd:import namespace="http://purl.oclc.org/ooxml/drawingml/main" schemaLocation="dml-main.xsd"/>
   <xsd:import schemaLocation="shared-relationshipReference.xsd"
-    namespace="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>
+    namespace="http://purl.oclc.org/ooxml/officeDocument/relationships"/>
   <xsd:element name="from" type="CT_Marker"/>
   <xsd:element name="to" type="CT_Marker"/>
   <xsd:complexType name="CT_AnchorClientData">

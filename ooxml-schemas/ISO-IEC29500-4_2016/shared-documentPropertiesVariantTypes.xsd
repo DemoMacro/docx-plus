@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-  xmlns="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"
-  xmlns:s="http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes"
-  targetNamespace="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"
-  blockDefault="#all" elementFormDefault="qualified">
-  <xsd:import namespace="http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes"
+  xmlns="http://purl.oclc.org/ooxml/officeDocument/docPropsVTypes"
+  xmlns:s="http://purl.oclc.org/ooxml/officeDocument/sharedTypes"
+  targetNamespace="http://purl.oclc.org/ooxml/officeDocument/docPropsVTypes" blockDefault="#all"
+  elementFormDefault="qualified">
+  <xsd:import namespace="http://purl.oclc.org/ooxml/officeDocument/sharedTypes"
     schemaLocation="shared-commonSimpleTypes.xsd"/>
   <xsd:simpleType name="ST_VectorBaseType">
     <xsd:restriction base="xsd:string">

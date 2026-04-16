@@ -1,20 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-  xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
-  xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
-  xmlns:dpct="http://schemas.openxmlformats.org/drawingml/2006/picture"
-  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
-  xmlns="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
-  targetNamespace="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+  xmlns:a="http://purl.oclc.org/ooxml/drawingml/main"
+  xmlns:w="http://purl.oclc.org/ooxml/wordprocessingml/main"
+  xmlns:dpct="http://purl.oclc.org/ooxml/drawingml/picture"
+  xmlns:r="http://purl.oclc.org/ooxml/officeDocument/relationships"
+  xmlns="http://purl.oclc.org/ooxml/drawingml/wordprocessingDrawing"
+  targetNamespace="http://purl.oclc.org/ooxml/drawingml/wordprocessingDrawing"
   elementFormDefault="qualified">
-  <xsd:import namespace="http://schemas.openxmlformats.org/drawingml/2006/main"
-    schemaLocation="dml-main.xsd"/>
-  <xsd:import schemaLocation="wml.xsd"
-    namespace="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>
-  <xsd:import namespace="http://schemas.openxmlformats.org/drawingml/2006/picture"
-    schemaLocation="dml-picture.xsd"/>
-  <xsd:import namespace="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
-    schemaLocation="shared-relationshipReference.xsd"/>
+  <xsd:import namespace="http://purl.oclc.org/ooxml/drawingml/main" schemaLocation="dml-main.xsd"/>
+  <xsd:import schemaLocation="wml.xsd" namespace="http://purl.oclc.org/ooxml/wordprocessingml/main"/>
+  <xsd:import namespace="http://purl.oclc.org/ooxml/drawingml/picture" schemaLocation="dml-picture.xsd"/>
+  <xsd:import namespace="http://purl.oclc.org/ooxml/officeDocument/relationships" schemaLocation="shared-relationshipReference.xsd"/>
   <xsd:complexType name="CT_EffectExtent">
     <xsd:attribute name="l" type="a:ST_Coordinate" use="required"/>
     <xsd:attribute name="t" type="a:ST_Coordinate" use="required"/>

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-  xmlns="http://schemas.openxmlformats.org/officeDocument/2006/customXml"
-  xmlns:s="http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes"
-  targetNamespace="http://schemas.openxmlformats.org/officeDocument/2006/customXml"
+  xmlns="http://purl.oclc.org/ooxml/officeDocument/customXml"
+  xmlns:s="http://purl.oclc.org/ooxml/officeDocument/sharedTypes"
+  targetNamespace="http://purl.oclc.org/ooxml/officeDocument/customXml"
   elementFormDefault="qualified" attributeFormDefault="qualified" blockDefault="#all">
-  <xsd:import namespace="http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes"
+  <xsd:import namespace="http://purl.oclc.org/ooxml/officeDocument/sharedTypes"
     schemaLocation="shared-commonSimpleTypes.xsd"/>
   <xsd:complexType name="CT_DatastoreSchemaRef">
     <xsd:attribute name="uri" type="xsd:string" use="required"/>

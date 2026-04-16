@@ -1,17 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-  xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
-  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
-  xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"
-  xmlns:s="http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes"
-  targetNamespace="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
-  elementFormDefault="qualified">
-  <xsd:import namespace="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+  xmlns="http://purl.oclc.org/ooxml/spreadsheetml/main"
+  xmlns:r="http://purl.oclc.org/ooxml/officeDocument/relationships"
+  xmlns:xdr="http://purl.oclc.org/ooxml/drawingml/spreadsheetDrawing"
+  xmlns:s="http://purl.oclc.org/ooxml/officeDocument/sharedTypes"
+  targetNamespace="http://purl.oclc.org/ooxml/spreadsheetml/main" elementFormDefault="qualified">
+  <xsd:import namespace="http://purl.oclc.org/ooxml/officeDocument/relationships"
     schemaLocation="shared-relationshipReference.xsd"/>
-  <xsd:import namespace="http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes"
+  <xsd:import namespace="http://purl.oclc.org/ooxml/officeDocument/sharedTypes"
     schemaLocation="shared-commonSimpleTypes.xsd"/>
-  <xsd:import 
-    namespace="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"
+  <xsd:import namespace="http://purl.oclc.org/ooxml/drawingml/spreadsheetDrawing"
     schemaLocation="dml-spreadsheetDrawing.xsd"/>
   <xsd:complexType name="CT_AutoFilter">
     <xsd:sequence>
@@ -85,7 +83,6 @@
     <xsd:attribute name="type" type="ST_DynamicFilterType" use="required"/>
     <xsd:attribute name="val" type="xsd:double" use="optional"/>
     <xsd:attribute name="valIso" type="xsd:dateTime" use="optional"/>
-    <xsd:attribute name="maxVal" type="xsd:double" use="optional"/>
     <xsd:attribute name="maxValIso" type="xsd:dateTime" use="optional"/>
   </xsd:complexType>
   <xsd:simpleType name="ST_DynamicFilterType">
@@ -221,11 +218,6 @@
       <xsd:length value="4"/>
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:simpleType name="ST_UnsignedShortHex">
-    <xsd:restriction base="xsd:hexBinary">
-      <xsd:length value="2"/>
-    </xsd:restriction>
-  </xsd:simpleType>
   <xsd:complexType name="CT_XStringElement">
     <xsd:attribute name="v" type="s:ST_Xstring" use="required"/>
   </xsd:complexType>
@@ -261,8 +253,7 @@
     </xsd:sequence>
   </xsd:complexType>
   <xsd:complexType name="CT_CalcCell">
-    <xsd:attribute name="r" type="ST_CellRef" use="optional"/>
-    <xsd:attribute name="ref" type="ST_CellRef" use="optional"/>
+    <xsd:attribute name="r" type="ST_CellRef" use="required"/>
     <xsd:attribute name="i" type="xsd:int" use="optional" default="0"/>
     <xsd:attribute name="s" type="xsd:boolean" use="optional" default="false"/>
     <xsd:attribute name="l" type="xsd:boolean" use="optional" default="false"/>
@@ -499,7 +490,6 @@
     </xsd:sequence>
     <xsd:attribute name="prompt" use="optional" type="xsd:boolean" default="true"/>
     <xsd:attribute name="fileType" use="optional" type="ST_FileType" default="win"/>
-    <xsd:attribute name="codePage" use="optional" type="xsd:unsignedInt" default="1252"/>
     <xsd:attribute name="characterSet" use="optional" type="xsd:string"/>
     <xsd:attribute name="firstRow" use="optional" type="xsd:unsignedInt" default="1"/>
     <xsd:attribute name="sourceFile" use="optional" type="s:ST_Xstring" default=""/>
@@ -578,7 +568,6 @@
     <xsd:attribute name="optimizeMemory" type="xsd:boolean" use="optional" default="false"/>
     <xsd:attribute name="enableRefresh" type="xsd:boolean" use="optional" default="true"/>
     <xsd:attribute name="refreshedBy" type="s:ST_Xstring" use="optional"/>
-    <xsd:attribute name="refreshedDate" type="xsd:double" use="optional"/>
     <xsd:attribute name="refreshedDateIso" type="xsd:dateTime" use="optional"/>
     <xsd:attribute name="backgroundQuery" type="xsd:boolean" default="false"/>
     <xsd:attribute name="missingItemsLimit" type="xsd:unsignedInt" use="optional"/>
@@ -1667,7 +1656,6 @@
       <xsd:enumeration value="origin"/>
       <xsd:enumeration value="button"/>
       <xsd:enumeration value="topEnd"/>
-      <xsd:enumeration value="topRight"/>
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:complexType name="CT_PivotAreaReferences">
@@ -2139,8 +2127,6 @@
       <xsd:element name="colBreaks" type="CT_PageBreak" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="customProperties" type="CT_CustomProperties" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="drawing" type="CT_Drawing" minOccurs="0" maxOccurs="1"/>
-      <xsd:element name="legacyDrawing" type="CT_LegacyDrawing" minOccurs="0" maxOccurs="1"/>
-      <xsd:element name="legacyDrawingHF" type="CT_LegacyDrawing" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="drawingHF" type="CT_DrawingHF" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="picture" type="CT_SheetBackgroundPicture" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="oleObjects" type="CT_OleObjects" minOccurs="0" maxOccurs="1"/>
@@ -2159,8 +2145,6 @@
       <xsd:element name="pageSetup" minOccurs="0" type="CT_PageSetup"/>
       <xsd:element name="headerFooter" minOccurs="0" type="CT_HeaderFooter"/>
       <xsd:element name="drawing" minOccurs="0" type="CT_Drawing"/>
-      <xsd:element name="legacyDrawing" minOccurs="0" type="CT_LegacyDrawing"/>
-      <xsd:element name="legacyDrawingHF" type="CT_LegacyDrawing" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="drawingHF" type="CT_DrawingHF" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="oleObjects" type="CT_OleObjects" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="controls" type="CT_Controls" minOccurs="0" maxOccurs="1"/>
@@ -2200,8 +2184,6 @@
       <xsd:element name="ignoredErrors" type="CT_IgnoredErrors" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="smartTags" type="CT_SmartTags" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="drawing" type="CT_Drawing" minOccurs="0" maxOccurs="1"/>
-      <xsd:element name="legacyDrawing" type="CT_LegacyDrawing" minOccurs="0" maxOccurs="1"/>
-      <xsd:element name="legacyDrawingHF" type="CT_LegacyDrawing" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="drawingHF" type="CT_DrawingHF" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="picture" type="CT_SheetBackgroundPicture" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="oleObjects" type="CT_OleObjects" minOccurs="0" maxOccurs="1"/>
@@ -2288,6 +2270,7 @@
   <xsd:simpleType name="ST_CellType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="b"/>
+      <xsd:enumeration value="d"/>
       <xsd:enumeration value="n"/>
       <xsd:enumeration value="e"/>
       <xsd:enumeration value="s"/>
@@ -2436,7 +2419,6 @@
     </xsd:sequence>
     <xsd:attribute name="function" type="ST_DataConsolidateFunction" use="optional" default="sum"/>
     <xsd:attribute name="startLabels" type="xsd:boolean" use="optional" default="false"/>
-    <xsd:attribute name="leftLabels" type="xsd:boolean" use="optional" default="false"/>
     <xsd:attribute name="topLabels" type="xsd:boolean" use="optional" default="false"/>
     <xsd:attribute name="link" type="xsd:boolean" use="optional" default="false"/>
   </xsd:complexType>
@@ -2502,9 +2484,6 @@
     <xsd:attribute name="val" type="s:ST_Xstring" use="required"/>
   </xsd:complexType>
   <xsd:complexType name="CT_Drawing">
-    <xsd:attribute ref="r:id" use="required"/>
-  </xsd:complexType>
-  <xsd:complexType name="CT_LegacyDrawing">
     <xsd:attribute ref="r:id" use="required"/>
   </xsd:complexType>
   <xsd:complexType name="CT_DrawingHF">
@@ -2885,7 +2864,6 @@
     <xsd:attribute name="sqref" type="ST_Sqref" use="optional"/>
   </xsd:complexType>
   <xsd:complexType name="CT_SheetProtection">
-    <xsd:attribute name="password" type="ST_UnsignedShortHex" use="optional"/>
     <xsd:attribute name="algorithmName" type="s:ST_Xstring" use="optional"/>
     <xsd:attribute name="hashValue" type="xsd:base64Binary" use="optional"/>
     <xsd:attribute name="saltValue" type="xsd:base64Binary" use="optional"/>
@@ -2917,10 +2895,8 @@
     <xsd:sequence>
       <xsd:element name="securityDescriptor" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
     </xsd:sequence>
-    <xsd:attribute name="password" type="ST_UnsignedShortHex" use="optional"/>
     <xsd:attribute name="sqref" type="ST_Sqref" use="required"/>
     <xsd:attribute name="name" type="s:ST_Xstring" use="required"/>
-    <xsd:attribute name="securityDescriptor" type="xsd:string" use="optional"/>
     <xsd:attribute name="algorithmName" type="s:ST_Xstring" use="optional"/>
     <xsd:attribute name="hashValue" type="xsd:base64Binary" use="optional"/>
     <xsd:attribute name="saltValue" type="xsd:base64Binary" use="optional"/>
@@ -2963,8 +2939,6 @@
       <xsd:element name="pageSetup" type="CT_CsPageSetup" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="headerFooter" minOccurs="0" type="CT_HeaderFooter"/>
       <xsd:element name="drawing" type="CT_Drawing" minOccurs="1" maxOccurs="1"/>
-      <xsd:element name="legacyDrawing" type="CT_LegacyDrawing" minOccurs="0" maxOccurs="1"/>
-      <xsd:element name="legacyDrawingHF" type="CT_LegacyDrawing" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="drawingHF" type="CT_DrawingHF" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="picture" type="CT_SheetBackgroundPicture" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="webPublishItems" type="CT_WebPublishItems" minOccurs="0" maxOccurs="1"/>
@@ -2994,7 +2968,6 @@
     <xsd:attribute name="zoomToFit" type="xsd:boolean" use="optional" default="false"/>
   </xsd:complexType>
   <xsd:complexType name="CT_ChartsheetProtection">
-    <xsd:attribute name="password" type="ST_UnsignedShortHex" use="optional"/>
     <xsd:attribute name="algorithmName" type="s:ST_Xstring" use="optional"/>
     <xsd:attribute name="hashValue" type="xsd:base64Binary" use="optional"/>
     <xsd:attribute name="saltValue" type="xsd:base64Binary" use="optional"/>
@@ -3452,8 +3425,6 @@
     <xsd:sequence>
       <xsd:element name="start" type="CT_BorderPr" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="end" type="CT_BorderPr" minOccurs="0" maxOccurs="1"/>
-      <xsd:element name="left" type="CT_BorderPr" minOccurs="0"/>
-      <xsd:element name="right" type="CT_BorderPr" minOccurs="0"/>
       <xsd:element name="top" type="CT_BorderPr" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="bottom" type="CT_BorderPr" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="diagonal" type="CT_BorderPr" minOccurs="0" maxOccurs="1"/>
@@ -3778,6 +3749,15 @@
       <xsd:enumeration value="none"/>
     </xsd:restriction>
   </xsd:simpleType>
+  <xsd:complexType name="CT_FontFamily">
+    <xsd:attribute name="val" type="ST_FontFamily" use="required"/>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_FontFamily">
+    <xsd:restriction base="xsd:integer">
+      <xsd:minInclusive value="0"/>
+      <xsd:maxInclusive value="14"/>
+    </xsd:restriction>
+  </xsd:simpleType>
   <xsd:complexType name="CT_Font">
     <xsd:choice maxOccurs="unbounded">
       <xsd:element name="name" type="CT_FontName" minOccurs="0" maxOccurs="1"/>
@@ -3797,15 +3777,6 @@
       <xsd:element name="scheme" type="CT_FontScheme" minOccurs="0" maxOccurs="1"/>
     </xsd:choice>
   </xsd:complexType>
-  <xsd:complexType name="CT_FontFamily">
-    <xsd:attribute name="val" type="ST_FontFamily" use="required"/>
-  </xsd:complexType>
-  <xsd:simpleType name="ST_FontFamily">
-    <xsd:restriction base="xsd:integer">
-      <xsd:minInclusive value="0"/>
-      <xsd:maxInclusive value="14"/>
-    </xsd:restriction>
-  </xsd:simpleType>
   <xsd:attributeGroup name="AG_AutoFormat">
     <xsd:attribute name="autoFormatId" type="xsd:unsignedInt"/>
     <xsd:attribute name="applyNumberFormats" type="xsd:boolean"/>
@@ -4359,7 +4330,6 @@
   <xsd:complexType name="CT_FileSharing">
     <xsd:attribute name="readOnlyRecommended" type="xsd:boolean" use="optional" default="false"/>
     <xsd:attribute name="userName" type="s:ST_Xstring"/>
-    <xsd:attribute name="reservationPassword" type="ST_UnsignedShortHex"/>
     <xsd:attribute name="algorithmName" type="s:ST_Xstring" use="optional"/>
     <xsd:attribute name="hashValue" type="xsd:base64Binary" use="optional"/>
     <xsd:attribute name="saltValue" type="xsd:base64Binary" use="optional"/>
@@ -4369,10 +4339,6 @@
     <xsd:attribute name="ref" type="ST_Ref" use="required"/>
   </xsd:complexType>
   <xsd:complexType name="CT_WorkbookProtection">
-    <xsd:attribute name="workbookPassword" type="ST_UnsignedShortHex" use="optional"/>
-    <xsd:attribute name="workbookPasswordCharacterSet" type="xsd:string" use="optional"/>
-    <xsd:attribute name="revisionsPassword" type="ST_UnsignedShortHex" use="optional"/>
-    <xsd:attribute name="revisionsPasswordCharacterSet" type="xsd:string" use="optional"/>
     <xsd:attribute name="lockStructure" type="xsd:boolean" use="optional" default="false"/>
     <xsd:attribute name="lockWindows" type="xsd:boolean" use="optional" default="false"/>
     <xsd:attribute name="lockRevision" type="xsd:boolean" use="optional" default="false"/>
@@ -4394,7 +4360,6 @@
     <xsd:attribute name="targetScreenSize" type="ST_TargetScreenSize" use="optional"
       default="800x600"/>
     <xsd:attribute name="dpi" type="xsd:unsignedInt" use="optional" default="96"/>
-    <xsd:attribute name="codePage" type="xsd:unsignedInt" use="optional"/>
     <xsd:attribute name="characterSet" type="xsd:string" use="optional"/>
   </xsd:complexType>
   <xsd:simpleType name="ST_TargetScreenSize">

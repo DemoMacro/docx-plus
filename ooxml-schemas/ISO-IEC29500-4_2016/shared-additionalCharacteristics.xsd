@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-  xmlns="http://schemas.openxmlformats.org/officeDocument/2006/characteristics"
-  targetNamespace="http://schemas.openxmlformats.org/officeDocument/2006/characteristics"
+  xmlns="http://purl.oclc.org/ooxml/officeDocument/characteristics"
+  targetNamespace="http://purl.oclc.org/ooxml/officeDocument/characteristics"
   elementFormDefault="qualified">
   <xsd:complexType name="CT_AdditionalCharacteristics">
     <xsd:sequence>
