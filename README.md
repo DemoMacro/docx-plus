@@ -29,6 +29,9 @@ Easily generate and modify .docx files with JS/TS. Works for Node and on the Bro
 | CT_PPrBase          | Missing 9 paragraph props                                                  | **Complete** (`suppressAutoHyphens`, `adjustRightInd`, `snapToGrid`, `mirrorIndents`, East Asian typography, `textAlignment`, `textboxTightWrap`) |
 | CT_SectPr           | Missing `noEndnote`/`bidi`/`rtlGutter`/`paperSrc`/`footnotePr`/`endnotePr` | **Complete** (all spec-defined elements)                                                                                                          |
 | EG_RPrBase          | Missing `eastAsianLayout`                                                  | **Complete** (`eastAsianLayout` with `combine`, `combineBrackets`, `vert`, `vertCompress`)                                                        |
+| DrawingML colors    | RGB + scheme only                                                          | **Complete** (`EG_ColorChoice`: RGB, scheme, HSL, system, preset + `EG_ColorTransform` with 29 transforms)                                        |
+| DrawingML fills     | Solid fill only                                                            | **Complete** (`solidFill`, `noFill`, `gradFill` with linear/path gradient + color stops)                                                          |
+| DrawingML outline   | Basic line (width, cap, fill)                                              | **Complete** (`a:ln` with `prstDash`, `lineJoin`, compound line, pen alignment, all fill types)                                                   |
 
 ## Installation
 

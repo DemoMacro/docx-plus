@@ -27,7 +27,7 @@ describe("Inline", () => {
                     },
                     type: "png",
                 },
-                outline: { solidFillType: "rgb", type: "solidFill", value: "FFFFFF" },
+                outline: { type: "solidFill", color: { value: "FFFFFF" } },
                 transform: {
                     emus: {
                         x: 100,

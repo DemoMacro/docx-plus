@@ -2,16 +2,17 @@
  * Shape properties for DrawingML pictures.
  *
  * This module provides the shape properties element which defines visual
- * characteristics of a picture including transformation, geometry, and outline.
+ * characteristics of a picture including transformation, geometry, fill, and outline.
  *
- * Reference: http://officeopenxml.com/drwSp-SpPr.php
+ * Reference: ISO/IEC 29500-4, dml-main.xsd, CT_ShapeProperties
  *
  * @module
  */
-// http://officeopenxml.com/drwSp-SpPr.php
 import type { IMediaDataTransformation } from "@file/media";
 import { XmlComponent } from "@file/xml-components";
 
+import { createGradientFill } from "./fill/gradient-fill";
+import type { IGradientFillOptions } from "./fill/gradient-fill";
 import { Form } from "./form";
 import { createNoFill } from "./outline/no-fill";
 import { createOutline } from "./outline/outline";
@@ -26,9 +27,7 @@ import { ShapePropertiesAttributes } from "./shape-properties-attributes";
  *
  * This element defines the visual formatting of a picture, including
  * its transform (size, position, rotation, flip), geometry preset,
- * and outline properties.
- *
- * Reference: http://officeopenxml.com/drwSp-SpPr.php
+ * fill, and outline properties.
  *
  * ## XSD Schema
  * ```xml
@@ -39,9 +38,6 @@ import { ShapePropertiesAttributes } from "./shape-properties-attributes";
  *     <xsd:group ref="EG_FillProperties" minOccurs="0"/>
  *     <xsd:element name="ln" type="CT_LineProperties" minOccurs="0"/>
  *     <xsd:group ref="EG_EffectProperties" minOccurs="0"/>
- *     <xsd:element name="scene3d" type="CT_Scene3D" minOccurs="0"/>
- *     <xsd:element name="sp3d" type="CT_Shape3D" minOccurs="0"/>
- *     <xsd:element name="extLst" type="CT_OfficeArtExtensionList" minOccurs="0"/>
  *   </xsd:sequence>
  *   <xsd:attribute name="bwMode" type="ST_BlackWhiteMode" use="optional"/>
  * </xsd:complexType>
@@ -50,17 +46,9 @@ import { ShapePropertiesAttributes } from "./shape-properties-attributes";
  * @example
  * ```typescript
  * const shapeProps = new ShapeProperties({
- *   transform: {
- *     emus: { x: 914400, y: 914400 },
- *     flip: { horizontal: false, vertical: false },
- *     rotation: 0
- *   },
- *   outline: {
- *     width: 9525,
- *     type: "solidFill",
- *     solidFillType: "rgb",
- *     value: "FF0000"
- *   }
+ *   element: "pic",
+ *   transform: { emus: { x: 914400, y: 914400 } },
+ *   solidFill: { color: { value: "FF0000" } },
  * });
  * ```
  */
@@ -69,6 +57,8 @@ export class ShapeProperties extends XmlComponent {
 
     public constructor({
         element,
+        gradientFill,
+        noFill,
         outline,
         solidFill,
         transform,
@@ -76,6 +66,8 @@ export class ShapeProperties extends XmlComponent {
         readonly element: string;
         readonly outline?: OutlineOptions;
         readonly solidFill?: SolidFillOptions;
+        readonly gradientFill?: IGradientFillOptions;
+        readonly noFill?: boolean;
         readonly transform: IMediaDataTransformation;
     }) {
         super(`${element}:spPr`);
@@ -91,13 +83,19 @@ export class ShapeProperties extends XmlComponent {
         this.root.push(this.form);
         this.root.push(new PresetGeometry());
 
-        if (outline) {
+        if (noFill) {
             this.root.push(createNoFill());
-            this.root.push(createOutline(outline));
+        } else if (solidFill) {
+            this.root.push(createSolidFill(solidFill));
+        } else if (gradientFill) {
+            this.root.push(createGradientFill(gradientFill));
+        } else if (outline) {
+            // Default to no fill when outline is specified without explicit fill
+            this.root.push(createNoFill());
         }
 
-        if (solidFill) {
-            this.root.push(createSolidFill(solidFill));
+        if (outline) {
+            this.root.push(createOutline(outline));
         }
     }
 }

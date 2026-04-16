@@ -21,7 +21,6 @@ describe("WpsShapeRun", () => {
                     zIndex: 10,
                 },
                 solidFill: {
-                    type: "rgb",
                     value: "FF0000",
                 },
                 transformation: {

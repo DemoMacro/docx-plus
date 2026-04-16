@@ -2,9 +2,9 @@
  * Outline (line) properties for DrawingML shapes.
  *
  * This module provides support for configuring outline properties including
- * width, cap style, compound line types, and fill properties.
+ * width, cap style, compound line types, fill properties, dash, and join.
  *
- * Reference: http://officeopenxml.com/drwSp-outline.php
+ * Reference: ISO/IEC 29500-4, dml-main.xsd, CT_LineProperties
  *
  * @module
  */
@@ -12,10 +12,10 @@ import { BuilderElement } from "@file/xml-components";
 import type { XmlComponent } from "@file/xml-components";
 
 import { createNoFill } from "./no-fill";
-import type { SchemeColor } from "./scheme-color";
 import { createSolidFill } from "./solid-fill";
+import type { SolidFillOptions } from "./solid-fill";
 
-// <xsd:complexType name="CT_TextOutlineEffect">
+// <xsd:complexType name="CT_LineProperties">
 //     <xsd:sequence>
 //         <xsd:group ref="EG_FillProperties" minOccurs="0"/>
 //         <xsd:group ref="EG_LineDashProperties" minOccurs="0"/>
@@ -51,11 +51,11 @@ export const LineCap = {
 
 // <xsd:simpleType name="ST_CompoundLine">
 //     <xsd:restriction base="xsd:string">
-//         <xsd:enumeration value="sng"/>
-//         <xsd:enumeration value="dbl"/>
-//         <xsd:enumeration value="thickThin"/>
-//         <xsd:enumeration value="thinThick"/>
-//         <xsd:enumeration value="tri"/>
+//     <xsd:enumeration value="sng"/>
+//     <xsd:enumeration value="dbl"/>
+//     <xsd:enumeration value="thickThin"/>
+//     <xsd:enumeration value="thinThick"/>
+//     <xsd:enumeration value="tri"/>
 //     </xsd:restriction>
 // </xsd:simpleType>
 
@@ -79,8 +79,8 @@ export const CompoundLine = {
 
 // <xsd:simpleType name="ST_PenAlignment">
 //     <xsd:restriction base="xsd:string">
-//         <xsd:enumeration value="ctr"/>
-//         <xsd:enumeration value="in"/>
+//     <xsd:enumeration value="ctr"/>
+//     <xsd:enumeration value="in"/>
 //     </xsd:restriction>
 // </xsd:simpleType>
 
@@ -97,6 +97,51 @@ export const PenAlignment = {
 } as const;
 
 /**
+ * Preset dash styles for outlines.
+ *
+ * ## XSD Schema
+ * ```xml
+ * <xsd:simpleType name="ST_PresetLineDashVal">
+ *   <xsd:restriction base="xsd:token">
+ *     <xsd:enumeration value="solid"/>
+ *     <xsd:enumeration value="dot"/>
+ *     <xsd:enumeration value="dash"/>
+ *     <xsd:enumeration value="lgDash"/>
+ *     <xsd:enumeration value="dashDot"/>
+ *     <xsd:enumeration value="lgDashDot"/>
+ *     <xsd:enumeration value="lgDashDotDot"/>
+ *     <xsd:enumeration value="sysDash"/>
+ *     <xsd:enumeration value="sysDot"/>
+ *     <xsd:enumeration value="sysDashDot"/>
+ *     <xsd:enumeration value="sysDashDotDot"/>
+ *   </xsd:restriction>
+ * </xsd:simpleType>
+ * ```
+ */
+export const PresetDash = {
+    SOLID: "solid",
+    DOT: "dot",
+    DASH: "dash",
+    LG_DASH: "lgDash",
+    DASH_DOT: "dashDot",
+    LG_DASH_DOT: "lgDashDot",
+    LG_DASH_DOT_DOT: "lgDashDotDot",
+    SYS_DASH: "sysDash",
+    SYS_DOT: "sysDot",
+    SYS_DASH_DOT: "sysDashDot",
+    SYS_DASH_DOT_DOT: "sysDashDotDot",
+} as const;
+
+/**
+ * Line join styles.
+ */
+export const LineJoin = {
+    ROUND: "round",
+    BEVEL: "bevel",
+    MITER: "miter",
+} as const;
+
+/**
  * Attributes for configuring outline properties.
  */
 export interface OutlineAttributes {
@@ -108,6 +153,12 @@ export interface OutlineAttributes {
     readonly compoundLine?: keyof typeof CompoundLine;
     /** Pen alignment */
     readonly align?: keyof typeof PenAlignment;
+    /** Preset dash style */
+    readonly dash?: keyof typeof PresetDash;
+    /** Line join style */
+    readonly join?: keyof typeof LineJoin;
+    /** Miter limit (only when join is MITER) */
+    readonly miterLimit?: number;
 }
 
 /**
@@ -119,41 +170,14 @@ interface OutlineNoFill {
 }
 
 /**
- * RGB solid fill for outline.
+ * Solid fill for outline.
  */
-interface OutlineRgbSolidFill {
+interface OutlineSolidFill {
     /** Solid fill type */
     readonly type: "solidFill";
-    /** RGB color type */
-    readonly solidFillType: "rgb";
-    /** Hex color value (e.g., "FF0000" for red) */
-    readonly value: string;
+    /** Color definition */
+    readonly color: SolidFillOptions;
 }
-
-/**
- * Scheme-based solid fill for outline.
- */
-interface OutlineSchemeSolidFill {
-    /** Solid fill type */
-    readonly type: "solidFill";
-    /** Scheme color type */
-    readonly solidFillType: "scheme";
-    /** Scheme color value */
-    readonly value: (typeof SchemeColor)[keyof typeof SchemeColor];
-}
-
-/**
- * Union type for solid fill options.
- */
-type OutlineSolidFill = OutlineRgbSolidFill | OutlineSchemeSolidFill;
-
-// <xsd:group name="EG_FillProperties">
-//     <xsd:choice>
-//         <xsd:element name="noFill" type="w:CT_Empty"/>
-//         <xsd:element name="solidFill" type="CT_SolidColorFillProperties"/>
-//         <xsd:element name="gradFill" type="CT_GradientFillProperties"/>
-//     </xsd:choice>
-// </xsd:group>
 
 /**
  * Fill properties for outline.
@@ -168,12 +192,20 @@ type OutlineFillProperties = OutlineNoFill | OutlineSolidFill;
 export type OutlineOptions = OutlineAttributes & OutlineFillProperties;
 
 /**
+ * Creates the fill child element for an outline.
+ */
+const createOutlineFill = (options: OutlineFillProperties): XmlComponent => {
+    if (options.type === "noFill") {
+        return createNoFill();
+    }
+    return createSolidFill(options.color);
+};
+
+/**
  * Creates an outline element for DrawingML shapes.
  *
  * The outline element specifies the line properties for the shape border,
- * including width, cap style, compound line type, alignment, and fill.
- *
- * Reference: http://officeopenxml.com/drwSp-outline.php
+ * including width, cap style, compound line type, alignment, dash, join, and fill.
  *
  * ## XSD Schema
  * ```xml
@@ -192,48 +224,77 @@ export type OutlineOptions = OutlineAttributes & OutlineFillProperties;
  *
  * @example
  * ```typescript
- * // Create outline with RGB color
+ * // Outline with RGB color and dash
  * const outline = createOutline({
  *   width: 9525,
- *   cap: "ROUND",
  *   type: "solidFill",
- *   solidFillType: "rgb",
- *   value: "FF0000"
+ *   color: { value: "FF0000" },
+ *   dash: "DASH",
  * });
  * ```
  */
-export const createOutline = (options: OutlineOptions): XmlComponent =>
-    new BuilderElement<OutlineAttributes>({
+export const createOutline = (options: OutlineOptions): XmlComponent => {
+    const children: XmlComponent[] = [];
+
+    // Fill
+    children.push(createOutlineFill(options));
+
+    // Dash
+    if (options.dash !== undefined) {
+        children.push(
+            new BuilderElement<{ readonly val: string }>({
+                attributes: {
+                    val: { key: "val", value: PresetDash[options.dash] },
+                },
+                name: "a:prstDash",
+            }),
+        );
+    }
+
+    // Join
+    if (options.join !== undefined) {
+        if (options.join === "MITER" && options.miterLimit !== undefined) {
+            children.push(
+                new BuilderElement<{ readonly lim: number }>({
+                    attributes: {
+                        lim: { key: "lim", value: options.miterLimit },
+                    },
+                    name: "a:miter",
+                }),
+            );
+        } else {
+            children.push(
+                new BuilderElement({
+                    name: `a:${LineJoin[options.join]}`,
+                }),
+            );
+        }
+    }
+
+    return new BuilderElement<OutlineAttributes>({
         attributes: {
             align: {
                 key: "algn",
-                value: options.align,
+                value: options.align
+                    ? (PenAlignment[options.align] as typeof options.align)
+                    : undefined,
             },
             cap: {
                 key: "cap",
-                value: options.cap,
+                value: options.cap ? (LineCap[options.cap] as typeof options.cap) : undefined,
             },
             compoundLine: {
                 key: "cmpd",
-                value: options.compoundLine,
+                value: options.compoundLine
+                    ? (CompoundLine[options.compoundLine] as typeof options.compoundLine)
+                    : undefined,
             },
             width: {
                 key: "w",
                 value: options.width,
             },
         },
-        children: [
-            options.type === "noFill"
-                ? createNoFill()
-                : options.solidFillType === "rgb"
-                  ? createSolidFill({
-                        type: "rgb",
-                        value: options.value,
-                    })
-                  : createSolidFill({
-                        type: "scheme",
-                        value: options.value,
-                    }),
-        ],
+        children,
         name: "a:ln",
     });
+};

@@ -4,17 +4,24 @@
  * This module provides scheme-based color support for solid fills,
  * allowing colors to be defined using theme color schemes.
  *
+ * Reference: ISO/IEC 29500-4, dml-main.xsd, CT_SchemeColor / ST_SchemeColorVal
+ *
  * @module
  */
 import { BuilderElement } from "@file/xml-components";
 import type { XmlComponent } from "@file/xml-components";
 
+import type { ColorTransformOptions } from "./color-transform";
+import { createColorTransforms } from "./color-transform";
+
 /**
  * Options for scheme color.
  */
-interface SchemeColorOptions {
+export interface SchemeColorOptions {
     /** Scheme color value */
     readonly value: (typeof SchemeColor)[keyof typeof SchemeColor];
+    /** Optional color transforms */
+    readonly transforms?: ColorTransformOptions;
 }
 
 // <xsd:simpleType name="ST_SchemeColorVal">
@@ -83,13 +90,6 @@ export const SchemeColor = {
     PHCLR: "phClr",
 } as const;
 
-// <xsd:complexType name="CT_SchemeColor">
-//     <xsd:sequence>
-//         <xsd:group ref="EG_ColorTransform" minOccurs="0" maxOccurs="unbounded"/>
-//     </xsd:sequence>
-//     <xsd:attribute name="val" type="ST_SchemeColorVal" use="required"/>
-// </xsd:complexType>
-
 /**
  * Creates a scheme color element.
  *
@@ -108,16 +108,23 @@ export const SchemeColor = {
  * @example
  * ```typescript
  * const accentColor = createSchemeColor({ value: SchemeColor.ACCENT1 });
- * const bgColor = createSchemeColor({ value: SchemeColor.BG1 });
+ * // With tint transform
+ * const lightAccent = createSchemeColor({
+ *   value: SchemeColor.ACCENT1,
+ *   transforms: { tint: 40000 },
+ * });
  * ```
  */
-export const createSchemeColor = (options: SchemeColorOptions): XmlComponent =>
-    new BuilderElement<SchemeColorOptions>({
+export const createSchemeColor = (options: SchemeColorOptions): XmlComponent => {
+    const transforms = options.transforms ? createColorTransforms(options.transforms) : [];
+    return new BuilderElement<SchemeColorOptions>({
         attributes: {
             value: {
                 key: "val",
                 value: options.value,
             },
         },
+        children: [...transforms],
         name: "a:schemeClr",
     });
+};
