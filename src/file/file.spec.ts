@@ -173,7 +173,8 @@ describe("File", () => {
                             {
                                 "w:docGrid": {
                                     _attr: {
-                                        "w:linePitch": 360,
+                                        "w:linePitch": 312,
+                                        "w:type": "lines",
                                     },
                                 },
                             },

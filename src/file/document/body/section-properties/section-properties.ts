@@ -177,29 +177,29 @@ export type ISectionPropertiesOptions = {
  * Default margin values for sections (in twips).
  *
  * Standard margins are 1 inch (1440 twips) on all sides.
- * Header/footer margins are 0.5 inches (708 twips) from page edge.
+ * Header/footer margins are from page edge.
  *
  * @property TOP - Top margin: 1440 twips (1 inch)
- * @property RIGHT - Right margin: 1440 twips (1 inch)
+ * @property RIGHT - Right margin: 1800 twips (1.25 inches)
  * @property BOTTOM - Bottom margin: 1440 twips (1 inch)
- * @property LEFT - Left margin: 1440 twips (1 inch)
- * @property HEADER - Header margin: 708 twips (0.5 inches)
- * @property FOOTER - Footer margin: 708 twips (0.5 inches)
+ * @property LEFT - Left margin: 1800 twips (1.25 inches)
+ * @property HEADER - Header margin: 851 twips (0.59 inches)
+ * @property FOOTER - Footer margin: 992 twips (0.69 inches)
  * @property GUTTER - Gutter margin: 0 twips
  */
 export const sectionMarginDefaults = {
     /** Top margin: 1440 twips (1 inch) */
     TOP: 1440,
-    /** Right margin: 1440 twips (1 inch) */
-    RIGHT: 1440,
+    /** Right margin: 1800 twips (1.25 inches) */
+    RIGHT: 1800,
     /** Bottom margin: 1440 twips (1 inch) */
     BOTTOM: 1440,
-    /** Left margin: 1440 twips (1 inch) */
-    LEFT: 1440,
-    /** Header margin from top: 708 twips (0.5 inches) */
-    HEADER: 708,
-    /** Footer margin from bottom: 708 twips (0.5 inches) */
-    FOOTER: 708,
+    /** Left margin: 1800 twips (1.25 inches) */
+    LEFT: 1800,
+    /** Header margin from top: 851 twips */
+    HEADER: 851,
+    /** Footer margin from bottom: 992 twips */
+    FOOTER: 992,
     /** Gutter margin for binding: 0 twips */
     GUTTER: 0,
 };
@@ -292,7 +292,7 @@ export class SectionProperties extends XmlComponent {
             borders,
             textDirection,
         } = {},
-        grid: { linePitch = 360, charSpace, type: gridType } = {},
+        grid: { linePitch = 312, charSpace = 0, type: gridType = "lines" } = {},
         headerWrapperGroup = {},
         footerWrapperGroup = {},
         lineNumbers,

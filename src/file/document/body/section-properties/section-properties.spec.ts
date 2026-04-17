@@ -138,7 +138,7 @@ describe("SectionProperties", () => {
             });
             // Expect(tree["w:sectPr"][3]).to.deep.equal({ "w:cols": { _attr: { "w:space": 708, "w:sep": false, "w:num": 1 } } });
             expect(tree["w:sectPr"][3]).to.deep.equal({
-                "w:docGrid": { _attr: { "w:linePitch": 360 } },
+                "w:docGrid": { _attr: { "w:linePitch": 312, "w:type": "lines" } },
             });
         });
 

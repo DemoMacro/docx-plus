@@ -17,7 +17,7 @@ import type { Column } from "./column";
 /**
  * Options for configuring column layout in a section.
  *
- * @property space - Spacing between columns in twips (default: 720)
+ * @property space - Spacing between columns in twips (default: 425)
  * @property count - Number of columns (default: 1)
  * @property separate - Whether to draw vertical separator lines between columns
  * @property equalWidth - Whether all columns have equal width
