@@ -34,7 +34,9 @@ describe("Settings", () => {
             expect(Object.keys(tree)).has.length(1);
             expect(tree["w:settings"]).to.be.an("array");
 
-            const compat = tree["w:settings"][2];
+            const compat = tree["w:settings"].find(
+                (item: Record<string, unknown>) => item["w:compat"],
+            );
             expect(compat).to.be.an("object").with.keys("w:compat");
             expect(compat["w:compat"]).to.deep.include({
                 "w:compatSetting": {
@@ -70,18 +72,17 @@ describe("Settings", () => {
             expect(Object.keys(tree)).has.length(1);
             expect(tree["w:settings"]).to.be.an("array");
 
-            expect(tree["w:settings"]).to.deep.include({
-                "w:compat": [
-                    {
-                        "w:compatSetting": {
-                            _attr: {
-                                "w:name": "compatibilityMode",
-                                "w:uri": "http://schemas.microsoft.com/office/word",
-                                "w:val": 15,
-                            },
-                        },
+            const compat = tree["w:settings"].find(
+                (item: Record<string, unknown>) => item["w:compat"],
+            );
+            expect(compat["w:compat"]).to.deep.include({
+                "w:compatSetting": {
+                    _attr: {
+                        "w:name": "compatibilityMode",
+                        "w:uri": "http://schemas.microsoft.com/office/word",
+                        "w:val": 15,
                     },
-                ],
+                },
             });
         });
 
@@ -96,18 +97,17 @@ describe("Settings", () => {
             expect(Object.keys(tree)).has.length(1);
             expect(tree["w:settings"]).to.be.an("array");
 
-            expect(tree["w:settings"]).to.deep.include({
-                "w:compat": [
-                    {
-                        "w:compatSetting": {
-                            _attr: {
-                                "w:name": "compatibilityMode",
-                                "w:uri": "http://schemas.microsoft.com/office/word",
-                                "w:val": 99,
-                            },
-                        },
+            const compat = tree["w:settings"].find(
+                (item: Record<string, unknown>) => item["w:compat"],
+            );
+            expect(compat["w:compat"]).to.deep.include({
+                "w:compatSetting": {
+                    _attr: {
+                        "w:name": "compatibilityMode",
+                        "w:uri": "http://schemas.microsoft.com/office/word",
+                        "w:val": 99,
                     },
-                ],
+                },
             });
         });
 
@@ -196,6 +196,36 @@ describe("Settings", () => {
             });
         });
 
+        it("should add characterSpacingControl setting", () => {
+            const settings = new Settings({
+                characterSpacingControl: "compressPunctuation",
+            });
+
+            const tree = new Formatter().format(settings);
+            expect(Object.keys(tree)).has.length(1);
+            expect(tree["w:settings"]).to.be.an("array");
+            expect(tree["w:settings"]).to.deep.include({
+                "w:characterSpacingControl": {
+                    _attr: {
+                        "w:val": "compressPunctuation",
+                    },
+                },
+            });
+        });
+
+        it("should add characterSpacingControl with default compressPunctuation when not set", () => {
+            const settings = new Settings({});
+
+            const tree = new Formatter().format(settings);
+            expect(tree["w:settings"]).to.deep.include({
+                "w:characterSpacingControl": {
+                    _attr: {
+                        "w:val": "compressPunctuation",
+                    },
+                },
+            });
+        });
+
         // TODO: Remove when deprecating compatibilityModeVersion
         it("should add compatibility setting with legacy version", () => {
             const settings = new Settings({
@@ -206,18 +236,17 @@ describe("Settings", () => {
             expect(Object.keys(tree)).has.length(1);
             expect(tree["w:settings"]).to.be.an("array");
 
-            expect(tree["w:settings"]).to.deep.include({
-                "w:compat": [
-                    {
-                        "w:compatSetting": {
-                            _attr: {
-                                "w:name": "compatibilityMode",
-                                "w:uri": "http://schemas.microsoft.com/office/word",
-                                "w:val": 99,
-                            },
-                        },
+            const compat = tree["w:settings"].find(
+                (item: Record<string, unknown>) => item["w:compat"],
+            );
+            expect(compat["w:compat"]).to.deep.include({
+                "w:compatSetting": {
+                    _attr: {
+                        "w:name": "compatibilityMode",
+                        "w:uri": "http://schemas.microsoft.com/office/word",
+                        "w:val": 99,
                     },
-                ],
+                },
             });
         });
     });

@@ -225,6 +225,12 @@ export interface ICompatibilityOptions {
     readonly useAnsiKerningPairs?: boolean;
     /** Use Cached Paragraph Information for Column Balancing */
     readonly cachedColumnBalance?: boolean;
+    /** Override Table Style Font Size and Justification */
+    readonly overrideTableStyleFontSizeAndJustification?: boolean;
+    /** Enable OpenType Features */
+    readonly enableOpenTypeFeatures?: boolean;
+    /** Do Not Flip Mirror Indents */
+    readonly doNotFlipMirrorIndents?: boolean;
 }
 
 /**
@@ -271,7 +277,7 @@ export class Compatibility extends XmlComponent {
         super("w:compat");
 
         if (options.version) {
-            this.root.push(createCompatibilitySetting(options.version));
+            this.root.push(createCompatibilitySetting("compatibilityMode", options.version));
         }
 
         if (options.useSingleBorderforContiguousCells) {
@@ -659,6 +665,20 @@ export class Compatibility extends XmlComponent {
 
         if (options.cachedColumnBalance) {
             this.root.push(new OnOffElement("w:cachedColBalance", options.cachedColumnBalance));
+        }
+
+        if (options.overrideTableStyleFontSizeAndJustification) {
+            this.root.push(
+                createCompatibilitySetting("overrideTableStyleFontSizeAndJustification", 1),
+            );
+        }
+
+        if (options.enableOpenTypeFeatures) {
+            this.root.push(createCompatibilitySetting("enableOpenTypeFeatures", 1));
+        }
+
+        if (options.doNotFlipMirrorIndents) {
+            this.root.push(createCompatibilitySetting("doNotFlipMirrorIndents", 1));
         }
     }
 }

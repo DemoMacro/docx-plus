@@ -22,16 +22,16 @@ import type { XmlComponent } from "@file/xml-components";
 // </xsd:complexType>
 
 interface ICompatibilitySettingAttributes {
-    readonly version: number;
     readonly name: string;
     readonly uri: string;
+    readonly val: string | number;
 }
 
 /**
  * Creates a compatibility setting for a WordprocessingML document.
  *
- * Currently hard-coded to set Microsoft Word compatibility mode version.
- * This controls which Word version's formatting and layout behavior the document emulates.
+ * This controls which Word version's formatting and layout behavior the document emulates,
+ * as well as other compatibility behaviors.
  *
  * Common version values:
  * - 11: Word 2003
@@ -53,18 +53,22 @@ interface ICompatibilitySettingAttributes {
  * @example
  * ```typescript
  * // Set compatibility mode to Word 2013+
- * createCompatibilitySetting(15);
+ * createCompatibilitySetting("compatibilityMode", 15);
  *
- * // Set compatibility mode to Word 2010
- * createCompatibilitySetting(14);
+ * // Enable OpenType features
+ * createCompatibilitySetting("enableOpenTypeFeatures", 1);
  * ```
  */
-export const createCompatibilitySetting = (version: number): XmlComponent =>
+export const createCompatibilitySetting = (
+    name: string,
+    val: string | number,
+    uri = "http://schemas.microsoft.com/office/word",
+): XmlComponent =>
     new BuilderElement<ICompatibilitySettingAttributes>({
         attributes: {
-            name: { key: "w:name", value: "compatibilityMode" },
-            uri: { key: "w:uri", value: "http://schemas.microsoft.com/office/word" },
-            version: { key: "w:val", value: version },
+            name: { key: "w:name", value: name },
+            uri: { key: "w:uri", value: uri },
+            val: { key: "w:val", value: val },
         },
         name: "w:compatSetting",
     });

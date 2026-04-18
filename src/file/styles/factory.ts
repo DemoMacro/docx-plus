@@ -89,11 +89,11 @@ export interface IDefaultStylesOptions {
  * Factory for creating default document styles.
  *
  * This factory creates a complete set of default styles for common document elements
- * such as headings, hyperlinks, and footnotes with sensible default formatting.
+ * such as headings, hyperlinks, and footnotes.
  *
  * @example
  * ```typescript
- * // Create default styles with custom heading colors
+ * // Create default styles with custom heading formatting
  * const factory = new DefaultStylesFactory();
  * const styles = factory.newInstance({
  *   heading1: {
@@ -120,46 +120,12 @@ export class DefaultStylesFactory {
                     },
                     ...options.title,
                 }),
-                new Heading1Style({
-                    run: {
-                        color: "2E74B5",
-                        size: 32,
-                    },
-                    ...options.heading1,
-                }),
-                new Heading2Style({
-                    run: {
-                        color: "2E74B5",
-                        size: 26,
-                    },
-                    ...options.heading2,
-                }),
-                new Heading3Style({
-                    run: {
-                        color: "1F4D78",
-                        size: 24,
-                    },
-                    ...options.heading3,
-                }),
-                new Heading4Style({
-                    run: {
-                        color: "2E74B5",
-                        italics: true,
-                    },
-                    ...options.heading4,
-                }),
-                new Heading5Style({
-                    run: {
-                        color: "2E74B5",
-                    },
-                    ...options.heading5,
-                }),
-                new Heading6Style({
-                    run: {
-                        color: "1F4D78",
-                    },
-                    ...options.heading6,
-                }),
+                new Heading1Style(options.heading1 || {}),
+                new Heading2Style(options.heading2 || {}),
+                new Heading3Style(options.heading3 || {}),
+                new Heading4Style(options.heading4 || {}),
+                new Heading5Style(options.heading5 || {}),
+                new Heading6Style(options.heading6 || {}),
                 new StrongStyle({
                     run: {
                         bold: true,

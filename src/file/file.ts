@@ -190,6 +190,7 @@ export class File {
             compatibilityModeVersion: options.compatabilityModeVersion,
             defaultTabStop: options.defaultTabStop,
             evenAndOddHeaders: options.evenAndOddHeaderAndFooters ? true : false,
+            characterSpacingControl: options.characterSpacingControl,
             hyphenation: {
                 autoHyphenation: options.hyphenation?.autoHyphenation,
                 consecutiveHyphenLimit: options.hyphenation?.consecutiveHyphenLimit,

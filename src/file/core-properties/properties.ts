@@ -89,6 +89,8 @@ export interface IPropertiesOptions {
     readonly defaultTabStop?: number;
     readonly fonts?: readonly FontOptions[];
     readonly hyphenation?: IHyphenationOptions;
+    /** Controls whether punctuation is compressed at line ends */
+    readonly characterSpacingControl?: "compressPunctuation" | "doNotCompress";
 }
 
 /**

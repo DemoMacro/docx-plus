@@ -11,6 +11,7 @@
 import {
     NumberValueElement,
     OnOffElement,
+    StringValueElement,
     XmlAttributeComponent,
     XmlComponent,
 } from "@file/xml-components";
@@ -191,6 +192,8 @@ export interface ISettingsOptions {
     readonly defaultTabStop?: number;
     /** Hyphenation settings */
     readonly hyphenation?: IHyphenationOptions;
+    /** Controls whether punctuation is compressed at line ends */
+    readonly characterSpacingControl?: "compressPunctuation" | "doNotCompress";
 }
 
 /**
@@ -280,10 +283,6 @@ export class Settings extends XmlComponent {
             }),
         );
 
-        // http://officeopenxml.com/WPdocument.php
-        // https://c-rex.net/projects/samples/ooxml/e1/Part4/OOXML_P4_DOCX_displayBackgroundSha_topic_ID0ET4SX.html
-        this.root.push(new OnOffElement("w:displayBackgroundShape", true));
-
         // https://c-rex.net/projects/samples/ooxml/e1/Part4/OOXML_P4_DOCX_trackRevisions_topic_ID0EKXKY.html
         if (options.trackRevisions !== undefined) {
             this.root.push(new OnOffElement("w:trackRevisions", options.trackRevisions));
@@ -300,9 +299,7 @@ export class Settings extends XmlComponent {
         }
 
         // https://c-rex.net/samples/ooxml/e1/Part4/OOXML_P4_DOCX_defaultTabStop_topic_ID0EIXSX.html
-        if (options.defaultTabStop !== undefined) {
-            this.root.push(new NumberValueElement("w:defaultTabStop", options.defaultTabStop));
-        }
+        this.root.push(new NumberValueElement("w:defaultTabStop", options.defaultTabStop ?? 420));
 
         // https://c-rex.net/samples/ooxml/e1/Part4/OOXML_P4_DOCX_autoHyphenation_topic_ID0EFUMX.html
         if (options.hyphenation?.autoHyphenation !== undefined) {
@@ -336,9 +333,28 @@ export class Settings extends XmlComponent {
         }
 
         this.root.push(
+            new StringValueElement(
+                "w:characterSpacingControl",
+                options.characterSpacingControl ?? "compressPunctuation",
+            ),
+        );
+
+        this.root.push(
             new Compatibility({
                 ...options.compatibility,
                 version: options.compatibility?.version ?? options.compatibilityModeVersion ?? 15,
+                spaceForUnderline: options.compatibility?.spaceForUnderline ?? true,
+                balanceSingleByteDoubleByteWidth:
+                    options.compatibility?.balanceSingleByteDoubleByteWidth ?? true,
+                doNotLeaveBackslashAlone: options.compatibility?.doNotLeaveBackslashAlone ?? true,
+                underlineTrailingSpaces: options.compatibility?.underlineTrailingSpaces ?? true,
+                doNotExpandShiftReturn: options.compatibility?.doNotExpandShiftReturn ?? true,
+                adjustLineHeightInTable: options.compatibility?.adjustLineHeightInTable ?? true,
+                useFELayout: options.compatibility?.useFELayout ?? true,
+                overrideTableStyleFontSizeAndJustification:
+                    options.compatibility?.overrideTableStyleFontSizeAndJustification ?? true,
+                enableOpenTypeFeatures: options.compatibility?.enableOpenTypeFeatures ?? true,
+                doNotFlipMirrorIndents: options.compatibility?.doNotFlipMirrorIndents ?? true,
             }),
         );
     }

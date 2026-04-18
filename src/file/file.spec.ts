@@ -433,7 +433,7 @@ describe("File", () => {
 
         const tree = new Formatter().format(doc.Settings);
 
-        expect(tree["w:settings"][2]).to.deep.equal({ "w:evenAndOddHeaders": {} });
+        expect(tree["w:settings"][1]).to.deep.equal({ "w:evenAndOddHeaders": {} });
     });
 
     describe("#comments", () => {
