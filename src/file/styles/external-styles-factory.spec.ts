@@ -139,18 +139,16 @@ describe("External styles factory", () => {
             });
         });
 
-        it("should throw when style element isn't found", () => {
-            expect(() =>
-                new ExternalStylesFactory().newInstance(
-                    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><foo/>`,
-                ),
-            ).to.throw("can not find styles element");
+        it("should return empty styles when style element isn't found", () => {
+            const result = new ExternalStylesFactory().newInstance(
+                `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><foo/>`,
+            );
+            expect(result.importedStyles).to.deep.equal([]);
 
-            expect(() =>
-                new ExternalStylesFactory().newInstance(
-                    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`,
-                ),
-            ).to.throw("can not find styles element");
+            const emptyResult = new ExternalStylesFactory().newInstance(
+                `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`,
+            );
+            expect(emptyResult.importedStyles).to.deep.equal([]);
         });
 
         it("should handle w:styles with no child elements", () => {

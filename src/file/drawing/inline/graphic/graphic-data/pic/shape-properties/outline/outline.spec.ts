@@ -134,4 +134,11 @@ describe("createOutline", () => {
             ],
         });
     });
+
+    it("should create outline with width only (no fill)", () => {
+        const tree = new Formatter().format(createOutline({ width: 12700 }));
+        expect(tree).to.deep.equal({
+            "a:ln": { _attr: { w: 12700 } },
+        });
+    });
 });

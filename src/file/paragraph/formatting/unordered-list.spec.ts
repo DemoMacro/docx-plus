@@ -29,8 +29,17 @@ describe("NumberProperties", () => {
             });
         });
 
-        it("should throw an error if level exceeds 9", () => {
-            expect(() => new NumberProperties(5, 10)).to.throw();
+        it("should clamp level to 9 if exceeds", () => {
+            const numberProperties = new NumberProperties(5, 10);
+
+            const tree = new Formatter().format(numberProperties);
+            expect(tree["w:numPr"][0]).to.deep.equal({
+                "w:ilvl": {
+                    _attr: {
+                        "w:val": 9,
+                    },
+                },
+            });
         });
     });
 });

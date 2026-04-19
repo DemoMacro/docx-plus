@@ -17,7 +17,7 @@ import type { SolidFillOptions } from "./solid-fill";
 
 // <xsd:complexType name="CT_LineProperties">
 //     <xsd:sequence>
-//         <xsd:group ref="EG_FillProperties" minOccurs="0"/>
+//         <xsd:group ref="EG_LineFillProperties" minOccurs="0"/>
 //         <xsd:group ref="EG_LineDashProperties" minOccurs="0"/>
 //         <xsd:group ref="EG_LineJoinProperties" minOccurs="0"/>
 //     </xsd:sequence>
@@ -162,27 +162,16 @@ export interface OutlineAttributes {
 }
 
 /**
- * No fill option for outline.
- */
-interface OutlineNoFill {
-    /** No fill type */
-    readonly type: "noFill";
-}
-
-/**
- * Solid fill for outline.
- */
-interface OutlineSolidFill {
-    /** Solid fill type */
-    readonly type: "solidFill";
-    /** Color definition */
-    readonly color: SolidFillOptions;
-}
-
-/**
  * Fill properties for outline.
+ *
+ * Both `type` and `color` are optional — OOXML allows `a:ln` without any fill child.
  */
-type OutlineFillProperties = OutlineNoFill | OutlineSolidFill;
+export interface OutlineFillProperties {
+    /** Fill type */
+    readonly type?: "noFill" | "solidFill";
+    /** Color definition (required when type is "solidFill") */
+    readonly color?: SolidFillOptions;
+}
 
 /**
  * Complete outline configuration options.
@@ -193,12 +182,17 @@ export type OutlineOptions = OutlineAttributes & OutlineFillProperties;
 
 /**
  * Creates the fill child element for an outline.
+ *
+ * Returns null when no fill type is specified (OOXML allows outline without fill).
  */
-const createOutlineFill = (options: OutlineFillProperties): XmlComponent => {
+const createOutlineFill = (options: OutlineOptions): XmlComponent | null => {
     if (options.type === "noFill") {
         return createNoFill();
     }
-    return createSolidFill(options.color);
+    if (options.type === "solidFill" && options.color) {
+        return createSolidFill(options.color);
+    }
+    return null;
 };
 
 /**
@@ -236,8 +230,11 @@ const createOutlineFill = (options: OutlineFillProperties): XmlComponent => {
 export const createOutline = (options: OutlineOptions): XmlComponent => {
     const children: XmlComponent[] = [];
 
-    // Fill
-    children.push(createOutlineFill(options));
+    // Fill (optional per OOXML spec)
+    const fill = createOutlineFill(options);
+    if (fill) {
+        children.push(fill);
+    }
 
     // Dash
     if (options.dash !== undefined) {

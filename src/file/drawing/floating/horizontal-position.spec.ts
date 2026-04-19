@@ -49,8 +49,20 @@ describe("HorizontalPosition", () => {
             });
         });
 
-        it("should require one of align or offset", () => {
-            expect(() => createHorizontalPosition({})).to.throw();
+        it("should default to LEFT align when neither align nor offset is specified", () => {
+            const tree = new Formatter().format(createHorizontalPosition({}));
+            expect(tree).to.deep.equal({
+                "wp:positionH": [
+                    {
+                        _attr: {
+                            relativeFrom: "page",
+                        },
+                    },
+                    {
+                        "wp:align": ["LEFT"],
+                    },
+                ],
+            });
         });
     });
 });

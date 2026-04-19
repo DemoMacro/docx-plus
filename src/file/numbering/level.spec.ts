@@ -6,19 +6,22 @@ import { Level, LevelFormat, LevelSuffix } from "./level";
 
 describe("Level", () => {
     describe("#constructor", () => {
-        it("should throw an error if level exceeds 9", () => {
-            expect(
-                () =>
-                    new Level({
-                        alignment: AlignmentType.BOTH,
-                        format: LevelFormat.BULLET,
-                        level: 10,
-                        start: 3,
-                        style: { paragraph: {}, run: {} },
-                        suffix: LevelSuffix.SPACE,
-                        text: "test",
-                    }),
-            ).to.throw();
+        it("should clamp level to 9 if exceeds", () => {
+            const level = new Level({
+                alignment: AlignmentType.BOTH,
+                format: LevelFormat.BULLET,
+                level: 10,
+                start: 3,
+                style: { paragraph: {}, run: {} },
+                suffix: LevelSuffix.SPACE,
+                text: "test",
+            });
+
+            const tree = new Formatter().format(level);
+            expect(tree["w:lvl"]).to.be.an("array");
+            expect(tree["w:lvl"]).to.deep.include({
+                _attr: { "w:ilvl": 9, "w15:tentative": 1 },
+            });
         });
     });
 

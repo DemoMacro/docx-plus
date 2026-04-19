@@ -103,9 +103,6 @@ export class ShapeProperties extends XmlComponent {
             this.root.push(createSolidFill(solidFill));
         } else if (gradientFill) {
             this.root.push(createGradientFill(gradientFill));
-        } else if (outline) {
-            // Default to no fill when outline is specified without explicit fill
-            this.root.push(createNoFill());
         }
 
         if (outline) {

@@ -72,13 +72,11 @@ export const createHorizontalPosition = ({
             (() => {
                 if (align) {
                     return createAlign(align);
-                } else if (offset !== undefined) {
-                    return createPositionOffset(offset);
-                } else {
-                    throw new Error(
-                        "There is no configuration provided for floating position (Align or offset)",
-                    );
                 }
+                if (offset !== undefined) {
+                    return createPositionOffset(offset);
+                }
+                return createAlign("LEFT" as const);
             })(),
         ],
         name: "wp:positionH",

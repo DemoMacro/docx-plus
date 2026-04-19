@@ -70,7 +70,7 @@ describe("ShapeProperties", () => {
         ]);
     });
 
-    it("should create with outline and default no fill", () => {
+    it("should create with outline without fill", () => {
         const props = new ShapeProperties({
             element: "pic",
             transform: TRANSFORM,
@@ -78,7 +78,6 @@ describe("ShapeProperties", () => {
         });
         const tree = new Formatter().format(props);
         expect(tree["pic:spPr"]).to.include.deep.members([
-            { "a:noFill": {} },
             {
                 "a:ln": [
                     { _attr: { w: 12700 } },

@@ -64,7 +64,10 @@ export class ExternalStylesFactory {
             }
         }
         if (stylesXmlElement === undefined) {
-            throw new Error("can not find styles element");
+            return {
+                importedStyles: [],
+                initialStyles: new ImportedRootElementAttributes({}),
+            };
         }
 
         const stylesElements = stylesXmlElement.elements || [];

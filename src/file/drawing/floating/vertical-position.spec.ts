@@ -49,8 +49,20 @@ describe("VerticalPosition", () => {
             });
         });
 
-        it("should require one of align or offset", () => {
-            expect(() => createVerticalPosition({})).to.throw();
+        it("should default to TOP align when neither align nor offset is specified", () => {
+            const tree = new Formatter().format(createVerticalPosition({}));
+            expect(tree).to.deep.equal({
+                "wp:positionV": [
+                    {
+                        _attr: {
+                            relativeFrom: "page",
+                        },
+                    },
+                    {
+                        "wp:align": ["TOP"],
+                    },
+                ],
+            });
         });
     });
 });
