@@ -52,7 +52,7 @@ const doc = new Document({
                     children: [
                         new ImageRun({
                             data: fs.readFileSync("./demo/images/cat.jpg"),
-                            srcRect: { l: 25000, r: 25000 },
+                            srcRect: { left: 25000, right: 25000 },
                             transformation: {
                                 height: 150,
                                 width: 150,

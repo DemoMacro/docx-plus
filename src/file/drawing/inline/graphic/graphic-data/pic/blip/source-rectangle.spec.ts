@@ -13,7 +13,7 @@ describe("SourceRectangle", () => {
         });
 
         it("should create source rectangle with left crop", () => {
-            const tree = new Formatter().format(createSourceRectangle({ l: 10000 }));
+            const tree = new Formatter().format(createSourceRectangle({ left: 10000 }));
             expect(tree).to.deep.equal({
                 "a:srcRect": {
                     _attr: {
@@ -25,7 +25,7 @@ describe("SourceRectangle", () => {
 
         it("should create source rectangle with all crop values", () => {
             const tree = new Formatter().format(
-                createSourceRectangle({ l: 10000, t: 5000, r: 10000, b: 5000 }),
+                createSourceRectangle({ left: 10000, top: 5000, right: 10000, bottom: 5000 }),
             );
             expect(tree).to.deep.equal({
                 "a:srcRect": {
@@ -40,7 +40,9 @@ describe("SourceRectangle", () => {
         });
 
         it("should create source rectangle with only right and bottom", () => {
-            const tree = new Formatter().format(createSourceRectangle({ r: 20000, b: 15000 }));
+            const tree = new Formatter().format(
+                createSourceRectangle({ right: 20000, bottom: 15000 }),
+            );
             expect(tree).to.deep.equal({
                 "a:srcRect": {
                     _attr: {

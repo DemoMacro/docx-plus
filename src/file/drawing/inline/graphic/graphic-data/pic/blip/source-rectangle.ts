@@ -17,13 +17,13 @@ import { BuilderElement } from "@file/xml-components";
  */
 export interface SourceRectangleOptions {
     /** Left inset percentage (0-100000) */
-    readonly l?: number;
+    readonly left?: number;
     /** Top inset percentage (0-100000) */
-    readonly t?: number;
+    readonly top?: number;
     /** Right inset percentage (0-100000) */
-    readonly r?: number;
+    readonly right?: number;
     /** Bottom inset percentage (0-100000) */
-    readonly b?: number;
+    readonly bottom?: number;
 }
 
 /**
@@ -47,7 +47,7 @@ export interface SourceRectangleOptions {
  * @example
  * ```typescript
  * // Crop 10% from left and right
- * createSourceRectangle({ l: 10000, r: 10000 });
+ * createSourceRectangle({ left: 10000, right: 10000 });
  * ```
  */
 export const createSourceRectangle = (options?: SourceRectangleOptions) => {
@@ -57,17 +57,17 @@ export const createSourceRectangle = (options?: SourceRectangleOptions) => {
 
     const attributes: Record<string, { readonly key: string; readonly value: number }> = {};
 
-    if (options.l !== undefined) {
-        attributes.l = { key: "l", value: options.l };
+    if (options.left !== undefined) {
+        attributes.l = { key: "l", value: options.left };
     }
-    if (options.t !== undefined) {
-        attributes.t = { key: "t", value: options.t };
+    if (options.top !== undefined) {
+        attributes.t = { key: "t", value: options.top };
     }
-    if (options.r !== undefined) {
-        attributes.r = { key: "r", value: options.r };
+    if (options.right !== undefined) {
+        attributes.r = { key: "r", value: options.right };
     }
-    if (options.b !== undefined) {
-        attributes.b = { key: "b", value: options.b };
+    if (options.bottom !== undefined) {
+        attributes.b = { key: "b", value: options.bottom };
     }
 
     return new BuilderElement({

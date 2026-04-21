@@ -324,10 +324,10 @@ const image = new ImageRun({
         height: 200,
     },
     srcRect: {
-        l: 10000, // 10% from left
-        t: 10000, // 10% from top
-        r: 10000, // 10% from right
-        b: 10000, // 10% from bottom
+        left: 10000, // 10% from left
+        top: 10000, // 10% from top
+        right: 10000, // 10% from right
+        bottom: 10000, // 10% from bottom
     },
 });
 ```
