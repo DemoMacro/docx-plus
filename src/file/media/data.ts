@@ -62,7 +62,7 @@ interface CoreMediaData {
  */
 interface RegularMediaData {
     /** Image format type */
-    readonly type: "jpg" | "png" | "gif" | "bmp";
+    readonly type: "jpg" | "png" | "gif" | "bmp" | "tif" | "ico" | "emf" | "wmf";
 }
 
 /**

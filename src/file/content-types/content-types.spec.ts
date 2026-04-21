@@ -35,9 +35,24 @@ describe("ContentTypes", () => {
                 Default: { _attr: { ContentType: "image/gif", Extension: "gif" } },
             });
             expect(tree["Types"][6]).to.deep.equal({
-                Default: { _attr: { ContentType: "image/svg+xml", Extension: "svg" } },
+                Default: { _attr: { ContentType: "image/tiff", Extension: "tif" } },
             });
             expect(tree["Types"][7]).to.deep.equal({
+                Default: { _attr: { ContentType: "image/tiff", Extension: "tiff" } },
+            });
+            expect(tree["Types"][8]).to.deep.equal({
+                Default: { _attr: { ContentType: "image/x-emf", Extension: "emf" } },
+            });
+            expect(tree["Types"][9]).to.deep.equal({
+                Default: { _attr: { ContentType: "image/x-wmf", Extension: "wmf" } },
+            });
+            expect(tree["Types"][10]).to.deep.equal({
+                Default: { _attr: { ContentType: "image/x-icon", Extension: "ico" } },
+            });
+            expect(tree["Types"][11]).to.deep.equal({
+                Default: { _attr: { ContentType: "image/svg+xml", Extension: "svg" } },
+            });
+            expect(tree["Types"][12]).to.deep.equal({
                 Default: {
                     _attr: {
                         ContentType: "application/vnd.openxmlformats-package.relationships+xml",
@@ -45,11 +60,11 @@ describe("ContentTypes", () => {
                     },
                 },
             });
-            expect(tree["Types"][8]).to.deep.equal({
+            expect(tree["Types"][13]).to.deep.equal({
                 Default: { _attr: { ContentType: "application/xml", Extension: "xml" } },
             });
 
-            expect(tree["Types"][9]).to.deep.equal({
+            expect(tree["Types"][14]).to.deep.equal({
                 Default: {
                     _attr: {
                         ContentType: "application/vnd.openxmlformats-officedocument.obfuscatedFont",
@@ -57,7 +72,7 @@ describe("ContentTypes", () => {
                     },
                 },
             });
-            expect(tree["Types"][10]).to.deep.equal({
+            expect(tree["Types"][15]).to.deep.equal({
                 Override: {
                     _attr: {
                         ContentType:
@@ -66,7 +81,7 @@ describe("ContentTypes", () => {
                     },
                 },
             });
-            expect(tree["Types"][11]).to.deep.equal({
+            expect(tree["Types"][16]).to.deep.equal({
                 Override: {
                     _attr: {
                         ContentType:
@@ -75,7 +90,7 @@ describe("ContentTypes", () => {
                     },
                 },
             });
-            expect(tree["Types"][12]).to.deep.equal({
+            expect(tree["Types"][17]).to.deep.equal({
                 Override: {
                     _attr: {
                         ContentType: "application/vnd.openxmlformats-package.core-properties+xml",
@@ -83,7 +98,7 @@ describe("ContentTypes", () => {
                     },
                 },
             });
-            expect(tree["Types"][13]).to.deep.equal({
+            expect(tree["Types"][18]).to.deep.equal({
                 Override: {
                     _attr: {
                         ContentType:
@@ -92,7 +107,7 @@ describe("ContentTypes", () => {
                     },
                 },
             });
-            expect(tree["Types"][14]).to.deep.equal({
+            expect(tree["Types"][19]).to.deep.equal({
                 Override: {
                     _attr: {
                         ContentType:
@@ -101,7 +116,7 @@ describe("ContentTypes", () => {
                     },
                 },
             });
-            expect(tree["Types"][15]).to.deep.equal({
+            expect(tree["Types"][20]).to.deep.equal({
                 Override: {
                     _attr: {
                         ContentType:
@@ -110,7 +125,7 @@ describe("ContentTypes", () => {
                     },
                 },
             });
-            expect(tree["Types"][16]).to.deep.equal({
+            expect(tree["Types"][21]).to.deep.equal({
                 Override: {
                     _attr: {
                         ContentType:
@@ -119,7 +134,7 @@ describe("ContentTypes", () => {
                     },
                 },
             });
-            expect(tree["Types"][17]).to.deep.equal({
+            expect(tree["Types"][22]).to.deep.equal({
                 Override: {
                     _attr: {
                         ContentType:
@@ -128,7 +143,7 @@ describe("ContentTypes", () => {
                     },
                 },
             });
-            expect(tree["Types"][18]).to.deep.equal({
+            expect(tree["Types"][23]).to.deep.equal({
                 Override: {
                     _attr: {
                         ContentType:
@@ -146,7 +161,7 @@ describe("ContentTypes", () => {
             contentTypes.addFooter(102);
             const tree = new Formatter().format(contentTypes);
 
-            expect(tree["Types"][21]).to.deep.equal({
+            expect(tree["Types"][26]).to.deep.equal({
                 Override: {
                     _attr: {
                         ContentType:
@@ -156,7 +171,7 @@ describe("ContentTypes", () => {
                 },
             });
 
-            expect(tree["Types"][22]).to.deep.equal({
+            expect(tree["Types"][27]).to.deep.equal({
                 Override: {
                     _attr: {
                         ContentType:
@@ -174,7 +189,7 @@ describe("ContentTypes", () => {
             contentTypes.addHeader(202);
             const tree = new Formatter().format(contentTypes);
 
-            expect(tree["Types"][21]).to.deep.equal({
+            expect(tree["Types"][26]).to.deep.equal({
                 Override: {
                     _attr: {
                         ContentType:
@@ -184,7 +199,7 @@ describe("ContentTypes", () => {
                 },
             });
 
-            expect(tree["Types"][22]).to.deep.equal({
+            expect(tree["Types"][27]).to.deep.equal({
                 Override: {
                     _attr: {
                         ContentType:

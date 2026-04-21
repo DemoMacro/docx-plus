@@ -42,7 +42,7 @@ interface CoreImageOptions {
 }
 
 interface RegularImageOptions {
-    readonly type: "jpg" | "png" | "gif" | "bmp";
+    readonly type: "jpg" | "png" | "gif" | "bmp" | "tif" | "ico" | "emf" | "wmf";
     readonly data: DataType;
 }
 
