@@ -83,7 +83,7 @@
         "tsx": "4.21.0",
         "typedoc": "0.28.19",
         "typescript": "6.0.2",
-        "vite-plus": "0.1.18"
+        "vite-plus": "0.1.19"
     },
     "pre-commit": [
         "check"
