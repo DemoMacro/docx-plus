@@ -82,7 +82,7 @@
         "pre-commit": "1.2.2",
         "tsx": "4.21.0",
         "typedoc": "0.28.19",
-        "typescript": "6.0.2",
+        "typescript": "6.0.3",
         "vite-plus": "0.1.18"
     },
     "pre-commit": [
