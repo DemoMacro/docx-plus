@@ -80,6 +80,21 @@ describe("commentsDesc round-trip", () => {
     expect(out).toContain("after");
   });
 
+  it("round-trips paragraph paraId inside a comment (w15:commentEx reply link)", () => {
+    // Word threads replies through w14:paraId on the comment's first w:p —
+    // dropping it orphans the w15:commentEx entry and flattens the thread.
+    const result = roundTrip([
+      {
+        id: 1,
+        author: "A",
+        date: "2024-01-01T00:00:00Z",
+        children: [{ children: ["hello"], paraId: "1A2B3C4D" }],
+      },
+    ]);
+    const first = result[0]?.children[0] as { paraId?: string };
+    expect(first?.paraId).toBe("1A2B3C4D");
+  });
+
   it("round-trips comment-level bookmark markers outside paragraphs", () => {
     // Word anchors _GoBack's end marker directly under w:comment, outside any
     // paragraph — kept as a comment child so presence round-trips.

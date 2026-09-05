@@ -1545,5 +1545,10 @@ export function stringifyParagraphInline(
     }
   }
 
-  return body ? `<w:p>${body}</w:p>` : "<w:p/>";
+  // Identity attributes — inline containers (comments, footnotes, headers)
+  // round-trip w14:paraId too; w15:commentEx links replies through it.
+  let attr = "";
+  if (resolved.paraId) attr += ` w14:paraId="${resolved.paraId}"`;
+  if (resolved.textId) attr += ` w14:textId="${resolved.textId}"`;
+  return body ? `<w:p${attr}>${body}</w:p>` : `<w:p${attr}/>`;
 }
