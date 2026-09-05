@@ -506,7 +506,15 @@ describe("tableDesc round-trip", () => {
               children: [],
               insertion: { id: 1, author: "A", date: "2024-01-01T00:00:00Z" },
               deletion: { id: 2, author: "B", date: "2024-02-02T00:00:00Z" },
-              revision: { id: 3, author: "C", date: "2024-03-03T00:00:00Z", hideMark: true },
+              revision: {
+                id: 3,
+                author: "C",
+                date: "2024-03-03T00:00:00Z",
+                hideMark: true,
+                // CT_TcPrInner (the snapshot's content model) includes
+                // EG_CellMarkupElements — the markers survive in the snapshot.
+                insertion: { id: 5, author: "E", date: "2024-05-05T00:00:00Z" },
+              },
             },
           ],
         },
@@ -518,6 +526,8 @@ describe("tableDesc round-trip", () => {
     expect(cell.deletion?.id).toBe(2);
     expect(cell.revision?.id).toBe(3);
     expect(cell.revision?.hideMark).toBe(true);
+    expect(cell.revision?.insertion?.id).toBe(5);
+    expect(cell.revision?.insertion?.author).toBe("E");
   });
 
   it("round-trips cell cellMerge (vMerge/vMergeOrig)", () => {

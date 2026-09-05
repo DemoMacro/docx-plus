@@ -25,7 +25,7 @@
       "description": "w:abstractNum attributes + child elements + w15 restart.",
       "properties": {
         "multiLevelType": {
-          "description": "w:multiLevelType value.",
+          "description": "w:multiLevelType value. Defaults to hybridMultilevel when omitted.",
           "enum": ["singleLevel", "multilevel", "hybridMultilevel"],
           "type": "string"
         },

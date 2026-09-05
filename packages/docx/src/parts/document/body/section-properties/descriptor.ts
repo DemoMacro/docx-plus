@@ -225,7 +225,9 @@ function stringifySectionPropertiesChange(opts: SectionPropertiesChangeOptions):
   // what the source carried. Injecting the fresh-document defaults (pgSz,
   // pgMar, docGrid) would fabricate elements the revision never had.
   const innerXml = stringifySectionPropertiesInner(inner, true);
-  return `<w:sectPrChange w:author="${escapeXml(author)}" w:date="${escapeXml(date)}" w:id="${id ?? autoRevisionId()}"><w:sectPr>${innerXml}</w:sectPr></w:sectPrChange>`;
+  // The snapshot's own rsid attributes round-trip too (CT_SectPrChange's
+  // inner CT_SectPr carries them just like the top-level element).
+  return `<w:sectPrChange w:author="${escapeXml(author)}" w:date="${escapeXml(date)}" w:id="${id ?? autoRevisionId()}"><w:sectPr${sectPrRsidAttrs(inner)}>${innerXml}</w:sectPr></w:sectPrChange>`;
 }
 
 // ── Core XML builder ──
@@ -392,18 +394,21 @@ export const sectionPropertiesDesc: CustomDescriptor<
   },
 };
 
-/** Standalone stringify — no context needed, pure options → XML. */
-export function stringifySectionProperties(opts: SectionPropertiesDescriptorOptions): string {
-  const inner = stringifySectionPropertiesInner(opts);
-
+/** The w:sectPr rsid attributes — identical set on the top-level element and
+ *  on the revision snapshot inside w:sectPrChange. */
+function sectPrRsidAttrs(opts: SectionPropertiesDescriptorOptions): string {
   const attrs: string[] = [];
   if (opts.runPropertiesRsid !== undefined) attrs.push(`w:rsidRPr="${opts.runPropertiesRsid}"`);
   if (opts.deletionRsid !== undefined) attrs.push(`w:rsidDel="${opts.deletionRsid}"`);
   if (opts.additionRsid !== undefined) attrs.push(`w:rsidR="${opts.additionRsid}"`);
   if (opts.sectionRsid !== undefined) attrs.push(`w:rsidSect="${opts.sectionRsid}"`);
+  return attrs.length ? " " + attrs.join(" ") : "";
+}
 
-  const attrStr = attrs.length ? " " + attrs.join(" ") : "";
-  return `<w:sectPr${attrStr}>${inner}</w:sectPr>`;
+/** Standalone stringify — no context needed, pure options → XML. */
+export function stringifySectionProperties(opts: SectionPropertiesDescriptorOptions): string {
+  const inner = stringifySectionPropertiesInner(opts);
+  return `<w:sectPr${sectPrRsidAttrs(opts)}>${inner}</w:sectPr>`;
 }
 
 // ── Parse (Element → SectionPropertiesOptions) ──

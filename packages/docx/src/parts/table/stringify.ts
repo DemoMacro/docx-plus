@@ -442,10 +442,10 @@ export function stringifyTableRowProperties(
 function stringifyTableCellPropertiesChangeInner(
   options: TableCellPropertiesChangeOptions,
 ): string {
-  // The embedded w:tcPr is CT_TcPrInner — drop the cell-markup revision
-  // elements that only the full TableCellPropertiesOptions carries.
-  const { insertion: _ins, deletion: _del, cellMerge: _cm, ...innerOptions } = options;
-  const inner = stringifyTableCellPropertiesInner({ ...innerOptions, includeIfEmpty: true });
+  // The embedded w:tcPr is CT_TcPrInner, which includes EG_CellMarkupElements
+  // (cellIns/cellDel/cellMerge) — the snapshot's own revision markers
+  // round-trip, same as every other property in the snapshot.
+  const inner = stringifyTableCellPropertiesInner({ ...options, includeIfEmpty: true });
   const a = attrsRaw({
     "w:author": escapeXml(options.author),
     "w:date": escapeXml(options.date),

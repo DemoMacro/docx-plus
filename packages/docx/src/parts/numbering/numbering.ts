@@ -365,7 +365,10 @@ export interface LevelOverrideOptions {
 /** w:abstractNum attributes + child elements + w15 restart (CT_AbstractNum). */
 export interface AbstractNumberingPropertiesOptions {
   nsid?: string;
-  /** w:multiLevelType value (ST_MultiLevelType). */
+  /**
+   * w:multiLevelType value (ST_MultiLevelType). Defaults to hybridMultilevel
+   * when omitted.
+   */
   multiLevelType?: "singleLevel" | "multilevel" | "hybridMultilevel";
   /** w15:restartNumberingAfterBreak attribute on w:abstractNum. Omitted when undefined. */
   restartNumberingAfterBreak?: boolean;

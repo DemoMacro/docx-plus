@@ -7,7 +7,10 @@ import { sectionPropertiesDesc } from "./descriptor";
 import type { DocGridProperties } from "./properties/doc-grid";
 import type { PageMarginProperties } from "./properties/page-margin";
 import type { PageSizeProperties } from "./properties/page-size";
-import type { SectionPropertiesOptions } from "./section-properties";
+import type {
+  SectionPropertiesChangeOptions,
+  SectionPropertiesOptions,
+} from "./section-properties";
 
 const writeCtx = {
   addRelationship: () => "rId1",
@@ -248,6 +251,30 @@ describe("sectionPropertiesDesc round-trip", () => {
     expect(result.additionRsid).toBe("00112233");
     expect(result.runPropertiesRsid).toBe("AABBCCDD");
     expect(result.sectionRsid).toBe("11223344");
+  });
+
+  it("round-trips the revision snapshot's rsids inside w:sectPrChange", () => {
+    // The inner w:sectPr of CT_SectPrChange carries the same rsid set as the
+    // top-level element — the snapshot must round-trip them too.
+    const result = roundTrip({
+      sectionRsid: "00AA11BB",
+      revision: {
+        author: "A",
+        date: "2024-01-01T00:00:00Z",
+        pageSize: { width: 12240, height: 15840 },
+        sectionRsid: "11223344",
+        additionRsid: "00112233",
+        runPropertiesRsid: "AABBCCDD",
+        deletionRsid: "55667788",
+      },
+    });
+    const rev = result.revision as SectionPropertiesChangeOptions;
+    expect(rev.author).toBe("A");
+    expect(rev.sectionRsid).toBe("11223344");
+    expect(rev.additionRsid).toBe("00112233");
+    expect(rev.runPropertiesRsid).toBe("AABBCCDD");
+    expect(rev.deletionRsid).toBe("55667788");
+    expect(pageSize(rev).width).toBe(12240);
   });
 
   it("round-trips combined options", () => {
