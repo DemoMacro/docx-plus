@@ -62,7 +62,12 @@ import { checkboxSymbolRunInner, stringifyCustomXmlShell, stringifySdtShell } fr
 import { drawingDesc } from "./drawing";
 import { stringifyMath, stringifyMathParagraph } from "./paragraph/math/stringify";
 import { createBegin, createSeparate, createEnd } from "./paragraph/run/field";
-import { onOff, stringifyParagraphProperties, stringifyRunProperties } from "./paragraph/stringify";
+import {
+  onOff,
+  paragraphIdentityAttrs,
+  stringifyParagraphProperties,
+  stringifyRunProperties,
+} from "./paragraph/stringify";
 
 // ── Run ──
 
@@ -1546,9 +1551,8 @@ export function stringifyParagraphInline(
   }
 
   // Identity attributes — inline containers (comments, footnotes, headers)
-  // round-trip w14:paraId too; w15:commentEx links replies through it.
-  let attr = "";
-  if (resolved.paraId) attr += ` w14:paraId="${resolved.paraId}"`;
-  if (resolved.textId) attr += ` w14:textId="${resolved.textId}"`;
+  // round-trip the body-level identity set too; w15:commentEx links comment
+  // replies through w14:paraId.
+  const attr = paragraphIdentityAttrs(resolved);
   return body ? `<w:p${attr}>${body}</w:p>` : `<w:p${attr}/>`;
 }

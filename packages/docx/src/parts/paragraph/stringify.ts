@@ -27,6 +27,7 @@ import type { IndentProperties } from "@parts/paragraph/formatting/indent";
 import type { SpacingProperties } from "@parts/paragraph/formatting/spacing";
 import type { TabStopDefinition } from "@parts/paragraph/formatting/tab-stop";
 import type { FrameOptions } from "@parts/paragraph/frame/frame-properties";
+import type { ParagraphOptions } from "@parts/paragraph/paragraph";
 import type {
   NumberingInsertionOptions,
   ParagraphPropertiesOptions,
@@ -53,6 +54,21 @@ export function onOff(name: string, val: boolean): string {
   // s:ST_OnOff allows all six spellings, but tblHeader/cantSplit bind
   // CT_OnOffOnly in the SDK's stricter schema (enumeration: on/off only).
   return val ? `<${name}/>` : `<${name} w:val="off"/>`;
+}
+
+/** The w:p opening-tag identity attributes (rsid family + w14:paraId/textId,
+ *  hex strings verbatim) — shared by the body-level and inline-container
+ *  paragraph stringifiers so both round-trip what the parser reads. */
+export function paragraphIdentityAttrs(opts: ParagraphOptions): string {
+  let attr = "";
+  if (opts.paraId) attr += ` w14:paraId="${opts.paraId}"`;
+  if (opts.textId) attr += ` w14:textId="${opts.textId}"`;
+  if (opts.additionRsid) attr += ` w:rsidR="${opts.additionRsid}"`;
+  if (opts.defaultRunRsid) attr += ` w:rsidRDefault="${opts.defaultRunRsid}"`;
+  if (opts.propertiesRsid) attr += ` w:rsidP="${opts.propertiesRsid}"`;
+  if (opts.runPropertiesRsid) attr += ` w:rsidRPr="${opts.runPropertiesRsid}"`;
+  if (opts.deletionRsid) attr += ` w:rsidDel="${opts.deletionRsid}"`;
+  return attr;
 }
 
 // ── Border ──

@@ -80,7 +80,11 @@ import type {
   SdtRunOptions,
   TrackChangeChild,
 } from "./parts/paragraph/paragraph";
-import { EMPTY_PPR_RESULT, stringifyParagraphProperties } from "./parts/paragraph/stringify";
+import {
+  EMPTY_PPR_RESULT,
+  paragraphIdentityAttrs,
+  stringifyParagraphProperties,
+} from "./parts/paragraph/stringify";
 import { replaceRelsWithPlaceholders } from "./util/replace-media-placeholders";
 import { stringifyElement } from "./util/stringify-element";
 
@@ -167,14 +171,7 @@ export function stringifyParagraph(
     }
   }
 
-  let attr = "";
-  if (resolved.paraId) attr += ` w14:paraId="${resolved.paraId}"`;
-  if (resolved.textId) attr += ` w14:textId="${resolved.textId}"`;
-  if (resolved.additionRsid) attr += ` w:rsidR="${resolved.additionRsid}"`;
-  if (resolved.defaultRunRsid) attr += ` w:rsidRDefault="${resolved.defaultRunRsid}"`;
-  if (resolved.propertiesRsid) attr += ` w:rsidP="${resolved.propertiesRsid}"`;
-  if (resolved.runPropertiesRsid) attr += ` w:rsidRPr="${resolved.runPropertiesRsid}"`;
-  if (resolved.deletionRsid) attr += ` w:rsidDel="${resolved.deletionRsid}"`;
+  const attr = paragraphIdentityAttrs(resolved);
   return body ? `<w:p${attr}>${body}</w:p>` : `<w:p${attr}/>`;
 }
 
