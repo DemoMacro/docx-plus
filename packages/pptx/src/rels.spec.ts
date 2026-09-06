@@ -14,6 +14,7 @@ import type { PresentationOptions } from "./shared/file";
 const CHART_REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart";
 const LAYOUT_REL =
   "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout";
+const THEME_REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme";
 
 const decodeEntry = (buffer: Uint8Array, path: string): string => {
   const unzipped = unzipSync(buffer);
@@ -71,5 +72,35 @@ describe("slide rels with passthrough source ids and a modeled picture", () => {
     // The fresh picture lands above the source id space
     const imageId = Number(/Id="rId(\d+)"[^>]*relationships\/image"/.exec(rels)?.[1]);
     expect(imageId).toBeGreaterThan(2);
+  });
+});
+
+// Captured rels whose kind the model re-registers (the master theme, say)
+// are absorbed — the claim skips them as owned, so their ids must not be
+// reserved: a reservation opens a hole the round-trip then reports as drift
+// (theme re-registered above the reserved id, the captured slot unused).
+describe("captured rels absorbed by the model", () => {
+  it("does not reserve ids for kinds the compiler re-emits, keeping round-trip stable", async () => {
+    const options: PresentationOptions = {
+      slides: [{ children: [] }],
+      passthroughRelationships: [
+        {
+          source: "ppt/slideMasters/slideMaster1.xml",
+          relationshipType: THEME_REL,
+          target: "../theme/theme1.xml",
+          rId: "rId2",
+        },
+      ],
+    };
+
+    const buffer = await generatePresentation(options);
+    const rels = decodeEntry(buffer, "ppt/slideMasters/_rels/slideMaster1.xml.rels");
+
+    const ids = [...rels.matchAll(/Id="rId(\d+)"/g)].map((m) => m[1]);
+    expect(new Set(ids).size).toBe(ids.length);
+    // The model's theme registration lands at the captured source id — no
+    // rId2 hole pushing it to rId3
+    expect(rels).toMatch(new RegExp(`Id="rId2"[^>]*Type="${THEME_REL}"`));
+    expect(rels).not.toMatch(/Id="rId3"/);
   });
 });

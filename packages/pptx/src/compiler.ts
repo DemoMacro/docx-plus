@@ -372,24 +372,9 @@ function buildMasterMap(
         });
       }
       const layoutRel = buildRels(layoutRelEntries);
-      // Reserve the layout's passthrough source ids — the media/hyperlink
-      // batches below snapshot nextRelationshipId, and a batch landing on a
-      // source id would force the claim loop to renumber the source rel
-      // instead of keeping it.
-      layoutRel.reserveSourceRids(
-        `ppt/slideLayouts/slideLayout${globalLayoutIndex + 1}.xml`,
-        passthroughRelationships ?? [],
-      );
-      // Layout-level passthrough relationships (round-trip) — re-emitted as
-      // written unless the model already registered the same kind (ownership
-      // test: targets may be renamed and ISO-strict types differ in URI only).
-      // claimSourceRel keeps the source ids when free (verbatim layout
-      // islands reference them).
-      for (const rel of passthroughRelationships ?? []) {
-        if (rel.source !== `ppt/slideLayouts/slideLayout${globalLayoutIndex + 1}.xml`) continue;
-        if (layoutRel.hasRelationshipKind(rel.relationshipType.split("/").pop()!)) continue;
-        layoutRel.claimSourceRel(rel);
-      }
+      // The layout's captured rels are claimed in the mapping phase, after
+      // the layout's media/hyperlink batches have registered their kinds —
+      // claiming here would re-emit rels the batches then duplicate.
       layoutRels.push(layoutRel);
       globalLayoutIndex++;
     }
@@ -397,13 +382,22 @@ function buildMasterMap(
     // The master's rels go through the Relationships class like every other
     // part: model registrations and the passthrough claim below share one id
     // space, so a hand-written max-id fallback can't collide with a batch
-    // offset. Source ids are reserved first — verbatim master islands
-    // (unmodeled pictures, OLE shapes) reference them, and a model batch
-    // landing on one would force the claim to renumber a dangle.
+    // offset. Captured ids whose rels a claim will re-emit are reserved
+    // before the media batch snapshots nextRelationshipId; absorbed kinds
+    // (slideLayout, theme, images the media batch re-registers) are skipped —
+    // reserving them would only open holes their claims never fill.
+    const masterMediaData = getReferencedMedia(master, ctx.mediaCollection.array);
+    const masterAbsorbedKinds = new Set([
+      "slideLayout",
+      "theme",
+      ...(masterMediaData.length > 0 ? ["image"] : []),
+    ]);
     const masterRels = new Relationships();
-    masterRels.reserveSourceRids(
+    reserveClaimedSourceRids(
+      masterRels,
       `ppt/slideMasters/slideMaster${mi + 1}.xml`,
-      passthroughRelationships ?? [],
+      passthroughRelationships,
+      masterAbsorbedKinds,
     );
     for (const [li, layout] of layouts.entries()) {
       masterRels.addRelationship(
@@ -420,7 +414,6 @@ function buildMasterMap(
     // wiring slides/layouts use (master pictures otherwise lose their rel).
     // Registered before the passthrough loop so its kind ownership test sees
     // the model registration and skips the source's stale image rels.
-    const masterMediaData = getReferencedMedia(master, ctx.mediaCollection.array);
     const masterImageOffset = masterRels.nextRelationshipId;
     for (const [idx, mediaItem] of masterMediaData.entries()) {
       masterRels.addRelationship(
@@ -540,6 +533,26 @@ function promoteLayoutToSourceId(
     "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout",
     Number(numeric[1]),
   );
+}
+
+/** Reserve the captured ids whose rels a claim will re-emit. A captured rel
+ * whose kind the model registers for the part (layout, theme, media, …) is
+ * absorbed — the claim skips it as owned, so reserving its id only opens a
+ * hole the round-trip then reports as drift. Kinds outside `absorbedKinds`
+ * have no model counterpart (a chart part carried as a raw island beside a
+ * modeled picture, say): their claims keep the source ids verbatim content
+ * references, so those ids must stay free above the batch allocations. */
+function reserveClaimedSourceRids(
+  rels: Relationships,
+  source: string,
+  passthroughRelationships: PresentationOptions["passthroughRelationships"],
+  absorbedKinds: ReadonlySet<string>,
+): void {
+  for (const rel of passthroughRelationships ?? []) {
+    if (rel.source !== source) continue;
+    if (absorbedKinds.has(rel.relationshipType.split("/").pop()!)) continue;
+    rels.reserveId(rel.rId);
+  }
 }
 
 export function buildCommentData(
@@ -886,12 +899,27 @@ export function compilePresentation(
   // empty part (undefined = fresh document, omit the part).
   const hasCustomProperties = options.customProperties !== undefined;
   const presRels = initPresRels(masters, slides.length);
-  // Reserve the presentation's passthrough source ids — after the structured
-  // slide/master slots above (their r:ids are written verbatim into
-  // sldMasterIdLst/sldIdLst and take precedence), but before the claim loop,
-  // so anything allocated on the way there lands above the source id space
-  // instead of taking an id a claim wants to keep.
-  presRels.reserveSourceRids("ppt/presentation.xml", options.passthroughRelationships ?? []);
+  // Reserve the presentation's captured ids whose rels a claim will re-emit —
+  // after the structured slide/master slots above (their r:ids are written
+  // verbatim into sldMasterIdLst/sldIdLst and take precedence), but before
+  // the claim loop, so anything allocated on the way there lands above those
+  // ids. Kinds the compiler always re-emits (slides, masters, the property
+  // parts) are absorbed and skipped: reserving them would only open holes.
+  reserveClaimedSourceRids(
+    presRels,
+    "ppt/presentation.xml",
+    options.passthroughRelationships,
+    new Set([
+      "slide",
+      "slideMaster",
+      "theme",
+      "presProps",
+      "viewProps",
+      "tableStyles",
+      "notesMaster",
+      "handoutMaster",
+    ]),
+  );
   // Group slides into p14:sections by name (first-occurrence order); slides
   // without a section name are left ungrouped (absent from p14:sectionLst).
   const sectionOrder: string[] = [];
@@ -1024,6 +1052,20 @@ export function compilePresentation(
     // wiring slides use (layout pictures otherwise lose their rel).
     const layoutRels = allLayoutRels[li]!;
     const layoutMediaData = getReferencedMedia(layoutXml, media.array);
+    // Reserve captured ids whose rels a claim will re-emit before the media
+    // batch below snapshots nextRelationshipId. Absorbed kinds (the
+    // slideMaster rel, a present themeOverride, images the media batch
+    // re-registers) are skipped — reserving them would only open holes.
+    reserveClaimedSourceRids(
+      layoutRels,
+      `ppt/slideLayouts/slideLayout${li + 1}.xml`,
+      options.passthroughRelationships,
+      new Set([
+        "slideMaster",
+        ...(layoutInfo.themeOverride ? ["themeOverride"] : []),
+        ...(layoutMediaData.length > 0 ? ["image"] : []),
+      ]),
+    );
     const layoutImageOffset = layoutRels.nextRelationshipId;
     for (const [idx, mediaItem] of layoutMediaData.entries()) {
       layoutRels.addRelationship(
@@ -1081,6 +1123,15 @@ export function compilePresentation(
       (id, type, target, mode) => layoutRels.addRelationship(id, type, target, mode),
       "../slides/",
     );
+    // Layout-level passthrough relationships (round-trip) — appended after
+    // every model registration so the kind ownership test sees them all.
+    // claimSourceRel keeps the source ids when free (verbatim layout islands
+    // reference them).
+    for (const rel of options.passthroughRelationships ?? []) {
+      if (rel.source !== `ppt/slideLayouts/slideLayout${li + 1}.xml`) continue;
+      if (layoutRels.hasRelationshipKind(rel.relationshipType.split("/").pop()!)) continue;
+      layoutRels.claimSourceRel(rel);
+    }
     mapping[`SlideLayout${li}`] = {
       data: XML_DECL + replacedLayoutXml,
       path: `ppt/slideLayouts/slideLayout${li + 1}.xml`,
@@ -1306,13 +1357,38 @@ export function compilePresentation(
     const slideMediaData = getReferencedMedia(slideXml, media.array);
     const currentSlideRels = slideRels[i];
     if (!currentSlideRels) continue; // slideRels is built one-per-slide in lockstep with slides
-    // Reserve the slide's passthrough source ids first — the media/chart/…
-    // batches below snapshot nextRelationshipId, and a batch landing on a
-    // source id would force the claim loop at the end to renumber a verbatim
-    // reference into a dangle (or, for media kinds, silently rebind it).
-    currentSlideRels.reserveSourceRids(
+    // Reserve the slide's captured ids whose rels a claim will re-emit — the
+    // media/chart/… batches below snapshot nextRelationshipId, and a batch
+    // landing on such an id would force the claim loop at the end to
+    // renumber a verbatim reference into a dangle. Kinds the batches register
+    // (layout, images, charts, media, notes, …) are absorbed by the model —
+    // the claim skips them as owned, so reserving their ids would only open
+    // holes the round-trip then reports as drift.
+    const slideAbsorbedKinds = new Set<string>(["slideLayout"]);
+    if (slideMediaData.length > 0 || collectPlaceholderKeys(slideXml, "img-link:").length > 0)
+      slideAbsorbedKinds.add("image");
+    if (collectPlaceholderKeys(slideXml, "chart:").length > 0) slideAbsorbedKinds.add("chart");
+    if (collectPlaceholderKeys(slideXml, "smartart:").length > 0) {
+      slideAbsorbedKinds.add("diagramData");
+      slideAbsorbedKinds.add("diagramColors");
+      slideAbsorbedKinds.add("diagramQuickStyle");
+    }
+    if (getMediaRefs(slideXml, media.array).length > 0) slideAbsorbedKinds.add("media");
+    if (getAudioRefs(slideXml, media.array).length > 0) slideAbsorbedKinds.add("audio");
+    if (getVideoRefs(slideXml, media.array).length > 0) slideAbsorbedKinds.add("video");
+    if (
+      getOleRefs(slideXml, descCtx.embeddings).length > 0 ||
+      collectPlaceholderKeys(slideXml, "ole-link:").length > 0
+    )
+      slideAbsorbedKinds.add("oleObject");
+    if (collectPlaceholderKeys(slideXml, "hlink:").length > 0) slideAbsorbedKinds.add("hyperlink");
+    if (slide.notes) slideAbsorbedKinds.add("notesSlide");
+    if (slide.comments) slideAbsorbedKinds.add("comments");
+    reserveClaimedSourceRids(
+      currentSlideRels,
       `ppt/slides/slide${i + 1}.xml`,
-      options.passthroughRelationships ?? [],
+      options.passthroughRelationships,
+      slideAbsorbedKinds,
     );
     // Promote the slide layout rel to its source id up front — the model's
     // layout registration is rId1 by construction and the source id is free
