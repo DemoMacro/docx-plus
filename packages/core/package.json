@@ -1,6 +1,6 @@
 {
   "name": "@office-open/core",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "description": "Shared OOXML infrastructure for office-open — part descriptors, charts, drawings, tables, VML, and unit converters",
   "keywords": [
     "chart",

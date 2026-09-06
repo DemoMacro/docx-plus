@@ -1,5 +1,4 @@
-import type { ParsedArchive } from "@office-open/core";
-import { parseArchive } from "@office-open/core";
+import { parseArchive, ParsedArchive } from "@office-open/core";
 import type { DataType } from "@office-open/core";
 import {
   collectPassthroughParts,
@@ -377,6 +376,17 @@ function parseRootRels(doc: ParsedArchive): {
  * @returns Document options including sections and metadata
  */
 export async function parseDocument(data: DataType): Promise<DocumentOptions> {
+  // Blob/File inputs bypass full materialization: the archive indexes and
+  // inflates through random-access windows, so a multi-GB package costs only
+  // the parts actually read.
+  if (data instanceof Blob) {
+    const head = new Uint8Array(await data.slice(0, 8).arrayBuffer());
+    if (isEncryptedContainer(head)) {
+      // The encrypted container re-emits verbatim — it needs all bytes.
+      return { sections: [], encrypted: { data: await toUint8ArrayAsync(data) } };
+    }
+    return parseDocumentFromDocx(parseDocxArchive(await ParsedArchive.open(data)));
+  }
   return parseDocumentFromBytes(await toUint8ArrayAsync(data));
 }
 
@@ -396,7 +406,10 @@ function parseDocumentFromBytes(uint8: Uint8Array): DocumentOptions {
     return { sections: [], encrypted: { data: uint8 } };
   }
 
-  const docx = parseDocx(uint8);
+  return parseDocumentFromDocx(parseDocx(uint8));
+}
+
+function parseDocumentFromDocx(docx: DocxDocument): DocumentOptions {
   const ctx = new DocxReadContext(
     docx,
     buildStyleCache(docx.styles),
@@ -690,9 +703,11 @@ function parseDocumentFromBytes(uint8: Uint8Array): DocumentOptions {
 }
 
 export function parseDocx(data: DataType): DocxDocument {
-  const uint8 = toUint8Array(data);
-  const doc = parseArchive(uint8);
+  return parseDocxArchive(parseArchive(toUint8Array(data)));
+}
 
+/** Archive-backed core of {@link parseDocx} — shared with the Blob open path. */
+function parseDocxArchive(doc: ParsedArchive): DocxDocument {
   const documentEl = doc.get("word/document.xml");
   if (!documentEl) throw new Error("word/document.xml not found");
   const body = documentEl.elements?.find((e) => e.name === "w:body");

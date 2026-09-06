@@ -1,4 +1,4 @@
-import type { ParsedArchive, PassthroughRelationship } from "@office-open/core";
+import type { PassthroughRelationship } from "@office-open/core";
 import {
   appPropertiesDesc,
   collectPassthroughParts,
@@ -8,6 +8,7 @@ import {
   parseArchive,
   parseCorePropsElement,
   partPathToRelsPath,
+  ParsedArchive,
   resolveRelationshipTarget,
 } from "@office-open/core";
 import type { DataType } from "@office-open/core";
@@ -195,9 +196,11 @@ function parseSlideRels(doc: ParsedArchive, slidePaths: string[], refs: PptxPart
 }
 
 export function parsePptx(data: DataType): PptxDocument {
-  const uint8 = toUint8Array(data);
-  const doc = parseArchive(uint8);
+  return parsePptxArchive(parseArchive(toUint8Array(data)));
+}
 
+/** Archive-backed core of {@link parsePptx} — shared with the Blob open path. */
+function parsePptxArchive(doc: ParsedArchive): PptxDocument {
   const presentation = doc.get("ppt/presentation.xml");
 
   const relsXml = doc.get("ppt/_rels/presentation.xml.rels");
@@ -444,6 +447,16 @@ function parseSlideSections(
  * @returns Parsed presentation options
  */
 export async function parsePresentation(data: DataType): Promise<PresentationOptions> {
+  // Blob/File inputs bypass full materialization: the archive indexes and
+  // inflates through random-access windows, so a multi-GB package costs only
+  // the parts actually read.
+  if (data instanceof Blob) {
+    const head = new Uint8Array(await data.slice(0, 8).arrayBuffer());
+    if (isEncryptedContainer(head)) {
+      return { encrypted: { data: await toUint8ArrayAsync(data) } };
+    }
+    return parsePresentationFromPptx(parsePptxArchive(await ParsedArchive.open(data)));
+  }
   return parsePresentationFromBytes(await toUint8ArrayAsync(data));
 }
 
@@ -463,7 +476,10 @@ function parsePresentationFromBytes(uint8: Uint8Array): PresentationOptions {
     return { encrypted: { data: uint8 } };
   }
 
-  const pptx = parsePptx(uint8);
+  return parsePresentationFromPptx(parsePptx(uint8));
+}
+
+function parsePresentationFromPptx(pptx: PptxDocument): PresentationOptions {
   const opts: Partial<PresentationOptions> = {};
   if (pptx.partRefs.handoutMaster) opts.includeHandoutMaster = true;
   const sectionBySlidePath = parseSlideSections(pptx.presentation, pptx.doc);

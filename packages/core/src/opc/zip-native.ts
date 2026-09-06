@@ -18,6 +18,8 @@ import type * as ZlibNode from "node:zlib";
 import { ZipPassThrough, inflateSync } from "fflate";
 import type { FlateError, Zippable, ZipOptions } from "fflate";
 
+import type { ByteSource } from "./byte-source";
+
 // ── CRC-32 lookup table ──
 
 const CRC_TABLE = new Int32Array(256);
@@ -387,6 +389,8 @@ export interface ZipEntryMeta {
   name: string;
   method: number;
   compSize: number;
+  /** Uncompressed size from the central directory (u32; zip64 overflows to fallback paths). */
+  uncompSize: number;
   crc: number;
   dataStart: number;
 }
@@ -412,6 +416,7 @@ export function readCentralDirectory(buf: Uint8Array): ZipEntryMeta[] {
     const method = rU16(buf, p + 10);
     const crc = rU32(buf, p + 16);
     const compSize = rU32(buf, p + 20);
+    const uncompSize = rU32(buf, p + 24);
     const nameLen = rU16(buf, p + 28);
     const extraLen = rU16(buf, p + 30);
     const cmtLen = rU16(buf, p + 32);
@@ -427,12 +432,29 @@ export function readCentralDirectory(buf: Uint8Array): ZipEntryMeta[] {
       name,
       method,
       compSize,
+      uncompSize,
       crc,
       dataStart: localOff + 30 + lNameLen + lExtraLen,
     });
     p += 46 + nameLen + extraLen + cmtLen;
   }
   return entries;
+}
+
+/**
+ * Inflate a raw DEFLATE window with CRC verification on the native path
+ * (Node/Bun), fflate `inflateSync` (check-free) elsewhere — the per-entry
+ * work shared by the sync and source-backed inflate paths.
+ */
+export function inflateRawWindow(raw: Uint8Array, entry: ZipEntryMeta): Uint8Array {
+  if (_nativeInflate) {
+    const dec = _nativeInflate(raw);
+    // >>> 0 normalizes the signed CRC_TABLE accumulation against zlib's unsigned crc32.
+    if ((_nativeCrc32 ?? computeCrc32)(dec) >>> 0 !== entry.crc)
+      throw new Error(`ZIP CRC-32 mismatch: ${entry.name}`);
+    return dec;
+  }
+  return inflateSync(raw);
 }
 
 /**
@@ -445,14 +467,64 @@ export function readCentralDirectory(buf: Uint8Array): ZipEntryMeta[] {
 export function inflateZipEntry(buf: Uint8Array, entry: ZipEntryMeta): Uint8Array {
   const raw = buf.subarray(entry.dataStart, entry.dataStart + entry.compSize);
   if (entry.method === 0) return raw.slice();
-  if (_nativeInflate) {
-    const dec = _nativeInflate(raw);
-    // >>> 0 normalizes the signed CRC_TABLE accumulation against zlib's unsigned crc32.
-    if ((_nativeCrc32 ?? computeCrc32)(dec) >>> 0 !== entry.crc)
-      throw new Error(`ZIP CRC-32 mismatch: ${entry.name}`);
-    return dec;
+  return inflateRawWindow(raw, entry);
+}
+
+// ── Source-backed reads (Blob/File input — random access via ByteSource) ──
+
+const EOCD_WINDOW = 65557; // 22-byte EOCD + up to 65535-byte comment
+
+/**
+ * Walk the central directory through a {@link ByteSource} — the EOCD window
+ * and the directory itself are the only bytes read; entry payloads stay on
+ * disk. `findEocd`'s backward scan runs over the tail window in memory.
+ */
+export async function readCentralDirectoryAsync(source: ByteSource): Promise<ZipEntryMeta[]> {
+  const tailStart = Math.max(0, source.byteLength - EOCD_WINDOW);
+  const tail = await source.read(tailStart, source.byteLength - tailStart);
+  let eocd = -1;
+  for (let i = tail.length - 22; i >= 0; i--) {
+    if (rU32(tail, i) === EOCD_MAGIC) {
+      eocd = i;
+      break;
+    }
   }
-  return inflateSync(raw);
+  if (eocd === -1) throw new Error("ZIP EOCD record not found");
+  const count = rU16(tail, eocd + 10);
+  const cdOffset = rU32(tail, eocd + 16);
+  const cdSize = rU32(tail, eocd + 12);
+  const cd = await source.read(cdOffset, cdSize);
+
+  const entries: ZipEntryMeta[] = [];
+  let p = 0;
+  for (let i = 0; i < count; i++) {
+    if (rU32(cd, p) !== CD_MAGIC) throw new Error(`ZIP central directory corrupt at offset ${p}`);
+    const method = rU16(cd, p + 10);
+    const crc = rU32(cd, p + 16);
+    const compSize = rU32(cd, p + 20);
+    const uncompSize = rU32(cd, p + 24);
+    const nameLen = rU16(cd, p + 28);
+    const extraLen = rU16(cd, p + 30);
+    const cmtLen = rU16(cd, p + 32);
+    const localOff = rU32(cd, p + 42);
+    const name = textDecoder.decode(cd.subarray(p + 46, p + 46 + nameLen));
+    // Locate the payload through the local header's own name/extra lengths —
+    // a small window per entry (the local headers are scattered across the
+    // package, so one bulk read cannot cover them).
+    const head = await source.read(localOff + 26, 4);
+    const lNameLen = rU16(head, 0);
+    const lExtraLen = rU16(head, 2);
+    entries.push({
+      name,
+      method,
+      compSize,
+      uncompSize,
+      crc,
+      dataStart: localOff + 30 + lNameLen + lExtraLen,
+    });
+    p += 46 + nameLen + extraLen + cmtLen;
+  }
+  return entries;
 }
 
 // ── Native streaming DEFLATE entry ──

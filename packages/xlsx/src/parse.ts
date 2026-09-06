@@ -10,8 +10,8 @@ import {
   customPropertiesDesc,
   parseArchive,
   parseCorePropsElement,
+  ParsedArchive,
 } from "@office-open/core";
-import type { ParsedArchive } from "@office-open/core";
 import {
   collectPassthroughParts,
   isEncryptedContainer,
@@ -144,9 +144,11 @@ const WORKSHEET_PARSE_OPTIONS: ParseOptions = { deferElements: ["sheetData"] };
  * Parse raw .xlsx data into a low-level XlsxDocument.
  */
 export function parseXlsx(data: DataType): XlsxDocument {
-  const uint8 = toUint8Array(data);
-  const doc = parseArchive(uint8);
+  return parseXlsxArchive(parseArchive(toUint8Array(data)));
+}
 
+/** Archive-backed core of {@link parseXlsx} — shared with the Blob open path. */
+function parseXlsxArchive(doc: ParsedArchive): XlsxDocument {
   const workbook = doc.get("xl/workbook.xml");
   const styles = doc.get("xl/styles.xml");
   const sharedStrings = doc.get("xl/sharedStrings.xml");
@@ -228,6 +230,16 @@ export function parseXlsx(data: DataType): XlsxDocument {
  * demand. The returned options can be passed to `new Workbook(parsed)`.
  */
 export async function parseWorkbook(data: DataType): Promise<WorkbookOptions> {
+  // Blob/File inputs bypass full materialization: the archive indexes and
+  // inflates through random-access windows, so a multi-GB package costs only
+  // the parts actually read.
+  if (data instanceof Blob) {
+    const head = new Uint8Array(await data.slice(0, 8).arrayBuffer());
+    if (isEncryptedContainer(head)) {
+      return { encrypted: { data: await toUint8ArrayAsync(data) } };
+    }
+    return parseWorkbookFromXlsx(parseXlsxArchive(await ParsedArchive.open(data)));
+  }
   return parseWorkbookFromBytes(await toUint8ArrayAsync(data));
 }
 
@@ -247,8 +259,10 @@ function parseWorkbookFromBytes(uint8: Uint8Array): WorkbookOptions {
     return { encrypted: { data: uint8 } };
   }
 
-  const xlsx = parseXlsx(uint8);
+  return parseWorkbookFromXlsx(parseXlsx(uint8));
+}
 
+function parseWorkbookFromXlsx(xlsx: XlsxDocument): WorkbookOptions {
   const opts: Partial<WorkbookOptions> = {};
 
   // Core properties
