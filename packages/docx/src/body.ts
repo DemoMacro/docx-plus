@@ -629,13 +629,20 @@ export function parseParagraphProperties(
     const endChars = attrNum(ind, "w:endChars");
     if (endChars !== undefined) indentObj.endChars = endChars;
     const hanging = attrMeasure(ind, "w:hanging");
-    if (hanging !== undefined) indentObj.hanging = hanging as IndentProperties["hanging"];
     const hangingChars = attrNum(ind, "w:hangingChars");
     if (hangingChars !== undefined) indentObj.hangingChars = hangingChars;
     const firstLine = attrMeasure(ind, "w:firstLine");
-    if (firstLine !== undefined) indentObj.firstLine = firstLine as IndentProperties["firstLine"];
     const firstLineChars = attrNum(ind, "w:firstLineChars");
     if (firstLineChars !== undefined) indentObj.firstLineChars = firstLineChars;
+    // hanging/firstLine are ST_TwipsMeasure (non-negative), yet some
+    // generators emit negatives — Word reads those as the twin (a negative
+    // firstLine indents like hanging and vice versa) and re-saves them
+    // flipped, so parse does the same. A legal twin keeps priority.
+    if (typeof hanging === "number" && hanging < 0) indentObj.firstLine ??= -hanging;
+    else if (hanging !== undefined) indentObj.hanging = hanging as IndentProperties["hanging"];
+    if (typeof firstLine === "number" && firstLine < 0) indentObj.hanging ??= -firstLine;
+    else if (firstLine !== undefined)
+      indentObj.firstLine = firstLine as IndentProperties["firstLine"];
     if (Object.keys(indentObj).length > 0) opts.indent = indentObj;
   }
 

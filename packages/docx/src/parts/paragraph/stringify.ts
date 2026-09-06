@@ -128,6 +128,18 @@ function spacingStr(opts: SpacingProperties): string {
 // ── Indent ──
 
 function indentStr(opts: IndentProperties): string {
+  // hanging/firstLine are ST_TwipsMeasure (non-negative): a negative input
+  // flips to its twin (Word renders and re-saves the same way) and loses to
+  // the twin's legal value when both are present.
+  let { hanging, firstLine } = opts;
+  if (typeof firstLine === "number" && firstLine < 0) {
+    hanging ??= -firstLine;
+    firstLine = undefined;
+  }
+  if (typeof hanging === "number" && hanging < 0) {
+    firstLine ??= -hanging;
+    hanging = undefined;
+  }
   const a = attrsRaw({
     "w:start": opts.start !== undefined ? convertToTwip(opts.start) : undefined,
     "w:startChars": opts.startChars !== undefined ? decimalNumber(opts.startChars) : undefined,
@@ -137,10 +149,10 @@ function indentStr(opts: IndentProperties): string {
     "w:leftChars": opts.leftChars !== undefined ? decimalNumber(opts.leftChars) : undefined,
     "w:right": opts.right !== undefined ? convertToTwip(opts.right) : undefined,
     "w:rightChars": opts.rightChars !== undefined ? decimalNumber(opts.rightChars) : undefined,
-    "w:hanging": opts.hanging !== undefined ? convertToTwip(opts.hanging) : undefined,
+    "w:hanging": hanging !== undefined ? convertToTwip(hanging) : undefined,
     "w:hangingChars":
       opts.hangingChars !== undefined ? decimalNumber(opts.hangingChars) : undefined,
-    "w:firstLine": opts.firstLine !== undefined ? convertToTwip(opts.firstLine) : undefined,
+    "w:firstLine": firstLine !== undefined ? convertToTwip(firstLine) : undefined,
     "w:firstLineChars":
       opts.firstLineChars !== undefined ? decimalNumber(opts.firstLineChars) : undefined,
   });
