@@ -948,7 +948,7 @@ export class DefaultStylesFactory {
       uiPriority: 99,
       unhideWhenUsed: true,
       paragraph: { spacing: { after: 0, line: 240, lineRule: "auto" } },
-      run: { size: 20 },
+      run: { size: 10 },
       ...options.footnoteText,
     });
 
@@ -959,7 +959,7 @@ export class DefaultStylesFactory {
       basedOn: "DefaultParagraphFont",
       link: "FootnoteText",
       semiHidden: true,
-      run: { size: 20 },
+      run: { size: 10 },
       ...options.footnoteTextChar,
     });
 
@@ -984,7 +984,7 @@ export class DefaultStylesFactory {
       uiPriority: 99,
       unhideWhenUsed: true,
       paragraph: { spacing: { after: 0, line: 240, lineRule: "auto" } },
-      run: { size: 20 },
+      run: { size: 10 },
       ...options.endnoteText,
     });
 
@@ -995,7 +995,7 @@ export class DefaultStylesFactory {
       basedOn: "DefaultParagraphFont",
       link: "EndnoteText",
       semiHidden: true,
-      run: { size: 20 },
+      run: { size: 10 },
       ...options.endnoteTextChar,
     });
 
