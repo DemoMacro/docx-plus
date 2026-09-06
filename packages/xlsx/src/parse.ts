@@ -19,6 +19,7 @@ import {
   pickNonVisualDrawingProperties,
   resolveRelationshipTarget,
   toUint8Array,
+  toUint8ArrayAsync,
 } from "@office-open/core";
 import type { DataType } from "@office-open/core";
 import { chartSpaceDesc, userShapesDesc } from "@office-open/core/chart";
@@ -222,12 +223,26 @@ export function parseXlsx(data: DataType): XlsxDocument {
 /**
  * Parse a .xlsx file and convert it into WorkbookOptions.
  *
- * The returned options can be passed to `new Workbook(parsed)`.
+ * Async so that `Blob` (including `File`) and `ReadableStream` inputs are
+ * accepted alongside raw bytes — parts are indexed and decompressed on
+ * demand. The returned options can be passed to `new Workbook(parsed)`.
  */
-export function parseWorkbook(data: DataType): WorkbookOptions {
+export async function parseWorkbook(data: DataType): Promise<WorkbookOptions> {
+  return parseWorkbookFromBytes(await toUint8ArrayAsync(data));
+}
+
+/**
+ * Synchronous counterpart of {@link parseWorkbook}: same result, but `Blob`
+ * and `ReadableStream` inputs throw (normalize them to bytes first, or use
+ * the async entry).
+ */
+export function parseWorkbookSync(data: DataType): WorkbookOptions {
+  return parseWorkbookFromBytes(toUint8Array(data));
+}
+
+function parseWorkbookFromBytes(uint8: Uint8Array): WorkbookOptions {
   // Encrypted package (OLE2/CFB container): the plaintext needs the password,
   // so carry the source bytes verbatim for generate() to re-emit.
-  const uint8 = toUint8Array(data);
   if (isEncryptedContainer(uint8)) {
     return { encrypted: { data: uint8 } };
   }

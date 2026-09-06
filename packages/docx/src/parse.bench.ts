@@ -1,6 +1,6 @@
 import { bench, describe } from "vite-plus/test";
 
-import { generateDocumentSync, parseDocument } from "./index";
+import { generateDocumentSync, parseDocumentSync } from "./index";
 
 // Parse benchmarks — the editor's "open document" path. Fixtures are
 // generated once (default compression, matching real-world DEFLATE'd files)
@@ -146,7 +146,7 @@ describe("DOCX: Parse", () => {
   bench(
     "ours parse — simple (2p + 1 img)",
     () => {
-      parseDocument(SIMPLE_BUF);
+      parseDocumentSync(SIMPLE_BUF);
     },
     {
       iterations: 50,
@@ -156,7 +156,7 @@ describe("DOCX: Parse", () => {
   bench(
     "ours parse — styled paragraphs (20) + 1 img",
     () => {
-      parseDocument(STYLED_BUF);
+      parseDocumentSync(STYLED_BUF);
     },
     {
       iterations: 50,
@@ -166,7 +166,7 @@ describe("DOCX: Parse", () => {
   bench(
     "ours parse — table (10x5)",
     () => {
-      parseDocument(TABLE_BUF);
+      parseDocumentSync(TABLE_BUF);
     },
     {
       iterations: 50,
@@ -176,7 +176,7 @@ describe("DOCX: Parse", () => {
   bench(
     "ours parse — 2000p + 20 img",
     () => {
-      parseDocument(LARGE_PARAGRAPHS_BUF);
+      parseDocumentSync(LARGE_PARAGRAPHS_BUF);
     },
     {
       iterations: 10,
@@ -186,7 +186,7 @@ describe("DOCX: Parse", () => {
   bench(
     "ours parse — 200x10 table",
     () => {
-      parseDocument(LARGE_TABLE_BUF);
+      parseDocumentSync(LARGE_TABLE_BUF);
     },
     {
       iterations: 10,

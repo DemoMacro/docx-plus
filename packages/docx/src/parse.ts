@@ -6,6 +6,7 @@ import {
   isEncryptedContainer,
   resolveRelationshipTarget,
   toUint8Array,
+  toUint8ArrayAsync,
 } from "@office-open/core";
 import type { ThemeColor } from "@office-open/core";
 import { contentTypesDesc } from "@office-open/core";
@@ -366,16 +367,29 @@ function parseRootRels(doc: ParsedArchive): {
 /**
  * Parse a .docx file and convert it into DocumentOptions.
  *
- * This is the main public API for parsing DOCX files.
+ * This is the main public API for parsing DOCX files. Async so that `Blob`
+ * (including `File`) and `ReadableStream` inputs are accepted alongside raw
+ * bytes — parts are indexed and decompressed on demand.
  * The returned options can be passed directly to `new Document(parsed)`
  * to recreate the document.
  *
- * @param data - Raw bytes of a .docx file
+ * @param data - .docx file content — raw bytes, base64 string, Blob, or ReadableStream
  * @returns Document options including sections and metadata
  */
-export function parseDocument(data: DataType): DocumentOptions {
-  const uint8 = toUint8Array(data);
+export async function parseDocument(data: DataType): Promise<DocumentOptions> {
+  return parseDocumentFromBytes(await toUint8ArrayAsync(data));
+}
 
+/**
+ * Synchronous counterpart of {@link parseDocument}: same result, but `Blob`
+ * and `ReadableStream` inputs throw (normalize them to bytes first, or use
+ * the async entry).
+ */
+export function parseDocumentSync(data: DataType): DocumentOptions {
+  return parseDocumentFromBytes(toUint8Array(data));
+}
+
+function parseDocumentFromBytes(uint8: Uint8Array): DocumentOptions {
   // Encrypted package (OLE2/CFB container): the plaintext needs the password,
   // so carry the source bytes verbatim for generate() to re-emit.
   if (isEncryptedContainer(uint8)) {

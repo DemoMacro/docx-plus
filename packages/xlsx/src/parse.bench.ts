@@ -1,7 +1,7 @@
 import { readXlsx as hucreReadXlsx } from "hucre";
 import { bench, describe } from "vite-plus/test";
 
-import { generateWorkbookSync, parseWorkbook } from "./index";
+import { generateWorkbookSync, parseWorkbookSync } from "./index";
 
 // Parse benchmarks — the editor's "open document" path. Fixtures are
 // generated once (default compression, matching real-world DEFLATE'd files)
@@ -114,7 +114,7 @@ describe("XLSX: Parse", () => {
   bench(
     "ours parse — simple (3 rows)",
     () => {
-      parseWorkbook(SIMPLE_BUF);
+      parseWorkbookSync(SIMPLE_BUF);
     },
     {
       iterations: 50,
@@ -134,7 +134,7 @@ describe("XLSX: Parse", () => {
   bench(
     "ours parse — styled rows (20)",
     () => {
-      parseWorkbook(STYLED_BUF);
+      parseWorkbookSync(STYLED_BUF);
     },
     {
       iterations: 50,
@@ -154,7 +154,7 @@ describe("XLSX: Parse", () => {
   bench(
     "ours parse — table (10x5)",
     () => {
-      parseWorkbook(TABLE_BUF);
+      parseWorkbookSync(TABLE_BUF);
     },
     {
       iterations: 50,
@@ -174,7 +174,7 @@ describe("XLSX: Parse", () => {
   bench(
     "ours parse — 2000 rows + 10 img",
     () => {
-      parseWorkbook(LARGE_ROWS_BUF);
+      parseWorkbookSync(LARGE_ROWS_BUF);
     },
     {
       iterations: 10,
@@ -194,7 +194,7 @@ describe("XLSX: Parse", () => {
   bench(
     "ours parse — 200x10 table",
     () => {
-      parseWorkbook(LARGE_TABLE_BUF);
+      parseWorkbookSync(LARGE_TABLE_BUF);
     },
     {
       iterations: 10,
@@ -214,7 +214,7 @@ describe("XLSX: Parse", () => {
   bench(
     "ours parse — 100k×20 data",
     () => {
-      parseWorkbook(DATA_100K_BUF);
+      parseWorkbookSync(DATA_100K_BUF);
     },
     {
       iterations: 3,

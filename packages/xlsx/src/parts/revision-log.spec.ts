@@ -3,7 +3,7 @@ import { parse as parseXml } from "@office-open/xml";
 import { describe, expect, it } from "vite-plus/test";
 
 import { generateWorkbook } from "../generate";
-import { parseWorkbook } from "../parse";
+import { parseWorkbookSync } from "../parse";
 import { revisionHeadersDesc, revisionLogDesc, usersDesc } from "./revision-log";
 import type {
   RevisionHeadersOptions,
@@ -348,7 +348,7 @@ describe("revision end-to-end round-trip", () => {
         users: { users: [{ guid: "{U}", name: "Alice", id: 1, dateTime: "2026-06-19T10:00:00Z" }] },
       },
     });
-    const parsed = parseWorkbook(buffer);
+    const parsed = parseWorkbookSync(buffer);
     expect(parsed.revisionLog).toBeDefined();
     expect(parsed.revisionLog!.headers.headers[0]?.userName).toBe("Alice");
     expect(parsed.revisionLog!.headers.headers[0]?.rId).toBe("rId1");

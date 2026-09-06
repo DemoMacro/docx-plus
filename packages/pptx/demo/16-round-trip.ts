@@ -1577,7 +1577,7 @@ assert("has ppt/theme/theme1.xml", pptxDoc.has("ppt/theme/theme1.xml"));
 // ══════════════════════════════════════════════════════════════════════════════
 
 console.log("\n--- parsePresentation (high-level) ---");
-const parsed = parsePresentation(buffer);
+const parsed = await parsePresentation(buffer);
 
 assert(`${slideCount} slides parsed`, parsed.slides!.length === slideCount);
 assert("title preserved", parsed.title === "Round-trip Feature Showcase");

@@ -2,7 +2,7 @@ import { unzipSync } from "fflate";
 import { describe, expect, it } from "vite-plus/test";
 
 import { generateDocument } from "../generate";
-import { parseDocument } from "../parse";
+import { parseDocumentSync } from "../parse";
 
 /** Unzip a generated package and decode one part as UTF-8 text. */
 function decodePart(output: Uint8Array, path: string): string {
@@ -27,7 +27,7 @@ describe("header/footer part naming", () => {
 
   it("parses back the source part name per slot (round-trip pin)", async () => {
     const output = await generateDocument(doc, { type: "uint8array" });
-    const opts = parseDocument(output);
+    const opts = parseDocumentSync(output);
 
     const headers = opts.sections?.[0]?.headers;
     expect(headers?.partNames).toEqual({
@@ -38,7 +38,7 @@ describe("header/footer part naming", () => {
 
   it("keeps content in the same part file when round-tripped", async () => {
     const first = await generateDocument(doc, { type: "uint8array" });
-    const second = await generateDocument(parseDocument(first), { type: "uint8array" });
+    const second = await generateDocument(parseDocumentSync(first), { type: "uint8array" });
 
     // Content stays in its source part instead of sliding to the next file
     // when the slot iteration order differs from the numbering.

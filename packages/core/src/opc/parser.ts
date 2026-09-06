@@ -1,10 +1,19 @@
 import { parse, stringify } from "@office-open/xml";
 import type { Element, ParseOptions } from "@office-open/xml";
-import { unzipSync, zipSync, strFromU8, strToU8, type ZipOptions, type Zippable } from "fflate";
+import {
+  unzipSync,
+  zipSync,
+  strFromU8,
+  strToU8,
+  inflateSync,
+  type ZipOptions,
+  type Zippable,
+} from "fflate";
 
+import { stripOversizedGfxdata } from "./gfxdata";
 import { OOXML_CANONICAL_PREFIXES } from "./namespaces";
 import { levelForMediaName, ZIP_MEDIA_LEVEL } from "./packer";
-import { hasNativeInflate, nativeUnzip } from "./zip-native";
+import { inflateZipEntry, readCentralDirectory, type ZipEntryMeta } from "./zip-native";
 
 const XML_PARSE_OPTIONS = {
   nativeTypeAttributes: true,
@@ -17,26 +26,62 @@ const XML_PARSE_OPTIONS = {
 };
 
 /**
- * Parsed OOXML archive backed by an unzipped ZIP map.
+ * Parsed OOXML archive backed by a lazily-inflated ZIP.
+ *
+ * The constructor walks the central directory only — no entry is decompressed
+ * until first read — so opening a package costs an index build (milliseconds
+ * even on multi-hundred-part archives) instead of a full inflate. Parts are
+ * inflated on demand and cached; XML parts additionally have oversized
+ * `o:gfxdata` attribute values stripped before parse (see
+ * {@link stripOversizedGfxdata}).
  *
  * Provides unstorage-style API (get/set/getRaw/setRaw/remove/has/keys)
  * for reading and modifying individual parts, then serializing back to a ZIP buffer.
  */
 export class ParsedArchive {
-  private readonly zip: Map<string, Uint8Array>;
+  private readonly source: Uint8Array;
+  /** Compressed entries not yet inflated (empty on the eager fallback path). */
+  private readonly index: Map<string, ZipEntryMeta>;
+  /** Inflated parts, populated on demand (and wholesale on the eager fallback). */
+  private readonly parts = new Map<string, Uint8Array>();
   private readonly modified = new Map<string, Uint8Array>();
   private readonly wrapperCache = new Map<string, Element>();
 
   public constructor(data: Uint8Array) {
-    // Native inflate is the fast path; on any failure (unsupported ZIP variant
-    // or corruption) fall back to fflate unzipSync, the reference implementation.
-    let unzipped: Record<string, Uint8Array>;
+    this.source = data;
+    let entries: ZipEntryMeta[];
     try {
-      unzipped = hasNativeInflate() ? nativeUnzip(data) : unzipSync(data);
+      entries = readCentralDirectory(data);
     } catch {
-      unzipped = unzipSync(data);
+      // Non-classic ZIP variant (zip64, exotic layouts) or not an archive at
+      // all: fall back to fflate's eager full read, the reference
+      // implementation — it throws on unreadable input, as before.
+      const eager = unzipSync(data);
+      for (const [name, bytes] of Object.entries(eager)) this.parts.set(name, bytes);
+      this.index = new Map();
+      return;
     }
-    this.zip = new Map(Object.entries(unzipped));
+    this.index = new Map(entries.map((e) => [e.name, e]));
+  }
+
+  /** Inflate and cache the compressed entry for `path`, if still compressed. */
+  private inflate(path: string): Uint8Array | undefined {
+    const entry = this.index.get(path);
+    if (entry === undefined) return undefined;
+    let data: Uint8Array;
+    try {
+      data = inflateZipEntry(this.source, entry);
+    } catch {
+      // The native path verifies CRC-32; a mismatch was previously tolerated
+      // by falling back to fflate's check-free unzipSync — keep that parity
+      // per entry before giving up.
+      const raw = this.source.subarray(entry.dataStart, entry.dataStart + entry.compSize);
+      data = entry.method === 0 ? raw.slice() : inflateSync(raw);
+    }
+    if (path.endsWith(".xml")) data = stripOversizedGfxdata(data);
+    this.index.delete(path);
+    this.parts.set(path, data);
+    return data;
   }
 
   /**
@@ -55,7 +100,7 @@ export class ParsedArchive {
       return wrapper.elements?.find((e) => e.type === "element");
     }
 
-    const data = this.zip.get(path);
+    const data = this.parts.get(path) ?? this.inflate(path);
     if (data === undefined) return undefined;
 
     // Try cache
@@ -80,7 +125,7 @@ export class ParsedArchive {
 
   /** Read raw binary data (images, media, etc.). */
   public getRaw(path: string): Uint8Array | undefined {
-    return this.modified.get(path) ?? this.zip.get(path);
+    return this.modified.get(path) ?? this.parts.get(path) ?? this.inflate(path);
   }
 
   /** Write raw binary data. */
@@ -92,18 +137,21 @@ export class ParsedArchive {
   /** Remove a part. Returns true if it existed. */
   public remove(path: string): boolean {
     this.wrapperCache.delete(path);
-    return this.modified.delete(path) || this.zip.delete(path);
+    return this.modified.delete(path) || this.parts.delete(path) || this.index.delete(path);
   }
 
   /** Check if a part exists. */
   public has(path: string): boolean {
-    return this.modified.has(path) || this.zip.has(path);
+    return this.modified.has(path) || this.parts.has(path) || this.index.has(path);
   }
 
   /** List all paths matching an optional prefix. */
   public keys(prefix?: string): string[] {
     const all = new Set<string>();
-    for (const key of this.zip.keys()) {
+    for (const key of this.index.keys()) {
+      if (!prefix || key.startsWith(prefix)) all.add(key);
+    }
+    for (const key of this.parts.keys()) {
       if (!prefix || key.startsWith(prefix)) all.add(key);
     }
     for (const key of this.modified.keys()) {
@@ -112,22 +160,22 @@ export class ParsedArchive {
     return [...all];
   }
 
-  /** Serialize back to a ZIP buffer, merging original zip + modifications. */
+  /** Serialize back to a ZIP buffer, inflating any untouched compressed entries. */
   public save(): Uint8Array {
     const files: Zippable = {};
-    for (const [path, data] of this.zip) {
-      if (!this.modified.has(path)) {
-        files[path] = [
-          data,
-          { level: levelForMediaName(path, ZIP_MEDIA_LEVEL) as ZipOptions["level"] },
-        ];
-      }
-    }
-    for (const [path, data] of this.modified) {
+    const collect = (path: string, data: Uint8Array): void => {
       files[path] = [
         data,
         { level: levelForMediaName(path, ZIP_MEDIA_LEVEL) as ZipOptions["level"] },
       ];
+    };
+    for (const path of new Set([...this.index.keys(), ...this.parts.keys()])) {
+      if (this.modified.has(path)) continue;
+      const data = this.parts.get(path) ?? this.inflate(path);
+      if (data !== undefined) collect(path, data);
+    }
+    for (const [path, data] of this.modified) {
+      collect(path, data);
     }
     return zipSync(files);
   }

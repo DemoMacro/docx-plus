@@ -2,7 +2,7 @@ import { unzipSync } from "@office-open/core";
 import { describe, expect, it } from "vite-plus/test";
 
 import { generatePresentation } from "./generate";
-import { parsePresentation } from "./parse";
+import { parsePresentationSync } from "./parse";
 import { patchPresentation } from "./patch";
 import type { PresentationOptions, SlideOptions } from "./shared/file";
 
@@ -29,7 +29,7 @@ describe("patchPresentation slides", () => {
     });
 
     // Parser must accept the new file and see three slides.
-    const parsed = parsePresentation(patched);
+    const parsed = parsePresentationSync(patched);
     expect(parsed.slides?.length).toBe(3);
 
     // New slide part carries the appended text.
@@ -55,7 +55,7 @@ describe("patchPresentation slides", () => {
       slides: { replace: { 0: slide("REPLACED_SLIDE") } },
     });
 
-    const parsed = parsePresentation(patched);
+    const parsed = parsePresentationSync(patched);
     expect(parsed.slides?.length).toBe(2);
 
     const slide1 = decodeEntry(patched, "ppt/slides/slide1.xml");
@@ -102,7 +102,7 @@ describe("patchPresentation slides", () => {
     });
 
     // Only the middle slide survives, first in the deck.
-    const parsed = parsePresentation(patched);
+    const parsed = parsePresentationSync(patched);
     expect(parsed.slides?.length).toBe(1);
     expect(decodeEntry(patched, "ppt/slides/slide2.xml")).toContain("<a:t>B</a:t>");
 

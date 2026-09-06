@@ -1,6 +1,6 @@
 import { bench, describe } from "vite-plus/test";
 
-import { generatePresentationSync, parsePresentation } from "./index";
+import { generatePresentationSync, parsePresentationSync } from "./index";
 
 // Parse benchmarks — the editor's "open document" path. Fixtures are
 // generated once (default compression, matching real-world DEFLATE'd files)
@@ -125,7 +125,7 @@ describe("PPTX: Parse", () => {
   bench(
     "ours parse — simple (2 shapes + 1 img)",
     () => {
-      parsePresentation(SIMPLE_BUF);
+      parsePresentationSync(SIMPLE_BUF);
     },
     {
       iterations: 50,
@@ -135,7 +135,7 @@ describe("PPTX: Parse", () => {
   bench(
     "ours parse — styled shapes (20) + 1 img",
     () => {
-      parsePresentation(STYLED_BUF);
+      parsePresentationSync(STYLED_BUF);
     },
     {
       iterations: 50,
@@ -145,7 +145,7 @@ describe("PPTX: Parse", () => {
   bench(
     "ours parse — table (10x5)",
     () => {
-      parsePresentation(TABLE_BUF);
+      parsePresentationSync(TABLE_BUF);
     },
     {
       iterations: 50,
@@ -155,7 +155,7 @@ describe("PPTX: Parse", () => {
   bench(
     "ours parse — 30 slides × 20 shapes",
     () => {
-      parsePresentation(MANY_SLIDES_BUF);
+      parsePresentationSync(MANY_SLIDES_BUF);
     },
     {
       iterations: 10,

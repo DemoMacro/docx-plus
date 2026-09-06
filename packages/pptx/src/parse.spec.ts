@@ -2,7 +2,7 @@ import { unzipSync, zipSync } from "@office-open/core";
 import { describe, expect, it } from "vite-plus/test";
 
 import { generatePresentation } from "./generate";
-import { parsePresentation } from "./parse";
+import { parsePresentationSync } from "./parse";
 import type { MasterDefinition, PresentationOptions, SlideOptions } from "./shared/file";
 
 const decodeEntry = (buffer: Uint8Array, path: string): string => {
@@ -33,7 +33,7 @@ describe("parsePresentation", () => {
       ],
     };
     const buffer = await generatePresentation(options);
-    const result = parsePresentation(buffer);
+    const result = parsePresentationSync(buffer);
 
     expect(result.slides).to.exist;
     expect(result.slides!.length).to.equal(1);
@@ -50,7 +50,7 @@ describe("parsePresentation", () => {
       ],
     };
     const buffer = await generatePresentation(options);
-    const result = parsePresentation(buffer);
+    const result = parsePresentationSync(buffer);
 
     expect(result.slides!.length).to.equal(2);
     expect(result.masters).to.have.lengthOf(1);
@@ -65,7 +65,7 @@ describe("parsePresentation", () => {
       ],
     };
     const buffer = await generatePresentation(options);
-    const result = parsePresentation(buffer);
+    const result = parsePresentationSync(buffer);
 
     expect(result.title).to.equal("Test Title");
     expect(result.creator).to.equal("Test Creator");
@@ -117,7 +117,7 @@ describe("parsePresentation", () => {
     ];
 
     const buffer = await generatePresentation({ title: "Multi-master", masters, slides });
-    const result = parsePresentation(buffer);
+    const result = parsePresentationSync(buffer);
 
     expect(result.slides!.length).to.equal(2);
     expect(result.masters).to.exist;
@@ -140,7 +140,7 @@ describe("parsePresentation", () => {
       ],
     };
     const buffer = await generatePresentation(options);
-    const result = parsePresentation(buffer);
+    const result = parsePresentationSync(buffer);
 
     expect(result.tableStyles).to.exist;
     expect(result.tableStyles!.defaultStyleId).toBe("{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}");
@@ -166,7 +166,7 @@ describe("parsePresentation", () => {
       ],
     };
     const buffer = await generatePresentation(options);
-    const parsed = parsePresentation(buffer);
+    const parsed = parsePresentationSync(buffer);
 
     expect(parsed.tableStyles).to.exist;
     expect(parsed.tableStyles!.defaultStyleId).toBe(defaultStyleId);
@@ -194,14 +194,14 @@ describe("parsePresentation", () => {
     const buffer = await generatePresentation({ masters, slides });
 
     // First parse
-    const parsed1 = parsePresentation(buffer);
+    const parsed1 = parsePresentationSync(buffer);
     expect(parsed1.masters!.length).to.equal(2);
 
     // Re-generate from parsed data
     const buffer2 = await generatePresentation(parsed1);
 
     // Second parse
-    const parsed2 = parsePresentation(buffer2);
+    const parsed2 = parsePresentationSync(buffer2);
     expect(parsed2.slides!.length).to.equal(2);
     expect(parsed2.masters!.length).to.equal(2);
     // Master name derived from theme name, not original master name
@@ -229,7 +229,7 @@ describe("parsePresentation", () => {
       ],
     };
     const buffer = await generatePresentation(options);
-    const result = parsePresentation(buffer);
+    const result = parsePresentationSync(buffer);
 
     // Same-name slides merge into one section; the unsectioned slide stays out
     expect(result.slides!.map((s) => s.section)).to.deep.equal([
@@ -308,7 +308,7 @@ describe("raw fidelity fallbacks", () => {
     const mutated = await rezip(buffer, "ppt/slides/slide1.xml", (xml) =>
       xml.replace("</p:spTree>", `${unknown}</p:spTree>`),
     );
-    const parsed = parsePresentation(mutated);
+    const parsed = parsePresentationSync(mutated);
     const child = parsed.slides![0]?.children?.find((c) => "rawXml" in c);
     expect(child).to.exist;
     expect((child as { rawXml: string }).rawXml).toContain("mc:AlternateContent");
@@ -326,7 +326,7 @@ describe("raw fidelity fallbacks", () => {
     const mutated = await rezip(buffer, "ppt/slides/slide1.xml", (xml) =>
       xml.replace("</p:sld>", `${ext}</p:sld>`),
     );
-    const parsed = parsePresentation(mutated);
+    const parsed = parsePresentationSync(mutated);
     expect(parsed.slides![0]?.ext).to.contain("{TEST-URI}");
 
     const regenerated = await generatePresentation(parsed);
@@ -342,7 +342,7 @@ describe("raw fidelity fallbacks", () => {
     const mutated = await rezip(buffer, "ppt/slides/slide1.xml", (xml) =>
       xml.replace(/<p:spPr>/, (m) => `${m}${ext}`),
     );
-    const parsed = parsePresentation(mutated);
+    const parsed = parsePresentationSync(mutated);
     const shape = parsed.slides![0]?.children?.[0] as {
       shape?: { properties?: { ext?: string } };
     };

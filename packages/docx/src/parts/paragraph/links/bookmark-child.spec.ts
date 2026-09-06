@@ -2,7 +2,7 @@ import { unzipSync } from "fflate";
 import { describe, expect, it } from "vite-plus/test";
 
 import { generateDocument } from "../../../generate";
-import { parseDocument } from "../../../parse";
+import { parseDocumentSync } from "../../../parse";
 
 /** Unzip a generated package and decode one part as UTF-8 text. */
 function decodePart(output: Uint8Array, path: string): string {
@@ -121,7 +121,7 @@ describe("{ bookmark } child — library allocates id and pairs start/end", () =
       { type: "uint8array" },
     );
 
-    const parsed = parseDocument(output);
+    const parsed = parseDocumentSync(output);
     const first = parsed.sections?.[0]?.children?.[0];
     expect(first && "paragraph" in first).toBe(true);
     const kids = (first as { paragraph: { children?: unknown[] } }).paragraph.children ?? [];

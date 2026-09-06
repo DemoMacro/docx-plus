@@ -74,7 +74,7 @@ writeFileSync("My Document.docx", buffer);
 ## API
 
 - `generateDocument(options)` — generate a `.docx` file; `generateDocumentSync` and `generateDocumentStream` cover sync and streaming output
-- `parseDocument(bytes)` — read a `.docx` back into `DocumentOptions`
+- `parseDocument(data)` — read a `.docx` back into `DocumentOptions` from bytes, `Blob`, or `ReadableStream`; `parseDocumentSync` covers synchronous parsing
 - `patchDocument(input)` — patch an existing `.docx` template by placeholder replacement
 
 Every input is a plain JSON object (`DocumentOptions` and its option types). The full typed API reference lives in the [documentation](https://www.office-open.com/en/docx/); the same types are also frozen as JSON Schemas — `npx office-open schema slice docx DocumentOptions`.
@@ -87,7 +87,7 @@ Read existing `.docx` files and re-create them as `DocumentOptions`:
 import { parseDocument, generateDocument } from "@office-open/docx";
 import { readFileSync, writeFileSync } from "node:fs";
 
-const opts = parseDocument(new Uint8Array(readFileSync("input.docx")));
+const opts = await parseDocument(new Uint8Array(readFileSync("input.docx")));
 
 // Modify parsed data, then re-generate
 const buffer = await generateDocument(opts);

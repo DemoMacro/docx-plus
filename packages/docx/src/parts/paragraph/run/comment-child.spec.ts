@@ -2,7 +2,7 @@ import { unzipSync } from "fflate";
 import { describe, expect, it } from "vite-plus/test";
 
 import { generateDocument } from "../../../generate";
-import { parseDocument } from "../../../parse";
+import { parseDocumentSync } from "../../../parse";
 
 /** Unzip a generated package and decode one part as UTF-8 text. */
 function decodePart(output: Uint8Array, path: string): string {
@@ -171,7 +171,7 @@ describe("{ comment } child — library allocates id, pairs markers, registers e
       { type: "uint8array" },
     );
 
-    const parsed = parseDocument(output);
+    const parsed = parseDocumentSync(output);
     expect(parsed.comments).toHaveLength(1);
     expect(parsed.comments?.[0]?.author).toBe("Roundtrip");
     expect(parsed.comments?.[0]?.id).toBe(0);

@@ -221,7 +221,7 @@ features:
 import { parseDocument, patchDocument } from "@office-open/docx";
 
 // 解析现有文件
-const opts = parseDocument(buffer);
+const opts = await parseDocument(buffer);
 // opts.sections — 文档节
 // opts.title, opts.creator — 核心属性
 
@@ -239,7 +239,7 @@ const result = await patchDocument({
 import { parsePresentation, patchPresentation } from "@office-open/pptx";
 
 // 解析现有文件
-const opts = parsePresentation(buffer);
+const opts = await parsePresentation(buffer);
 // opts.slides — 幻灯片数组
 // opts.size, opts.title — 演示文稿属性
 
@@ -257,7 +257,7 @@ const result = await patchPresentation({
 import { parseWorkbook, patchWorkbook } from "@office-open/xlsx";
 
 // 解析现有文件
-const opts = parseWorkbook(buffer);
+const opts = await parseWorkbook(buffer);
 // opts.worksheets — 工作表数组
 // opts.styles — 样式定义
 

@@ -61,3 +61,34 @@ export function toUint8Array(data: DataType, options?: ToUint8ArrayOptions): Uin
     throw new TypeError("ReadableStream input requires async processing");
   throw new TypeError(`Unsupported data type: ${typeof data}`);
 }
+
+/**
+ * Async counterpart of {@link toUint8Array}: additionally accepts `Blob`
+ * (including `File`) and `ReadableStream` inputs, which the sync variant
+ * rejects. Everything else delegates to the sync normalization.
+ */
+export async function toUint8ArrayAsync(
+  data: DataType,
+  options?: ToUint8ArrayOptions,
+): Promise<Uint8Array> {
+  if (data instanceof Blob) return new Uint8Array(await data.arrayBuffer());
+  if (data instanceof ReadableStream) {
+    const reader = data.getReader();
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      total += value.length;
+    }
+    const out = new Uint8Array(total);
+    let offset = 0;
+    for (const chunk of chunks) {
+      out.set(chunk, offset);
+      offset += chunk.length;
+    }
+    return out;
+  }
+  return toUint8Array(data, options);
+}

@@ -12,7 +12,7 @@ export type {
   OutputByType,
   PackerOptions,
 } from "@office-open/core";
-export { parseXlsx, parseWorkbook } from "./parse";
+export { parseXlsx, parseWorkbook, parseWorkbookSync } from "./parse";
 export type { XlsxDocument, XlsxPartRefs } from "./parse";
 export { patchWorkbook } from "./patch";
 export type { Patch, ScalarValue, PatchWorkbookOptions } from "./patch";

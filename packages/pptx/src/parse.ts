@@ -11,7 +11,7 @@ import {
   resolveRelationshipTarget,
 } from "@office-open/core";
 import type { DataType } from "@office-open/core";
-import { extUriMatches, toUint8Array } from "@office-open/core";
+import { extUriMatches, toUint8Array, toUint8ArrayAsync } from "@office-open/core";
 import type { ReadContext } from "@office-open/core/descriptor";
 import { themeDesc, themeOverrideDesc } from "@office-open/core/theme";
 import type { Element } from "@office-open/xml";
@@ -434,17 +434,31 @@ function parseSlideSections(
 /**
  * Parse a .pptx file and convert it into PresentationOptions.
  *
- * This is the main public API for parsing PPTX files.
+ * This is the main public API for parsing PPTX files. Async so that `Blob`
+ * (including `File`) and `ReadableStream` inputs are accepted alongside raw
+ * bytes — parts are indexed and decompressed on demand.
  * The returned options can be passed directly to `new Presentation(parsed)`
  * to recreate the presentation.
  *
- * @param data - Raw bytes of a .pptx file
+ * @param data - .pptx file content — raw bytes, base64 string, Blob, or ReadableStream
  * @returns Parsed presentation options
  */
-export function parsePresentation(data: DataType): PresentationOptions {
+export async function parsePresentation(data: DataType): Promise<PresentationOptions> {
+  return parsePresentationFromBytes(await toUint8ArrayAsync(data));
+}
+
+/**
+ * Synchronous counterpart of {@link parsePresentation}: same result, but
+ * `Blob` and `ReadableStream` inputs throw (normalize them to bytes first,
+ * or use the async entry).
+ */
+export function parsePresentationSync(data: DataType): PresentationOptions {
+  return parsePresentationFromBytes(toUint8Array(data));
+}
+
+function parsePresentationFromBytes(uint8: Uint8Array): PresentationOptions {
   // Encrypted package (OLE2/CFB container): the plaintext needs the password,
   // so carry the source bytes verbatim for generate() to re-emit.
-  const uint8 = toUint8Array(data);
   if (isEncryptedContainer(uint8)) {
     return { encrypted: { data: uint8 } };
   }

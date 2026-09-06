@@ -221,7 +221,7 @@ features:
 import { parseDocument, patchDocument } from "@office-open/docx";
 
 // Parse existing file
-const opts = parseDocument(buffer);
+const opts = await parseDocument(buffer);
 // opts.sections — document sections
 // opts.title, opts.creator — core properties
 
@@ -239,7 +239,7 @@ const result = await patchDocument({
 import { parsePresentation, patchPresentation } from "@office-open/pptx";
 
 // Parse existing file
-const opts = parsePresentation(buffer);
+const opts = await parsePresentation(buffer);
 // opts.slides — slide array
 // opts.size, opts.title — presentation properties
 
@@ -257,7 +257,7 @@ const result = await patchPresentation({
 import { parseWorkbook, patchWorkbook } from "@office-open/xlsx";
 
 // Parse existing file
-const opts = parseWorkbook(buffer);
+const opts = await parseWorkbook(buffer);
 // opts.worksheets — worksheet array
 // opts.styles — style definitions
 

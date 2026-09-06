@@ -15,7 +15,7 @@
 
 import type * as ZlibNode from "node:zlib";
 
-import { ZipPassThrough } from "fflate";
+import { ZipPassThrough, inflateSync } from "fflate";
 import type { FlateError, Zippable, ZipOptions } from "fflate";
 
 // ── CRC-32 lookup table ──
@@ -97,7 +97,7 @@ try {
   _nativeCrc32 =
     typeof zlib.crc32 === "function" ? (data: Uint8Array) => zlib.crc32(data) : computeCrc32;
   // Inflate is optional (deflate presence doesn't guarantee it), so probe
-  // separately — nativeUnzip only becomes available when this resolves.
+  // separately — inflateZipEntry only uses the native path when this resolves.
   if (typeof zlib.inflateRawSync === "function" && _nativeInflate === undefined) {
     _nativeInflate = (data: Uint8Array): Uint8Array => zlib.inflateRawSync(data);
   }
@@ -106,8 +106,6 @@ try {
 }
 
 export const hasNativeDeflate = (): boolean => _nativeDeflate !== undefined;
-
-export const hasNativeInflate = (): boolean => _nativeInflate !== undefined;
 
 // fflate's async zip entries hand every chunk to a dedicated worker via
 // postMessage with a transfer list — one thread spawn per part (~5-10ms each
@@ -384,7 +382,8 @@ function rU32(b: Uint8Array, o: number): number {
 const EOCD_MAGIC = 0x06054b50;
 const CD_MAGIC = 0x02014b50;
 
-interface ZipEntryMeta {
+/** One archive entry as resolved from the central directory. */
+export interface ZipEntryMeta {
   name: string;
   method: number;
   compSize: number;
@@ -402,7 +401,7 @@ function findEocd(b: Uint8Array): number {
 }
 
 /** Walk the central directory and resolve each entry's payload offset. */
-function readCentralDirectory(buf: Uint8Array): ZipEntryMeta[] {
+export function readCentralDirectory(buf: Uint8Array): ZipEntryMeta[] {
   const eocd = findEocd(buf);
   const count = rU16(buf, eocd + 10);
   const cdOffset = rU32(buf, eocd + 16);
@@ -437,24 +436,23 @@ function readCentralDirectory(buf: Uint8Array): ZipEntryMeta[] {
 }
 
 /**
- * Decompress a ZIP archive via `node:zlib` `inflateRawSync`, mirroring fflate's
- * `unzipSync` signature and CRC-32 integrity check. Node/Bun only — callers
- * gate on {@link hasNativeInflate} and fall back to fflate `unzipSync` elsewhere.
- * Measured ~2x faster than fflate on large OOXML packages.
+ * Inflate a single entry resolved by {@link readCentralDirectory}, without
+ * materializing the rest of the archive. Mirrors the per-entry work of the
+ * former eager `nativeUnzip`: native zlib inflate + CRC-32 where available
+ * (Node/Bun), fflate `inflateSync` elsewhere (no CRC check — fflate parity).
+ * STORE entries are copied out of the source buffer.
  */
-export function nativeUnzip(buf: Uint8Array): Record<string, Uint8Array> {
-  if (!_nativeInflate) throw new Error("Native inflate not available");
-  const inflate = _nativeInflate;
-  const crc = _nativeCrc32 ?? computeCrc32;
-  const out: Record<string, Uint8Array> = {};
-  for (const e of readCentralDirectory(buf)) {
-    const raw = buf.subarray(e.dataStart, e.dataStart + e.compSize);
-    const dec = e.method === 0 ? raw.slice() : inflate(raw);
+export function inflateZipEntry(buf: Uint8Array, entry: ZipEntryMeta): Uint8Array {
+  const raw = buf.subarray(entry.dataStart, entry.dataStart + entry.compSize);
+  if (entry.method === 0) return raw.slice();
+  if (_nativeInflate) {
+    const dec = _nativeInflate(raw);
     // >>> 0 normalizes the signed CRC_TABLE accumulation against zlib's unsigned crc32.
-    if (crc(dec) >>> 0 !== e.crc) throw new Error(`ZIP CRC-32 mismatch: ${e.name}`);
-    out[e.name] = dec;
+    if ((_nativeCrc32 ?? computeCrc32)(dec) >>> 0 !== entry.crc)
+      throw new Error(`ZIP CRC-32 mismatch: ${entry.name}`);
+    return dec;
   }
-  return out;
+  return inflateSync(raw);
 }
 
 // ── Native streaming DEFLATE entry ──

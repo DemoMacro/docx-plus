@@ -150,7 +150,7 @@ assert("has xl/styles.xml", xlsxDoc.has("xl/styles.xml"));
 // ══════════════════════════════════════════════════════════════════════════════
 
 console.log("\n--- parseWorkbook (high-level) ---");
-const parsed = parseWorkbook(buffer);
+const parsed = await parseWorkbook(buffer);
 
 assert("2 worksheets parsed", parsed.worksheets!.length === 2);
 assert("sheet 1 name", parsed.worksheets![0]?.name === "Data");

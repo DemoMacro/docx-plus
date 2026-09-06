@@ -958,7 +958,7 @@ async function main() {
   console.log(`Generated DOCX: ${buffer.length} bytes`);
 
   // 3. Parse it back
-  const parsed = parseDocument(buffer);
+  const parsed = await parseDocument(buffer);
   console.log(`Parsed ${parsed.sections!.length} sections`);
 
   // 4. Basic verification

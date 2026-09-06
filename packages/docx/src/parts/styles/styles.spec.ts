@@ -5,7 +5,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { parseParagraphProperties } from "../../body";
 import type { DocxReadContext } from "../../context";
 import { generateDocumentSync } from "../../generate";
-import { parseDocument } from "../../parse";
+import { parseDocumentSync } from "../../parse";
 import { DefaultStylesFactory, stringifyDocDefaults } from "./factory";
 import { parseStyleDefinitions, Styles } from "./styles";
 
@@ -314,13 +314,13 @@ describe("styles round-trip (generate → parse → generate)", () => {
     });
 
     // First parse: custom + table styles are structured (table not lost).
-    const parsed = parseDocument(buffer);
+    const parsed = parseDocumentSync(buffer);
     expect(parsed.styles?.paragraphStyles?.map((s) => s.id)).toContain("MyPara");
     expect(parsed.styles?.tableStyles?.map((s) => s.id)).toContain("MyTable");
 
     // Round-trip through context.ts again — table styles must survive (the
     // previous round-trip branch dropped tableStyles, losing every table style).
-    const reparsed = parseDocument(generateDocumentSync(parsed));
+    const reparsed = parseDocumentSync(generateDocumentSync(parsed));
     expect(reparsed.styles?.tableStyles?.map((s) => s.id)).toContain("MyTable");
     expect(reparsed.styles?.paragraphStyles?.map((s) => s.id)).toContain("MyPara");
   });
@@ -330,7 +330,7 @@ describe("styles round-trip (generate → parse → generate)", () => {
       sections: [{ children: [{ paragraph: { children: [{ text: "x" }] } }] }],
       styles: { default: { heading1: { run: { color: "FF0000" } } } },
     });
-    const parsed = parseDocument(buffer);
+    const parsed = parseDocumentSync(buffer);
     // Builtins (Heading1, Normal) round-trip structured so an HTML renderer can
     // read their run/paragraph attributes directly — no XML string parsing.
     const h1 = parsed.styles?.paragraphStyles?.find((s) => s.id === "Heading1");
@@ -405,9 +405,9 @@ describe("styles round-trip (generate → parse → generate)", () => {
     const fresh = generateDocumentSync({
       sections: [{ children: [{ paragraph: { children: [{ text: "x" }] } }] }],
     });
-    const parsed = parseDocument(fresh);
+    const parsed = parseDocumentSync(fresh);
     parsed.styles!.default!.document!.paragraph = { spacing: { after: 0 } };
-    const regenerated = parseDocument(generateDocumentSync(parsed));
+    const regenerated = parseDocumentSync(generateDocumentSync(parsed));
     const docDefaultsXml = regenerated.styles!.docDefaultsXml!;
     expect(docDefaultsXml).toContain('w:after="0"');
     expect(docDefaultsXml).not.toContain('w:after="160"');

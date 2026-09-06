@@ -101,7 +101,7 @@ Read existing files back into the same structured options for inspection or roun
 ```typescript
 import { parseDocument } from "office-open/docx";
 
-const opts = parseDocument(buffer);
+const opts = await parseDocument(buffer);
 // opts.sections — document sections and content
 // opts.title, opts.creator — core properties
 ```

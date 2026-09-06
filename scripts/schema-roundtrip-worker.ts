@@ -42,9 +42,9 @@ if (format !== "docx" && format !== "pptx" && format !== "xlsx") {
 }
 
 const mod = (await import(pathToFileURL(resolve("src/parse.ts")).href)) as {
-  parseDocument?: (data: unknown) => unknown;
-  parsePresentation?: (data: unknown) => unknown;
-  parseWorkbook?: (data: unknown) => unknown;
+  parseDocument?: (data: unknown) => Promise<unknown>;
+  parsePresentation?: (data: unknown) => Promise<unknown>;
+  parseWorkbook?: (data: unknown) => Promise<unknown>;
 };
 
 for (const file of files) {
@@ -52,10 +52,10 @@ for (const file of files) {
     const data = readFileSync(file);
     const options =
       format === "docx"
-        ? mod.parseDocument!(data)
+        ? await mod.parseDocument!(data)
         : format === "pptx"
-          ? mod.parsePresentation!(data)
-          : mod.parseWorkbook!(data);
+          ? await mod.parsePresentation!(data)
+          : await mod.parseWorkbook!(data);
     process.stdout.write(toJson({ file, ok: true, options }) + "\n");
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

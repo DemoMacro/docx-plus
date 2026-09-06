@@ -1,6 +1,6 @@
 {
   "name": "@office-open/pptx",
-  "version": "0.13.2",
+  "version": "0.14.0",
   "description": "AI-native PowerPoint (.pptx) generation, parsing, and patching from plain JSON — fully typed TypeScript, 100% OOXML coverage, no Microsoft Office required",
   "keywords": [
     "ai",

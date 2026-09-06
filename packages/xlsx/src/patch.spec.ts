@@ -2,7 +2,7 @@ import { unzipSync } from "@office-open/core";
 import { describe, expect, it } from "vite-plus/test";
 
 import { generateWorkbook } from "./generate";
-import { parseWorkbook } from "./parse";
+import { parseWorkbookSync } from "./parse";
 import { patchWorkbook } from "./patch";
 
 const decodeEntry = (buffer: Uint8Array, path: string): string => {
@@ -13,7 +13,7 @@ const decodeEntry = (buffer: Uint8Array, path: string): string => {
 };
 
 const cellValue = (buf: Uint8Array, sheetIndex: number): string => {
-  const parsed = parseWorkbook(buf);
+  const parsed = parseWorkbookSync(buf);
   const cell = parsed.worksheets?.[sheetIndex]?.rows?.[0]?.cells?.[0];
   return typeof cell?.value === "string" ? cell.value : "";
 };
@@ -39,7 +39,7 @@ describe("patchWorkbook worksheets", () => {
       },
     });
 
-    const parsed = parseWorkbook(patched);
+    const parsed = parseWorkbookSync(patched);
     expect(parsed.worksheets?.length).toBe(2);
     expect(parsed.worksheets?.[1]?.name).toBe("Appended");
 
@@ -82,7 +82,7 @@ describe("patchWorkbook worksheets", () => {
       },
     });
 
-    const parsed = parseWorkbook(patched);
+    const parsed = parseWorkbookSync(patched);
     expect(parsed.worksheets?.length).toBe(2);
     expect(cellValue(patched, 0)).toBe("KEPT");
     expect(cellValue(patched, 1)).toBe("REPLACED");
@@ -120,7 +120,7 @@ describe("patchWorkbook worksheets", () => {
       worksheets: { remove: ["Drop"] },
     });
 
-    const parsed = parseWorkbook(patched);
+    const parsed = parseWorkbookSync(patched);
     expect(parsed.worksheets?.length).toBe(1);
     expect(cellValue(patched, 0)).toBe("KEPT");
 

@@ -3,14 +3,14 @@ import type { WorkbookOptions } from "@parts/file";
 import { describe, expect, it } from "vite-plus/test";
 
 import { generateWorkbook } from "./generate";
-import { parseWorkbook } from "./parse";
+import { parseWorkbookSync } from "./parse";
 
 // Full-file round-trip: generateWorkbook → Buffer → parseWorkbook → WorkbookOptions.
 // Proves the three previously-deferred parse gaps are resolved on the read path.
 
 async function roundTrip(opts: WorkbookOptions): Promise<WorkbookOptions> {
   const buf = (await generateWorkbook(opts, { type: "uint8array" })) as Uint8Array;
-  return parseWorkbook(buf);
+  return parseWorkbookSync(buf);
 }
 
 describe("parseWorkbook round-trip", () => {
@@ -68,7 +68,7 @@ describe("parseWorkbook round-trip", () => {
     const pivotXml = new TextDecoder().decode(archive["xl/pivotTables/pivotTable1.xml"]!);
     expect(pivotXml).toContain('<pageFields count="1">');
     expect(pivotXml).toContain('<pageField fld="1" hier="0" item="1"/>');
-    const reparsed = parseWorkbook(buf);
+    const reparsed = parseWorkbookSync(buf);
     expect(reparsed.worksheets).toHaveLength(2);
   });
 
@@ -415,7 +415,7 @@ describe("theme round-trip", () => {
     unzipped["xl/theme/theme1.xml"] = new TextEncoder().encode(mutated);
     const reborn = zipSync(unzipped);
 
-    const parsed = parseWorkbook(reborn);
+    const parsed = parseWorkbookSync(reborn);
     expect(parsed.theme?.colorScheme?.accent1).to.exist;
 
     const regenerated = (await generateWorkbook(parsed, { type: "uint8array" })) as Uint8Array;

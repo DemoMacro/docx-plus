@@ -2,7 +2,7 @@ import { unzipSync } from "fflate";
 import { describe, expect, it } from "vitest";
 
 import { generateDocument } from "../../generate";
-import { parseDocument } from "../../parse";
+import { parseDocumentSync } from "../../parse";
 
 const RAW_DATA = [
   '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
@@ -76,7 +76,7 @@ describe("SmartArt raw round-trip", () => {
 
   it("parses the raw parts back alongside the structured fold", async () => {
     const out = await generateDocument(docWithRawSmartArt(), { type: "uint8array" });
-    const opts = parseDocument(out);
+    const opts = parseDocumentSync(out);
 
     const para = opts.sections?.[0]?.children?.[0] as unknown as {
       paragraph: { children: { smartArt: Record<string, unknown> }[] };
@@ -99,7 +99,7 @@ describe("SmartArt raw round-trip", () => {
 
   it("re-emits byte-identical parts on a second round-trip", async () => {
     const first = await generateDocument(docWithRawSmartArt(), { type: "uint8array" });
-    const second = await generateDocument(parseDocument(first), { type: "uint8array" });
+    const second = await generateDocument(parseDocumentSync(first), { type: "uint8array" });
 
     expect(decodePart(second, "word/diagrams/data1.xml")).toBe(RAW_DATA);
     const mediaA = unzipSync(first)["word/media/image1.png"];

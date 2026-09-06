@@ -9,7 +9,7 @@ import { unzipSync } from "@office-open/core";
 import { describe, expect, it } from "vite-plus/test";
 
 import { generateWorkbook, generateWorkbookStream } from "./index";
-import { parseWorkbook } from "./parse";
+import { parseWorkbookSync } from "./parse";
 import type { WorkbookOptions } from "./parts/file";
 import { canStreamWorkbook } from "./stream";
 
@@ -103,8 +103,8 @@ describe("generateWorkbookStream", () => {
   it("round-trips to the same parsed data as the full path", async () => {
     const streamedBytes = await collectStream(generateWorkbookStream(PLAIN));
     const fullBytes = await generateWorkbook(PLAIN, { type: "uint8array" });
-    const streamed = parseWorkbook(streamedBytes);
-    const full = parseWorkbook(fullBytes);
+    const streamed = parseWorkbookSync(streamedBytes);
+    const full = parseWorkbookSync(fullBytes);
     expect(streamed.worksheets?.length).toBe(full.worksheets?.length);
     const s1 = streamed.worksheets?.[0]?.rows;
     const f1 = full.worksheets?.[0]?.rows;

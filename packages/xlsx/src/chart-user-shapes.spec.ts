@@ -9,7 +9,7 @@ import { unzipSync } from "@office-open/core";
 import { describe, expect, it } from "vite-plus/test";
 
 import { generateWorkbook } from "./index";
-import { parseWorkbook } from "./parse";
+import { parseWorkbookSync } from "./parse";
 import type { WorkbookOptions } from "./parts/file";
 
 const WORKBOOK: WorkbookOptions = {
@@ -79,7 +79,7 @@ describe("chart userShapes companion part", () => {
 
   it("round-trips the anchors through the chart part rels", async () => {
     const bytes = await generateWorkbook(WORKBOOK);
-    const parsed = parseWorkbook(bytes);
+    const parsed = parseWorkbookSync(bytes);
     const chart = parsed.worksheets?.[0]?.charts?.[0];
     expect(chart?.userShapes?.relationshipId).toBe("rId1");
     expect(chart?.userShapes?.anchors).toHaveLength(1);
