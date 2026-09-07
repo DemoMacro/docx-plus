@@ -6,48 +6,42 @@
  * All XML parts are produced via descriptors or serialize() —
  * no Formatter dependency.
  *
+ * The part wiring runs in phases owned by the compile/ folder: the document
+ * body and its rels (compile/document), the notes parts (compile/notes),
+ * headers/footers (compile/headerfooter), and the chart/SmartArt tail
+ * (compile/drawings), with the placeholder bridge and embedding rel
+ * resolution they share in compile/shared. This module keeps the
+ * part-mapping orchestration.
+ *
  * @module
  */
 
 import {
   RELATIONSHIP_TYPES,
-  type RelationshipType,
   addModelBinaries,
-  addSmartArtRelationships,
   compileMapping,
   createThemeXml,
   dropDanglingPassthroughRels,
   DOCX_PARTS,
   finalizeContentTypes,
   findAndReplaceImagePlaceholders,
-  formatId,
-  hasPlaceholders,
   optionalRelsPart,
   Relationships,
   TargetModeType,
-  replaceAllPlaceholders,
   replaceNumberingPlaceholders,
   IMAGE_MEDIA_CONTENT_TYPES,
   resolverFromRegistry,
-  toUint8Array,
 } from "@office-open/core";
 import type { XmlifyedFile, Zippable } from "@office-open/core";
-import {
-  getColorXml,
-  getLayoutXml,
-  getStyleXml,
-  stringifyColorDefinitionPart,
-  stringifyLayoutDefinitionPart,
-  stringifyStyleDefinitionPart,
-} from "@office-open/core/smartart";
-import { OOXML_XML_DECLARATION, escapeXml } from "@office-open/xml";
 import type { DocumentOptions } from "@parts/core-properties";
 import { obfuscate } from "@parts/fonts/obfuscate-ttf-to-odttf";
-import { HEADER_NAMESPACES, FOOTER_NAMESPACES, stringifyHeaderFooter } from "@parts/header-footer";
-import type { CommentOptions } from "@parts/paragraph/run/comment-run";
-import type { EmbeddingCollection } from "@shared/embeddings/embeddings";
 
 import { stringifyDocumentXml, stringifyBodyChild, type BodyContext } from "./body";
+import { compileDocumentEntries } from "./compile/document";
+import { compileChartParts, compileSmartArtParts } from "./compile/drawings";
+import { compileHeaderFooterParts } from "./compile/headerfooter";
+import { compileNotesParts } from "./compile/notes";
+import { XML_DECL } from "./compile/shared";
 import { DocxWriteContext } from "./context";
 import {
   corePropertiesDesc,
@@ -55,97 +49,18 @@ import {
   appPropertiesDesc,
   fontTableDesc,
   webSettingsDesc,
-  commentsDesc,
-  commentsExtendedDesc,
-  peopleDesc,
   bibliographyDesc,
   settingsDesc,
-  footnotesDesc,
-  endnotesDesc,
   glossaryDesc,
+  peopleDesc,
+  commentsExtendedDesc,
 } from "./parts";
 
 /** Reusable TextEncoder (stateless, safe to share). */
 const encoder = new TextEncoder();
 
-/** Relationship type for OLE embedding parts (word|ppt/embeddings/*). */
-const OLE_OBJECT_RELATIONSHIP = RELATIONSHIP_TYPES.oleObject;
-
-/** Relationship type for native-format embedding parts (embedded xlsx/docx). */
-const PACKAGE_RELATIONSHIP = RELATIONSHIP_TYPES.package;
-
-/** Re-emit the relationship type the source used for an embedding part — a
- *  native OPC package (xlsx/docx) stays a package rel, an OLE compound binary
- *  stays an oleObject rel. */
-const embeddingRelationship = (
-  embeddings: EmbeddingCollection,
-  fileName: string,
-): RelationshipType =>
-  embeddings.array.find((e) => e.fileName === fileName)?.relationshipType === "package"
-    ? PACKAGE_RELATIONSHIP
-    : OLE_OBJECT_RELATIONSHIP;
-
-/** XML declaration prepended to every OOXML part. */
-const XML_DECL = OOXML_XML_DECLARATION;
-
-/**
- * Look up the source rId for a document relationship by kind+target. Returns
- * the numeric id when the source carried the same rel, undefined otherwise.
- * The body XML's `r:id` references the source rId verbatim on round-trip, so
- * the structured compiler must emit the rel at that exact id — otherwise
- * `r:id="rId4"` would point at a different rel and Word refuses to open.
- */
-function sourceRidFor(
-  passthroughRelationships:
-    | readonly { source: string; relationshipType: string; target: string; rId: string }[]
-    | undefined,
-  ownerSource: string,
-  relationshipType: string,
-  target: string,
-): number | undefined {
-  if (!passthroughRelationships) return undefined;
-  for (const rel of passthroughRelationships) {
-    if (
-      rel.source === ownerSource &&
-      rel.relationshipType === relationshipType &&
-      rel.target === target
-    ) {
-      const m = /^rId(\d+)$/.exec(rel.rId);
-      if (m) return Number(m[1]);
-    }
-  }
-  return undefined;
-}
-
-/**
- * Build a {fileName → rId} map for source rels targeting `media/` or
- * `embeddings/`. findAndReplaceImagePlaceholders consults this map to
- * substitute the source rId in body XML (so `<a:blip r:embed="rId5"/>` points
- * at the rel registered at rId5 — not the rel registered at an
- * offset-derived id, which dangles against any source body that referenced
- * the source rId). Placeholder keys use the media-collection fileName; a
- * dedup-renamed file misses the map and falls through to the offset id on
- * BOTH the body and the .rels side, keeping them consistent.
- */
-function documentSourceRids(
-  ctx: DocxWriteContext,
-  dir: "media" | "embeddings",
-): ReadonlyMap<string, string> {
-  const map = new Map<string, string>();
-  const prefix = `${dir}/`;
-  for (const rel of ctx._options.passthroughRelationships ?? []) {
-    if (rel.source !== "word/document.xml") continue;
-    if (!rel.target.startsWith(prefix)) continue;
-    map.set(rel.target.slice(prefix.length), rel.rId);
-  }
-  return map;
-}
-
 /** DOCX part path → content type, derived from the part registry. */
 const DOCX_CONTENT_TYPE_RESOLVER = resolverFromRegistry(DOCX_PARTS);
-
-/** Chart part → user-shapes part relationship (c:userShapes bridge). */
-const CHART_USER_SHAPES_REL = RELATIONSHIP_TYPES.chartUserShapes;
 
 /** Extension → MIME for media/font/embedding Default entries. Declared only
  * for extensions actually present in the package. */
@@ -160,6 +75,9 @@ const DOCX_MEDIA_CONTENT_TYPES: Record<string, string> = {
 
 /** Extended context for header/footer part stringification. */
 type DocxContext = BodyContext;
+
+/** Factory the compile phases use to derive a per-part stringify context. */
+export type PartCtxFactory = (viewWrapper?: BodyContext["viewWrapper"]) => BodyContext;
 
 // ── Public API ──
 
@@ -269,16 +187,6 @@ interface XmlifyedFileMapping {
   WebSettings?: XmlifyedFile;
 }
 
-/**
- * Comments carried by the document: those the caller listed explicitly
- * (`options.comments`) plus entries registered by `{ comment }` sugar children
- * during body stringification. Drives both word/comments.xml generation and the
- * [Content_Types] comments Override, which must stay in sync (OPC consistency).
- */
-function mergedCommentChildren(ctx: DocxWriteContext): CommentOptions[] {
-  return [...(ctx._options.comments ?? []), ...ctx.comments.entries];
-}
-
 function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
   const mkCtx = (viewWrapper: DocxContext["viewWrapper"] = ctx.document): DocxContext => {
     const bodyCtx: DocxContext = {
@@ -297,22 +205,6 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
     return bodyCtx;
   };
 
-  // Per-part media-replacement results shared between the .rels pass and the
-  // body-XML pass so both use identical rId offsets. Each header/footer part
-  // has its own relationship numbering (independent of the document part).
-  // Embedding results chain after media (same {fileName} placeholder bridge,
-  // offsets continuing past the media relationships), mirroring the document
-  // part — headers/footers can carry w:object runs of their own.
-  const footerMediaResults = new Map<number, { xml: string; referenced: { fileName: string }[] }>();
-  const footerEmbeddingResults = new Map<
-    number,
-    { xml: string; referenced: { fileName: string }[] }
-  >();
-  const headerMediaResults = new Map<number, { xml: string; referenced: { fileName: string }[] }>();
-  const headerEmbeddingResults = new Map<
-    number,
-    { xml: string; referenced: { fileName: string }[] }
-  >();
   const docCtx = mkCtx(ctx.document);
   const documentXmlData = XML_DECL + stringifyDocumentXml(ctx, docCtx);
   // Sampled after stringify: hyperlinks/altChunks registered during body
@@ -320,136 +212,19 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
   // below must skip them (same ordering as the footnote part).
   const documentRelationshipCount = ctx.document.relationships.nextRelationshipId;
 
-  // Comments is an optional part — skip it entirely (no comments.xml, no
-  // comments rels, no [Content_Types] Override) when the document carries none.
-  // Emitting an empty comments.xml with a dangling relationship is the OPC
-  // violation that makes Word reject the package on open.
-  const mergedCommentChildrenList = mergedCommentChildren(ctx);
-  const hasComments = mergedCommentChildrenList.length > 0;
-  const commentCtx = hasComments ? mkCtx({ relationships: ctx.comments.relationships }) : null;
-  const commentXmlData = commentCtx
-    ? XML_DECL + commentsDesc.stringify(mergedCommentChildrenList, commentCtx)
-    : "";
-  // Sampled after stringify, like the document and footnote counts above.
-  const commentRelationshipCount = hasComments ? ctx.comments.relationships.nextRelationshipId : 0;
-
-  const footnoteCtx = mkCtx({
-    relationships: ctx.footNotes.relationships,
-  });
-  const footnoteXmlData =
-    XML_DECL +
-    (footnotesDesc.stringify(
-      {
-        notes: ctx.footNotes.notes,
-        separator: ctx.footNotes.separator,
-        continuationSeparator: ctx.footNotes.continuationSeparator,
-        continuationNotice: ctx.footNotes.continuationNotice,
-      },
-      footnoteCtx,
-    ) ?? "");
-  // Sampled after stringify: hyperlinks registered during note stringification
-  // take sequential ids here, and the media/embedding offsets below must skip
-  // them (same ordering as the document and comments parts).
-  const footnoteRelationshipCount = ctx.footNotes.relationships.nextRelationshipId;
-
-  const documentMedia = findAndReplaceImagePlaceholders(
-    documentXmlData,
-    ctx.media.array,
-    documentRelationshipCount,
-    "rId",
-    documentSourceRids(ctx, "media"),
-  );
-  // OLE embeddings reuse the same {fileName} placeholder bridge as images; run
-  // after media so {oleObjectN.bin} placeholders resolve against the embedding array.
-  const documentEmbeddingOffset = documentRelationshipCount + documentMedia.referenced.length;
-  const documentEmbeddings = findAndReplaceImagePlaceholders(
-    documentMedia.xml,
-    ctx.embeddings.array,
-    documentEmbeddingOffset,
-    "rId",
-    documentSourceRids(ctx, "embeddings"),
-  );
-  const commentMedia = hasComments
-    ? findAndReplaceImagePlaceholders(commentXmlData, ctx.media.array, commentRelationshipCount)
-    : { xml: "", referenced: [] as { fileName: string }[] };
-  // OLE embeddings inside comments reuse the same placeholder bridge, offset
-  // chained past the media relationships (same order as the document part).
-  const commentEmbeddingOffset = commentRelationshipCount + commentMedia.referenced.length;
-  const commentEmbeddings = hasComments
-    ? findAndReplaceImagePlaceholders(
-        commentMedia.xml,
-        ctx.embeddings.array,
-        commentEmbeddingOffset,
-      )
-    : { xml: "", referenced: [] as { fileName: string }[] };
-  const footnoteMedia = findAndReplaceImagePlaceholders(
-    footnoteXmlData,
-    ctx.media.array,
-    footnoteRelationshipCount,
-  );
-  // OLE embeddings inside footnotes reuse the same placeholder bridge, offset
-  // chained past the media relationships (same order as the document part).
-  const footnoteEmbeddingOffset = footnoteRelationshipCount + footnoteMedia.referenced.length;
-  const footnoteEmbeddings = findAndReplaceImagePlaceholders(
-    footnoteMedia.xml,
-    ctx.embeddings.array,
-    footnoteEmbeddingOffset,
-  );
-  // Register footnote media/embedding relationships eagerly so the
-  // relationshipCount used to gate footnotes.xml.rels reflects the final state
-  // (see FootNotesRelationships).
-  for (const [i, ref] of footnoteMedia.referenced.entries()) {
-    ctx.footNotes.relationships.addRelationship(
-      footnoteRelationshipCount + i,
-      RELATIONSHIP_TYPES.image,
-      `media/${ref.fileName}`,
-    );
-  }
-  for (const [i, ref] of footnoteEmbeddings.referenced.entries()) {
-    ctx.footNotes.relationships.addRelationship(
-      footnoteEmbeddingOffset + i,
-      embeddingRelationship(ctx.embeddings, ref.fileName),
-      `embeddings/${ref.fileName}`,
-    );
-  }
+  // Phases owned by the compile/ folder, invoked in the order their parts
+  // stringified before (document body → notes → headers/footers → the
+  // document rels), so per-part media registration keeps its sequencing.
+  const notesParts = compileNotesParts(ctx, mkCtx);
+  const headerFooterParts = compileHeaderFooterParts(ctx, mkCtx);
+  const documentEntries = compileDocumentEntries(ctx, documentXmlData, documentRelationshipCount);
 
   return {
     AppProperties: {
       data: XML_DECL + (appPropertiesDesc.stringify(ctx._options.appProperties ?? {}, ctx) ?? ""),
       path: "docProps/app.xml",
     },
-    ...(hasComments
-      ? {
-          Comments: {
-            data: replaceNumberingPlaceholders(
-              commentEmbeddings.xml,
-              ctx.numbering.concreteNumbering,
-            ),
-            path: "word/comments.xml",
-          },
-          CommentsRelationships: (() => {
-            for (const [i, ref] of commentMedia.referenced.entries()) {
-              ctx.comments.relationships.addRelationship(
-                commentRelationshipCount + i,
-                RELATIONSHIP_TYPES.image,
-                `media/${ref.fileName}`,
-              );
-            }
-            for (const [i, ref] of commentEmbeddings.referenced.entries()) {
-              ctx.comments.relationships.addRelationship(
-                commentEmbeddingOffset + i,
-                embeddingRelationship(ctx.embeddings, ref.fileName),
-                `embeddings/${ref.fileName}`,
-              );
-            }
-            return optionalRelsPart(
-              ctx.comments.relationships,
-              XML_DECL,
-              "word/_rels/comments.xml.rels",
-            );
-          })(),
-        }
-      : {}),
+    ...notesParts,
     // docProps/custom.xml — emitted only when custom properties exist (parsed
     // presence or fresh authoring); Word omits the part otherwise.
     ...(ctx._options.customProperties !== undefined
@@ -483,54 +258,7 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
           },
         }
       : {}),
-    Document: {
-      data: (() => {
-        let xmlData = documentEmbeddings.xml;
-        if (hasPlaceholders(xmlData)) {
-          const mediaCount = documentMedia.referenced.length;
-          const embeddingCount = documentEmbeddings.referenced.length;
-          const chartKeys = ctx.charts.array.map((c) => c.key);
-          const smartArtKeys = ctx.smartArts.array.map((s) => s.key);
-          const chartOffset = documentRelationshipCount + mediaCount + embeddingCount;
-          const smartArtOffset = chartOffset + chartKeys.length;
-
-          // Build combined replacement entries for charts, smartart, and numbering
-          const entries: Array<{ prefix?: string; key: string; value: string }> = [];
-          for (const [i, key] of chartKeys.entries()) {
-            const chartTarget = `charts/chart${i + 1}.xml`;
-            const sourceRid = sourceRidFor(
-              ctx._options.passthroughRelationships,
-              "word/document.xml",
-              RELATIONSHIP_TYPES.chart,
-              chartTarget,
-            );
-            entries.push({
-              prefix: "chart:",
-              key,
-              value: sourceRid !== undefined ? `rId${sourceRid}` : formatId(chartOffset, i, "rId"),
-            });
-          }
-          const saPrefixes = ["smartart:", "smartart-lo:", "smartart-qs:", "smartart-cs:"];
-          for (const [i, key] of smartArtKeys.entries()) {
-            for (let p = 0; p < saPrefixes.length; p++) {
-              entries.push({
-                prefix: saPrefixes[p],
-                key,
-                value: formatId(smartArtOffset + p * smartArtKeys.length, i, "rId"),
-              });
-            }
-          }
-          for (const { reference, instance, numId } of ctx.numbering.concreteNumbering) {
-            entries.push({ key: `${reference}-${instance}`, value: numId.toString() });
-          }
-          xmlData = replaceAllPlaceholders(xmlData, entries);
-        } else {
-          xmlData = replaceNumberingPlaceholders(xmlData, ctx.numbering.concreteNumbering);
-        }
-        return xmlData;
-      })(),
-      path: "word/document.xml",
-    },
+    ...documentEntries,
     // Theme — fresh-compile emits a language-neutral default theme
     // (createThemeXml). Round-trip carries the source theme in rawParts,
     // already copied verbatim above, so skip emitting here to avoid a duplicate.
@@ -542,68 +270,6 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
             path: "word/theme/theme1.xml",
           },
         }),
-    ...(ctx.hasEndnotes
-      ? {
-          Endnotes: {
-            data: (() => {
-              const endnoteCtx = mkCtx({
-                relationships: ctx.endnotes.relationships,
-              });
-              const xmlData =
-                XML_DECL +
-                (endnotesDesc.stringify(
-                  {
-                    notes: ctx.endnotes.notes,
-                    separator: ctx.endnotes.separator,
-                    continuationSeparator: ctx.endnotes.continuationSeparator,
-                    continuationNotice: ctx.endnotes.continuationNotice,
-                  },
-                  endnoteCtx,
-                ) ?? "");
-              const endnoteRelCount = ctx.endnotes.relationships.nextRelationshipId;
-              const endnoteMedia = findAndReplaceImagePlaceholders(
-                xmlData,
-                ctx.media.array,
-                endnoteRelCount,
-              );
-              for (const [i, ref] of endnoteMedia.referenced.entries()) {
-                ctx.endnotes.relationships.addRelationship(
-                  endnoteRelCount + i,
-                  RELATIONSHIP_TYPES.image,
-                  `media/${ref.fileName}`,
-                );
-              }
-              // OLE embeddings inside endnotes reuse the same placeholder
-              // bridge, offset chained past the media relationships.
-              const endnoteEmbeddingOffset = endnoteRelCount + endnoteMedia.referenced.length;
-              const endnoteEmbeddings = findAndReplaceImagePlaceholders(
-                endnoteMedia.xml,
-                ctx.embeddings.array,
-                endnoteEmbeddingOffset,
-              );
-              for (const [i, ref] of endnoteEmbeddings.referenced.entries()) {
-                ctx.endnotes.relationships.addRelationship(
-                  endnoteEmbeddingOffset + i,
-                  embeddingRelationship(ctx.embeddings, ref.fileName),
-                  `embeddings/${ref.fileName}`,
-                );
-              }
-              return replaceNumberingPlaceholders(
-                endnoteEmbeddings.xml,
-                ctx.numbering.concreteNumbering,
-              );
-            })(),
-            path: "word/endnotes.xml",
-          },
-          EndnotesRelationships:
-            ctx.endnotes.relationships.relationshipCount > 0
-              ? {
-                  data: XML_DECL + ctx.endnotes.relationships.serialize(),
-                  path: "word/_rels/endnotes.xml.rels",
-                }
-              : undefined,
-        }
-      : {}),
     FileRelationships: {
       data: XML_DECL + ctx.fileRelationships.serialize(),
       path: "_rels/.rels",
@@ -619,140 +285,7 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
       XML_DECL,
       "word/_rels/fontTable.xml.rels",
     ),
-    ...(ctx.hasFootnotes
-      ? {
-          FootNotes: {
-            data: replaceNumberingPlaceholders(
-              footnoteEmbeddings.xml,
-              ctx.numbering.concreteNumbering,
-            ),
-            path: "word/footnotes.xml",
-          },
-          FootNotesRelationships:
-            ctx.footNotes.relationships.relationshipCount > 0
-              ? {
-                  data: XML_DECL + ctx.footNotes.relationships.serialize(),
-                  path: "word/_rels/footnotes.xml.rels",
-                }
-              : undefined,
-        }
-      : {}),
-    FooterRelationships: ctx.footers
-      .map((entry, index) => {
-        const footerCtx = mkCtx({
-          relationships: entry.relationships,
-          partName: `word/${entry.partName ?? `footer${index + 1}.xml`}`,
-        });
-        const xmlData =
-          XML_DECL + stringifyHeaderFooter("w:ftr", FOOTER_NAMESPACES, entry.children, footerCtx);
-        // Footer images get per-part relationship IDs starting at
-        // nextRelationshipId, mirroring the document part. The placeholder pass
-        // uses referenced-local positions, so body r:embed and .rels stay aligned.
-        const footerRelCount = entry.relationships.nextRelationshipId;
-        const footerMedia = findAndReplaceImagePlaceholders(
-          xmlData,
-          ctx.media.array,
-          footerRelCount,
-        );
-        footerMediaResults.set(index, footerMedia);
-        // OLE embeddings reuse the same {fileName} placeholder bridge, offset
-        // chained past the media relationships (same order as the document part).
-        const footerEmbeddingOffset = footerRelCount + footerMedia.referenced.length;
-        const footerEmbeddings = findAndReplaceImagePlaceholders(
-          footerMedia.xml,
-          ctx.embeddings.array,
-          footerEmbeddingOffset,
-        );
-        footerEmbeddingResults.set(index, footerEmbeddings);
-
-        for (const [i, ref] of footerMedia.referenced.entries()) {
-          entry.relationships.addRelationship(
-            footerRelCount + i,
-            RELATIONSHIP_TYPES.image,
-            `media/${ref.fileName}`,
-          );
-        }
-        for (const [i, ref] of footerEmbeddings.referenced.entries()) {
-          entry.relationships.addRelationship(
-            footerEmbeddingOffset + i,
-            embeddingRelationship(ctx.embeddings, ref.fileName),
-            `embeddings/${ref.fileName}`,
-          );
-        }
-
-        return optionalRelsPart(
-          entry.relationships,
-          XML_DECL,
-          `word/_rels/${entry.partName ?? `footer${index + 1}.xml`}.rels`,
-        );
-      })
-      .filter((r): r is XmlifyedFile => r !== undefined),
-    Footers: ctx.footers.map((entry, index) => {
-      const footerEmbeddings = footerEmbeddingResults.get(index)!;
-
-      return {
-        data: replaceNumberingPlaceholders(footerEmbeddings.xml, ctx.numbering.concreteNumbering),
-        path: `word/${entry.partName ?? `footer${index + 1}.xml`}`,
-      };
-    }),
-    HeaderRelationships: ctx.headers
-      .map((entry, index) => {
-        const headerCtx = mkCtx({
-          relationships: entry.relationships,
-          partName: `word/${entry.partName ?? `header${index + 1}.xml`}`,
-        });
-        const xmlData =
-          XML_DECL + stringifyHeaderFooter("w:hdr", HEADER_NAMESPACES, entry.children, headerCtx);
-        // Header images get per-part relationship IDs starting at
-        // nextRelationshipId, mirroring the document part. The placeholder pass
-        // uses referenced-local positions, so body r:embed and .rels stay aligned.
-        const headerRelCount = entry.relationships.nextRelationshipId;
-        const headerMedia = findAndReplaceImagePlaceholders(
-          xmlData,
-          ctx.media.array,
-          headerRelCount,
-        );
-        headerMediaResults.set(index, headerMedia);
-        // OLE embeddings reuse the same {fileName} placeholder bridge, offset
-        // chained past the media relationships (same order as the document part).
-        const headerEmbeddingOffset = headerRelCount + headerMedia.referenced.length;
-        const headerEmbeddings = findAndReplaceImagePlaceholders(
-          headerMedia.xml,
-          ctx.embeddings.array,
-          headerEmbeddingOffset,
-        );
-        headerEmbeddingResults.set(index, headerEmbeddings);
-
-        for (const [i, ref] of headerMedia.referenced.entries()) {
-          entry.relationships.addRelationship(
-            headerRelCount + i,
-            RELATIONSHIP_TYPES.image,
-            `media/${ref.fileName}`,
-          );
-        }
-        for (const [i, ref] of headerEmbeddings.referenced.entries()) {
-          entry.relationships.addRelationship(
-            headerEmbeddingOffset + i,
-            embeddingRelationship(ctx.embeddings, ref.fileName),
-            `embeddings/${ref.fileName}`,
-          );
-        }
-
-        return optionalRelsPart(
-          entry.relationships,
-          XML_DECL,
-          `word/_rels/${entry.partName ?? `header${index + 1}.xml`}.rels`,
-        );
-      })
-      .filter((r): r is XmlifyedFile => r !== undefined),
-    Headers: ctx.headers.map((entry, index) => {
-      const headerEmbeddings = headerEmbeddingResults.get(index)!;
-
-      return {
-        data: replaceNumberingPlaceholders(headerEmbeddings.xml, ctx.numbering.concreteNumbering),
-        path: `word/${entry.partName ?? `header${index + 1}.xml`}`,
-      };
-    }),
+    ...headerFooterParts,
     ...(ctx.hasNumbering
       ? (() => {
           // Picture-bullet media resolves through numbering.xml's own rels —
@@ -777,92 +310,6 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
     Properties: {
       data: XML_DECL + (corePropertiesDesc.stringify(ctx._options, ctx) ?? ""),
       path: "docProps/core.xml",
-    },
-    Relationships: {
-      data: (() => {
-        for (const [i, ref] of documentMedia.referenced.entries()) {
-          const target = `media/${ref.fileName}`;
-          const sourceRid = sourceRidFor(
-            ctx._options.passthroughRelationships,
-            "word/document.xml",
-            RELATIONSHIP_TYPES.image,
-            target,
-          );
-          ctx.document.relationships.addRelationship(
-            sourceRid ?? documentRelationshipCount + i,
-            RELATIONSHIP_TYPES.image,
-            target,
-          );
-        }
-        for (const [i, ref] of documentEmbeddings.referenced.entries()) {
-          const target = `embeddings/${ref.fileName}`;
-          const sourceRid = sourceRidFor(
-            ctx._options.passthroughRelationships,
-            "word/document.xml",
-            embeddingRelationship(ctx.embeddings, ref.fileName),
-            target,
-          );
-          ctx.document.relationships.addRelationship(
-            sourceRid ?? documentEmbeddingOffset + i,
-            embeddingRelationship(ctx.embeddings, ref.fileName),
-            target,
-          );
-        }
-
-        const chartOffset =
-          documentRelationshipCount +
-          documentMedia.referenced.length +
-          documentEmbeddings.referenced.length;
-        for (let i = 0; i < ctx.charts.array.length; i++) {
-          const target = `charts/chart${i + 1}.xml`;
-          const sourceRid = sourceRidFor(
-            ctx._options.passthroughRelationships,
-            "word/document.xml",
-            RELATIONSHIP_TYPES.chart,
-            target,
-          );
-          ctx.document.relationships.addRelationship(
-            sourceRid ?? chartOffset + i,
-            RELATIONSHIP_TYPES.chart,
-            target,
-          );
-        }
-
-        addSmartArtRelationships(
-          ctx.smartArts.array.map((s) => s.key),
-          (id, type, target) => {
-            ctx.document.relationships.addRelationship(id, type, target);
-          },
-          documentRelationshipCount +
-            documentMedia.referenced.length +
-            documentEmbeddings.referenced.length +
-            ctx.charts.array.length,
-          0,
-          {
-            pathPrefix: "",
-            styleRelType: RELATIONSHIP_TYPES.diagramQuickStyle,
-            // The drawing part is an Office render cache, present only when the
-            // source carried it — Word never emits it for a fresh SmartArt.
-            hasDrawing: (key) =>
-              ctx.smartArts.array.find((s) => s.key === key)?.raw?.drawing !== undefined,
-          },
-        );
-
-        ctx.document.relationships.addRelationship(
-          sourceRidFor(
-            ctx._options.passthroughRelationships,
-            "word/document.xml",
-            RELATIONSHIP_TYPES.fontTable,
-            "fontTable.xml",
-          ) ?? ctx.document.relationships.nextRelationshipId,
-          RELATIONSHIP_TYPES.fontTable,
-          "fontTable.xml",
-        );
-        ctx.addPassthroughDocumentRelationships();
-
-        return XML_DECL + ctx.document.relationships.serialize();
-      })(),
-      path: "word/_rels/document.xml.rels",
     },
     Settings: {
       data: XML_DECL + (settingsDesc.stringify(ctx._settingsOptions, ctx) ?? ""),
@@ -900,128 +347,8 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
           },
         }
       : {}),
-    ...(ctx.charts.array.length > 0
-      ? {
-          Charts: ctx.charts.array.flatMap((chartData, i) => {
-            const parts: Array<{ data: string; path: string }> = [
-              {
-                data: XML_DECL + chartData.chartSpaceXml,
-                path: `word/charts/chart${i + 1}.xml`,
-              },
-            ];
-            // User-shapes part behind c:userShapes: the chart's own rels
-            // entry plus the body part (chartUserShapes, same directory).
-            if (chartData.userShapes) {
-              parts.push({
-                data: XML_DECL + chartData.userShapes.xml,
-                path: `word/charts/userShapes${i + 1}.xml`,
-              });
-            }
-            // Embedded workbook behind c:externalData rides in the same rels
-            // part. Relationship ids are carried verbatim so the re-emitted
-            // r:ids resolve without rewriting.
-            const e = chartData.embedding;
-            const rels = [
-              ...(e
-                ? [
-                    `<Relationship Id="${escapeXml(e.relationshipId)}" Type="${PACKAGE_RELATIONSHIP}" Target="../embeddings/${escapeXml(e.fileName)}"/>`,
-                  ]
-                : []),
-              ...(chartData.userShapes
-                ? [
-                    `<Relationship Id="${escapeXml(chartData.userShapes.relationshipId)}" Type="${CHART_USER_SHAPES_REL}" Target="userShapes${i + 1}.xml"/>`,
-                  ]
-                : []),
-            ];
-            if (rels.length > 0) {
-              parts.push({
-                data:
-                  XML_DECL +
-                  `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rels.join("")}</Relationships>`,
-                path: `word/charts/_rels/chart${i + 1}.xml.rels`,
-              });
-            }
-            return parts;
-          }),
-          ChartEmbeddings: (() => {
-            const seen = new Set<string>();
-            const parts: { data: Uint8Array; path: string }[] = [];
-            for (const c of ctx.charts.array) {
-              const e = c.embedding;
-              if (!e || seen.has(e.fileName)) continue;
-              seen.add(e.fileName);
-              parts.push({
-                data: toUint8Array(e.data),
-                path: `word/embeddings/${e.fileName}`,
-              });
-            }
-            return parts;
-          })(),
-        }
-      : {}),
-    ...(ctx.smartArts.array.length > 0
-      ? {
-          DiagramData: ctx.smartArts.array.map((smartArtData, i) => ({
-            data:
-              smartArtData.raw?.data !== undefined
-                ? toUint8Array(smartArtData.raw.data)
-                : XML_DECL + smartArtData.dataModelXml,
-            path: `word/diagrams/data${i + 1}.xml`,
-          })),
-          DiagramLayout: ctx.smartArts.array.map((smartArtData, i) => ({
-            data:
-              smartArtData.raw?.layout !== undefined
-                ? toUint8Array(smartArtData.raw.layout)
-                : typeof smartArtData.layout === "string"
-                  ? getLayoutXml(smartArtData.layout)
-                  : stringifyLayoutDefinitionPart(smartArtData.layout),
-            path: `word/diagrams/layout${i + 1}.xml`,
-          })),
-          DiagramStyle: ctx.smartArts.array.map((smartArtData, i) => ({
-            data:
-              smartArtData.raw?.style !== undefined
-                ? toUint8Array(smartArtData.raw.style)
-                : typeof smartArtData.style === "string"
-                  ? getStyleXml(smartArtData.style)
-                  : stringifyStyleDefinitionPart(smartArtData.style),
-            path: `word/diagrams/quickStyle${i + 1}.xml`,
-          })),
-          DiagramColors: ctx.smartArts.array.map((smartArtData, i) => ({
-            data:
-              smartArtData.raw?.color !== undefined
-                ? toUint8Array(smartArtData.raw.color)
-                : typeof smartArtData.color === "string"
-                  ? getColorXml(smartArtData.color)
-                  : stringifyColorDefinitionPart(smartArtData.color),
-            path: `word/diagrams/colors${i + 1}.xml`,
-          })),
-          DiagramDrawing: ctx.smartArts.array
-            .map((smartArtData, i) => ({ smartArtData, i }))
-            .filter(({ smartArtData }) => smartArtData.raw?.drawing !== undefined)
-            .map(({ smartArtData, i }) => ({
-              data: toUint8Array(smartArtData.raw!.drawing!),
-              // Source-aligned index: a package can carry drawing2 without
-              // drawing1, so the numbering skips alongside the relationship.
-              path: `word/diagrams/drawing${i + 1}.xml`,
-            })),
-          // Data parts with their own rels (blipFill art): re-emit the rels
-          // verbatim — its rIds and ../media targets match the pinned media.
-          ...(ctx.smartArts.array.some((s) => s.raw?.dataRels !== undefined)
-            ? {
-                SmartArtDataRels: ctx.smartArts.array.flatMap((smartArtData, i) =>
-                  smartArtData.raw?.dataRels !== undefined
-                    ? [
-                        {
-                          data: toUint8Array(smartArtData.raw.dataRels),
-                          path: `word/diagrams/_rels/data${i + 1}.xml.rels`,
-                        },
-                      ]
-                    : [],
-                ),
-              }
-            : {}),
-        }
-      : {}),
+    ...compileChartParts(ctx),
+    ...compileSmartArtParts(ctx),
     ...(ctx.altChunks.array.length > 0
       ? {
           AltChunks: ctx.altChunks.array.map((altChunkData) => ({
