@@ -260,6 +260,10 @@ function stringifyDocumentBackground(opts: DocumentBackgroundOptions, ctx: BodyC
   // (VML pattern fills, texture images). Register each referenced media item
   // so the compiler resolves the `{fileName}` placeholders into rIds.
   if (opts.rawXml) {
+    // Remap into a local — the caller's options object is shared, serializable
+    // data, and writing the dedup renames back would leak this generate run's
+    // media numbering into the next run's input.
+    let xml = opts.rawXml;
     if (opts.rawMedia) {
       for (const m of opts.rawMedia) {
         const data = toUint8Array(m.data);
@@ -278,11 +282,11 @@ function stringifyDocumentBackground(opts: DocumentBackgroundOptions, ctx: BodyC
         // Dedup may reuse an earlier file name; remap the placeholder so the
         // compiler resolves it to the shared media relationship.
         if (entry.fileName !== m.fileName) {
-          opts.rawXml = opts.rawXml.split(`{${m.fileName}}`).join(`{${entry.fileName}}`);
+          xml = xml.split(`{${m.fileName}}`).join(`{${entry.fileName}}`);
         }
       }
     }
-    return opts.rawXml;
+    return xml;
   }
 
   const attrs: string[] = [];

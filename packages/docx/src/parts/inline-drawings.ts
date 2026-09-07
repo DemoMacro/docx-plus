@@ -21,11 +21,14 @@ import type { RunPropertiesOptions } from "@parts/paragraph/run/properties";
 import type { SmartArtOptions } from "@parts/paragraph/run/smartart-run";
 import type {
   ChartMediaData,
+  CoreMediaData,
   GroupChildMediaData,
   MediaData,
+  RegularMediaData,
   SmartArtMediaData,
   GroupMediaData,
   ShapeMediaData,
+  SvgMediaData,
 } from "@shared/media";
 import { createTransformation } from "@shared/media";
 
@@ -48,15 +51,18 @@ function wrapDrawingRun(
     runProperties?: RunPropertiesOptions;
     lastRenderedPageBreak?: boolean;
   },
+  // The remapped fallback copy from registerVmlFallbackMedia — spliced in
+  // place of opts.vmlFallback so the caller's options object stays untouched.
+  vmlFallback: string | undefined = opts.vmlFallback,
 ): string {
   const xml = drawingXml ?? "";
   const rPr = stringifyRunProperties(opts.runProperties) ?? "";
   const lrpb = opts.lastRenderedPageBreak ? "<w:lastRenderedPageBreak/>" : "";
-  if (opts.vmlFallback) {
+  if (vmlFallback) {
     const requires = opts.mcChoiceRequires ?? "wps";
-    // opts.vmlFallback is the serialized <mc:Fallback>…</mc:Fallback> element,
-    // so splice it in directly (no extra wrapper).
-    return `<w:r>${rPr}${lrpb}<mc:AlternateContent><mc:Choice Requires="${requires}">${xml}</mc:Choice>${opts.vmlFallback}</mc:AlternateContent></w:r>`;
+    // vmlFallback is the serialized <mc:Fallback>…</mc:Fallback> element, so
+    // splice it in directly (no extra wrapper).
+    return `<w:r>${rPr}${lrpb}<mc:AlternateContent><mc:Choice Requires="${requires}">${xml}</mc:Choice>${vmlFallback}</mc:AlternateContent></w:r>`;
   }
   return `<w:r>${rPr}${lrpb}${xml}</w:r>`;
 }
@@ -69,12 +75,19 @@ function wrapDrawingRun(
  * blip is already registered, reuse it and remap the fallback's `{fileName}`
  * placeholder to the shared media — matching Office, which emits one
  * relationship/file per image rather than a duplicate for the VML branch.
+ *
+ * Returns the fallback XML with the renames applied — a local copy, never the
+ * caller's `opts.vmlFallback` (options objects are shared, serializable data;
+ * mutating them would leak this run's media numbering into the next run's
+ * input).
  */
 function registerVmlFallbackMedia(
   opts: { vmlFallback?: string; vmlFallbackMedia?: BackgroundRawMediaOptions[] },
   ctx: BodyContext,
-): void {
-  if (!opts.vmlFallbackMedia) return;
+): string | undefined {
+  const vml = opts.vmlFallback;
+  if (!vml || !opts.vmlFallbackMedia) return vml;
+  let out = vml;
   for (const m of opts.vmlFallbackMedia) {
     const data = toUint8Array(m.data);
     const entry = ctx.file.media.addMedia(
@@ -91,10 +104,11 @@ function registerVmlFallbackMedia(
     );
     // Dedup may reuse the Choice blip's file name; remap the VML fallback
     // placeholder so both branches share one relationship/file (matches Office).
-    if (entry.fileName !== m.fileName && opts.vmlFallback) {
-      opts.vmlFallback = opts.vmlFallback.split(`{${m.fileName}}`).join(`{${entry.fileName}}`);
+    if (entry.fileName !== m.fileName) {
+      out = out.split(`{${m.fileName}}`).join(`{${entry.fileName}}`);
     }
   }
+  return out;
 }
 
 /** Rewrite ../media targets inside verbatim data rels after the media
@@ -210,28 +224,30 @@ export function stringifyDrawingChild(child: ParagraphChild, ctx: BodyContext): 
 
     // The dedup entry carries media identity only — a byte-identical image
     // reuses the first registrant's entry object, so per-reference placement
-    // fields (size, crop, cNvPr, blip hints) are re-applied onto the returned
-    // entry instead of baked into the `build` callback.
+    // fields (size, crop, cNvPr, blip hints, the svg raster fallback) are
+    // re-applied onto the returned entry instead of baked into the `build`
+    // callback.
     let mediaData: MediaData;
     if (opts.type === "svg") {
       const fallbackData = toUint8Array(opts.fallback.data, { encoding: "base64" }) as Uint8Array;
       const fallbackType = opts.fallback.type;
       // Register the raster fallback first so its file name is allocated, then
       // build the svg entry referencing it. Dedup applies to both independently.
+      // Media<MediaData> pins addMedia's entry type to the wide union — assert
+      // each branch back to the narrow shape its slot declares.
       const fallback = ctx.file.media.addMedia(
         fallbackData,
         fallbackType,
-        (fileName) =>
-          ({
-            type: fallbackType,
-            data: fallbackData,
-            fileName,
-            transformation: { emus: { x: 0, y: 0 }, pixels: { x: 0, y: 0 } },
-          }) as MediaData,
+        (fileName) => ({
+          type: fallbackType,
+          data: fallbackData,
+          fileName,
+          transformation: { emus: { x: 0, y: 0 }, pixels: { x: 0, y: 0 } },
+        }),
         opts.fallback.fileName,
-      );
+      ) as RegularMediaData & CoreMediaData;
       mediaData = {
-        ...ctx.file.media.addMedia(
+        ...(ctx.file.media.addMedia(
           rawData,
           "svg",
           (fileName) =>
@@ -241,9 +257,10 @@ export function stringifyDrawingChild(child: ParagraphChild, ctx: BodyContext): 
               fileName,
               fallback,
               transformation: { emus: { x: 0, y: 0 }, pixels: { x: 0, y: 0 } },
-            }) as MediaData,
+            }) as SvgMediaData & CoreMediaData,
           opts.fileName,
-        ),
+        ) as SvgMediaData & CoreMediaData),
+        fallback: fallback as RegularMediaData & CoreMediaData,
         transformation: createTransformation(opts.transformation),
         sourceRectangle: opts.sourceRectangle,
         nonVisualProperties: opts.nonVisualProperties,
@@ -443,8 +460,8 @@ export function stringifyDrawingChild(child: ParagraphChild, ctx: BodyContext): 
       },
       ctx,
     );
-    registerVmlFallbackMedia(opts, ctx);
-    return wrapDrawingRun(drawingXml, opts);
+    const vmlFallback = registerVmlFallbackMedia(opts, ctx);
+    return wrapDrawingRun(drawingXml, opts, vmlFallback);
   }
 
   // Content part (w:contentPart) — run-level EG_RunInnerContent element (CT_Rel).
@@ -457,8 +474,20 @@ export function stringifyDrawingChild(child: ParagraphChild, ctx: BodyContext): 
   // WPG Group (WordProcessing Group) — group of shapes/pictures
   if ("wpgGroup" in child) {
     const opts = child.wpgGroup;
+    // Registration stamps per-run state onto the media data (dedup renames in
+    // registerMedia, fresh chart keys), so stringify a shallow copy tree — the
+    // caller's GroupOptions must stay untouched (options objects are shared,
+    // serializable data; mutating them would leak this run's media numbering
+    // into the next run's input, and a persisted chart key would skip the
+    // chart registration of a later run entirely).
+    const cloneChild = (c: GroupChildMediaData): GroupChildMediaData =>
+      c.type === "wpg"
+        ? { ...c, children: c.children.map(cloneChild) }
+        : c.type === "svg"
+          ? { ...c, fallback: { ...c.fallback } }
+          : { ...c };
     const mediaData: GroupMediaData = {
-      children: opts.children,
+      children: opts.children.map(cloneChild),
       transformation: createTransformation(opts.transformation),
       childOffsetX: opts.childOffsetX,
       childOffsetY: opts.childOffsetY,
@@ -529,7 +558,7 @@ export function stringifyDrawingChild(child: ParagraphChild, ctx: BodyContext): 
         c.fileName = entry.fileName;
       }
     };
-    registerMedia(opts.children);
+    registerMedia(mediaData.children);
 
     const drawingXml = drawingDesc.stringify(
       {
@@ -540,8 +569,8 @@ export function stringifyDrawingChild(child: ParagraphChild, ctx: BodyContext): 
       },
       ctx,
     );
-    registerVmlFallbackMedia(opts, ctx);
-    return wrapDrawingRun(drawingXml, opts);
+    const vmlFallback = registerVmlFallbackMedia(opts, ctx);
+    return wrapDrawingRun(drawingXml, opts, vmlFallback);
   }
 
   return undefined;

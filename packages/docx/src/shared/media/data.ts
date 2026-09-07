@@ -76,7 +76,7 @@ export interface NonVisualPropertiesOptions extends NonVisualDrawingPropertiesOp
 /**
  * Core properties shared by all media data types.
  */
-interface CoreMediaData extends BaseMediaEntry {
+export interface CoreMediaData extends BaseMediaEntry {
   /** Transformation settings for display */
   transformation: MediaDataTransformation;
   /** Source rectangle for image cropping */
@@ -101,7 +101,7 @@ interface CoreMediaData extends BaseMediaEntry {
 /**
  * Regular raster image formats.
  */
-interface RegularMediaData {
+export interface RegularMediaData {
   /** Image format type */
   type: "jpg" | "png" | "gif" | "bmp" | "tif" | "ico" | "emf" | "wmf";
 }

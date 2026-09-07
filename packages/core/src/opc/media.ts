@@ -4,10 +4,10 @@
  * Stores image entries keyed by file name. `addMedia` deduplicates by raw byte
  * content — byte-identical images referenced N times share one file AND one
  * entry object. The `build` callback therefore must fill media-identity fields
- * only (type/data/fileName, plus svg `fallback`); per-reference placement
- * metadata (transformation/extent, crop, cNvPr, blip hints) is owned by the
- * caller at stringify time — baking it into the entry would leak the first
- * registrant's values onto every later reference of the same bytes.
+ * only (type/data/fileName); per-reference placement metadata
+ * (transformation/extent, crop, cNvPr, blip hints, the svg raster fallback) is
+ * owned by the caller at stringify time — baking it into the entry would leak
+ * the first registrant's values onto every later reference of the same bytes.
  *
  * Lookup is O(1) amortized: a `WeakMap` memoizes the resolved entry per input
  * `Uint8Array` (the hot path — a single document reuses the same buffer object
