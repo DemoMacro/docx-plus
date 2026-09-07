@@ -15,11 +15,10 @@ import {
   buildCorePropertiesXmlString,
   buildRootRelationships,
   compileMapping,
-  contentTypesDesc,
   dropDanglingPassthroughRels,
+  finalizeContentTypes,
   type PassthroughRelationship,
   type RelationshipType,
-  deriveContentTypes,
   pickNonVisualDrawingProperties,
   resolverFromRegistry,
   XLSX_PARTS,
@@ -532,43 +531,25 @@ export function compileWorkbook(
   }
 
   const files = compileMapping(mapping, overrides, mediaFiles, mediaLevel);
-  // Raw passthrough parts (drawings, VML, external links, unknown extensions, …).
-  // The compiler output above wins over a passthrough copy at the same path, so
-  // only what the model missed actually passes through.
-  const passthroughSkipped = new Set<string>();
-  for (const part of options.rawParts ?? []) {
-    if (files[part.path] !== undefined) {
-      passthroughSkipped.add(part.path);
-      continue;
-    }
-    files[part.path] = toUint8Array(part.data);
-  }
   // Derive [Content_Types].xml from the actual parts written — the file set is
   // the single source of truth, so content-type declarations cannot drift from
-  // what is written. Sparse/index-based naming is handled naturally.
-  const contentTypesInput = deriveContentTypes(Object.keys(files), {
-    resolve: XLSX_CONTENT_TYPE_RESOLVER,
-    mediaContentTypes: XLSX_MEDIA_CONTENT_TYPES,
-    // Round-trip: the source declaration table is the base; derived entries
-    // only fill what surviving source entries leave uncovered or mistyped.
-    source: options.contentTypes,
-    verbatimPaths: new Set((options.rawParts ?? []).map((p) => p.path)),
-  });
-  // Passthrough parts whose extension has no covering Default would leave the
-  // package invalid (an undeclared part — Excel refuses to open). Only those
-  // borrow their source content-type declaration as a per-part Override;
-  // extensions already covered (xml/rels/media) stay as derived above.
-  const coveredExt = new Set(contentTypesInput.defaults.map((d) => d.extension.toLowerCase()));
-  for (const part of options.rawParts ?? []) {
-    if (part.contentType === undefined || passthroughSkipped.has(part.path)) continue;
-    const dot = part.path.lastIndexOf(".");
-    const slash = part.path.lastIndexOf("/");
-    const ext = dot > slash ? part.path.slice(dot + 1).toLowerCase() : undefined;
-    if (ext && coveredExt.has(ext)) continue;
-    contentTypesInput.overrides.push({ partName: `/${part.path}`, contentType: part.contentType });
-  }
+  // what is written. Sparse/index-based naming is handled naturally. Raw
+  // passthrough parts (drawings, VML, external links, unknown extensions, …)
+  // copy in first: the compiler output above wins at the same path, so only
+  // what the model missed actually passes through.
   files["[Content_Types].xml"] = encoder.encode(
-    XML_DECL + (contentTypesDesc.stringify(contentTypesInput, ctx) ?? ""),
+    finalizeContentTypes(
+      files,
+      {
+        resolve: XLSX_CONTENT_TYPE_RESOLVER,
+        mediaContentTypes: XLSX_MEDIA_CONTENT_TYPES,
+        // Round-trip: the source declaration table is the base; derived entries
+        // only fill what surviving source entries leave uncovered or mistyped.
+        source: options.contentTypes,
+        rawParts: options.rawParts,
+      },
+      ctx,
+    ),
   );
   // Guard: drop passthrough rels whose target part never made it into the
   // package (hand-authored input) — Office refuses to open dangling rels.

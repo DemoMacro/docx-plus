@@ -99,10 +99,13 @@ export {
   contentTypesDesc,
   resolverFromRegistry,
   deriveContentTypes,
+  finalizeContentTypes,
   type ContentTypeDefault,
   type ContentTypeOverride,
   type ContentTypesInput,
+  type FinalizeContentTypesOptions,
   type PartContentTypeResolver,
+  type RawPackagePart,
   type DeriveContentTypesOptions,
   IMAGE_MEDIA_CONTENT_TYPES,
 } from "./content-types-input";

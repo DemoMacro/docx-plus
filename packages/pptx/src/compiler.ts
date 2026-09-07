@@ -11,7 +11,7 @@ import {
   RELATIONSHIP_TYPES,
   IMAGE_MEDIA_CONTENT_TYPES,
   Relationships,
-  addBinaryFile,
+  addModelBinaries,
   buildRootRelationships,
   convertToEmu,
   dropDanglingPassthroughRels,
@@ -40,11 +40,9 @@ import {
   replaceSmartArtPlaceholders,
   replaceVideoPlaceholders,
   addSmartArtRelationships,
-  contentTypesDesc,
-  deriveContentTypes,
+  finalizeContentTypes,
   resolverFromRegistry,
   themeOverrideDesc,
-  toUint8Array,
   PPTX_PARTS,
 } from "@office-open/core";
 import type { XmlifyedFile, Zippable } from "@office-open/core";
@@ -71,7 +69,6 @@ import {
   type SlideSize,
 } from "@shared/file";
 import { buildHeaderFooterShapes } from "@shared/header-footer";
-import type { MediaData } from "@shared/media/data";
 import { createThemeXml } from "@shared/theme";
 
 import { PptxWriteContext, type HyperlinkEntry } from "./context";
@@ -1753,64 +1750,29 @@ export function compilePresentation(
     }
   }
 
-  // Media files
-  for (const image of media.array) {
-    addBinaryFile(files, `ppt/media/${image.fileName}`, image.data, mediaLevel);
-    if (image.type === "svg" && "fallback" in image) {
-      const fallback = (
-        image as MediaData & {
-          fallback: { fileName: string; data: Uint8Array };
-        }
-      ).fallback;
-      addBinaryFile(files, `ppt/media/${fallback.fileName}`, fallback.data, mediaLevel);
-    }
-  }
-
-  // OLE embedding binaries (ppt/embeddings/oleObjectN.bin)
-  for (const embedding of descCtx.embeddings) {
-    addBinaryFile(files, `ppt/embeddings/${embedding.fileName}`, embedding.data, mediaLevel);
-  }
-
-  // Raw passthrough parts (handout masters, customXml, unknown extensions, …).
-  // The compiler output above wins over a passthrough copy at the same path —
-  // media/charts/notes absorbed into the model are re-emitted under pinned
-  // source paths, so only what the model missed actually passes through.
-  const passthroughSkipped = new Set<string>();
-  for (const part of options.rawParts ?? []) {
-    if (files[part.path] !== undefined) {
-      passthroughSkipped.add(part.path);
-      continue;
-    }
-    files[part.path] = toUint8Array(part.data);
-  }
+  // Media + OLE embedding binaries (ppt/media/*, ppt/embeddings/*)
+  addModelBinaries(files, "ppt", media.array, descCtx.embeddings, mediaLevel);
 
   // Derive [Content_Types].xml from the actual parts written — the file set is
   // the single source of truth, so declarations cannot drift from what is on
   // disk, and sparse/index-based names (slide-keyed comments) are handled
-  // naturally because emission follows the files.
-  const contentTypesInput = deriveContentTypes(Object.keys(files), {
-    resolve: PPTX_CONTENT_TYPE_RESOLVER,
-    mediaContentTypes: PPTX_MEDIA_CONTENT_TYPES,
-    // Round-trip: the source declaration table is the base; derived entries
-    // only fill what surviving source entries leave uncovered or mistyped.
-    source: options.contentTypes,
-    verbatimPaths: new Set((options.rawParts ?? []).map((p) => p.path)),
-  });
-  // Passthrough parts whose extension has no covering Default would leave the
-  // package invalid (an undeclared part — Office refuses to open). Only those
-  // borrow their source content-type declaration as a per-part Override;
-  // extensions already covered (xml/rels/media) stay as derived above.
-  const coveredExt = new Set(contentTypesInput.defaults.map((d) => d.extension.toLowerCase()));
-  for (const part of options.rawParts ?? []) {
-    if (part.contentType === undefined || passthroughSkipped.has(part.path)) continue;
-    const dot = part.path.lastIndexOf(".");
-    const slash = part.path.lastIndexOf("/");
-    const ext = dot > slash ? part.path.slice(dot + 1).toLowerCase() : undefined;
-    if (ext && coveredExt.has(ext)) continue;
-    contentTypesInput.overrides.push({ partName: `/${part.path}`, contentType: part.contentType });
-  }
+  // naturally because emission follows the files. Raw passthrough parts
+  // (handout masters, customXml, unknown extensions, …) copy in first: the
+  // compiler output above wins at the same path, so only what the model missed
+  // actually passes through.
   files["[Content_Types].xml"] = encoder.encode(
-    XML_DECL + (contentTypesDesc.stringify(contentTypesInput, descCtx) ?? ""),
+    finalizeContentTypes(
+      files,
+      {
+        resolve: PPTX_CONTENT_TYPE_RESOLVER,
+        mediaContentTypes: PPTX_MEDIA_CONTENT_TYPES,
+        // Round-trip: the source declaration table is the base; derived entries
+        // only fill what surviving source entries leave uncovered or mistyped.
+        source: options.contentTypes,
+        rawParts: options.rawParts,
+      },
+      descCtx,
+    ),
   );
 
   // Guard: drop passthrough rels whose target part never made it into the

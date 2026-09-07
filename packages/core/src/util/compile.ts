@@ -22,6 +22,49 @@ export function addBinaryFile(
   files[path] = [data, { level: levelForMediaName(path, mediaLevel) as ZipOptions["level"] }];
 }
 
+/** Media entry with an SVG fallback raster twin (`type: "svg"` only). */
+export interface MediaBinary {
+  fileName: string;
+  data: Uint8Array;
+  type: string;
+  fallback?: { fileName: string; data: Uint8Array };
+}
+
+/** OLE embedding binary (oleObjectN.bin / native package). */
+export interface EmbeddingBinary {
+  fileName: string;
+  data: Uint8Array;
+}
+
+/**
+ * Write the media and embedding binaries a package compiler collected into
+ * the model back out as ZIP entries under `<packageDir>/media` and
+ * `<packageDir>/embeddings`. An svg media entry also writes its fallback
+ * raster twin (the mc:AlternateContent image browsers render).
+ */
+export function addModelBinaries(
+  files: Zippable,
+  packageDir: string,
+  media: readonly MediaBinary[],
+  embeddings: readonly EmbeddingBinary[],
+  mediaLevel: number,
+): void {
+  for (const m of media) {
+    addBinaryFile(files, `${packageDir}/media/${m.fileName}`, m.data, mediaLevel);
+    if (m.type === "svg" && m.fallback) {
+      addBinaryFile(
+        files,
+        `${packageDir}/media/${m.fallback.fileName}`,
+        m.fallback.data,
+        mediaLevel,
+      );
+    }
+  }
+  for (const e of embeddings) {
+    addBinaryFile(files, `${packageDir}/embeddings/${e.fileName}`, e.data, mediaLevel);
+  }
+}
+
 /**
  * Convert XML files, overrides, and media into a Zippable structure.
  *

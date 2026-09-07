@@ -16,7 +16,12 @@
  * @module
  */
 
-import type { CustomDescriptor } from "../descriptor";
+import { OOXML_XML_DECLARATION } from "@office-open/xml";
+
+import type { CustomDescriptor, WriteContext } from "../descriptor";
+import type { DataType } from "../util/data-type";
+import { toUint8Array } from "../util/data-type";
+import type { Zippable } from "./packer";
 import type { PackagePartRegistry } from "./part-registry";
 
 // ── Types ──
@@ -341,3 +346,73 @@ export const IMAGE_MEDIA_CONTENT_TYPES: Record<string, string> = {
   ico: "image/x-icon",
   svg: "image/svg+xml",
 };
+
+// ── Package finalization ──
+
+/** Raw passthrough part carried verbatim from the source package. */
+export interface RawPackagePart {
+  path: string;
+  data: DataType;
+  contentType?: string;
+}
+
+export interface FinalizeContentTypesOptions {
+  /** Resolve an OOXML part path to its Override content type. */
+  resolve: PartContentTypeResolver;
+  /** Lowercase extension → MIME for media/embedding Default entries. */
+  mediaContentTypes: Readonly<Record<string, string>>;
+  /** The source package's [Content_Types].xml (round-trip). */
+  source?: ContentTypesInput;
+  /** Raw passthrough parts, copied into the package before derivation — the
+   * compiler output wins at the same path, so only what the model missed
+   * passes through. */
+  rawParts?: readonly RawPackagePart[];
+  /** Data-driven Overrides whose content type is not path-determinable —
+   * docx altChunks carry a caller-supplied MIME, sub-documents are always
+   * main-document parts. */
+  overrides?: ReadonlyArray<{ path: string; contentType: string }>;
+}
+
+/**
+ * Shared closing step of the three format compilers: copy raw passthrough
+ * parts into the package (compiler output wins at the same path), derive
+ * [Content_Types].xml from the final file set, and return the XML document
+ * (declaration included) for the caller to store at
+ * files["[Content_Types].xml"]. Deriving after the copy is what keeps the
+ * declarations and the parts in sync — passthrough parts whose extension has
+ * no covering Default borrow their source content type as a per-part Override
+ * (an undeclared part makes Office refuse to open the package).
+ */
+export function finalizeContentTypes(
+  files: Zippable,
+  options: FinalizeContentTypesOptions,
+  ctx: WriteContext,
+): string {
+  const rawParts = options.rawParts ?? [];
+  const passthroughSkipped = new Set<string>();
+  for (const part of rawParts) {
+    if (files[part.path] !== undefined) {
+      passthroughSkipped.add(part.path);
+      continue;
+    }
+    files[part.path] = toUint8Array(part.data);
+  }
+
+  const input = deriveContentTypes(Object.keys(files), {
+    resolve: options.resolve,
+    mediaContentTypes: options.mediaContentTypes,
+    overrides: options.overrides,
+    source: options.source,
+    verbatimPaths: new Set(rawParts.map((p) => p.path)),
+  });
+  const coveredExt = new Set(input.defaults.map((d) => d.extension.toLowerCase()));
+  for (const part of rawParts) {
+    if (part.contentType === undefined || passthroughSkipped.has(part.path)) continue;
+    const dot = part.path.lastIndexOf(".");
+    const slash = part.path.lastIndexOf("/");
+    const ext = dot > slash ? part.path.slice(dot + 1).toLowerCase() : undefined;
+    if (ext && coveredExt.has(ext)) continue;
+    input.overrides.push({ partName: `/${part.path}`, contentType: part.contentType });
+  }
+  return OOXML_XML_DECLARATION + (contentTypesDesc.stringify(input, ctx) ?? "");
+}

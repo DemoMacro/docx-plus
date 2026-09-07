@@ -12,14 +12,13 @@
 import {
   RELATIONSHIP_TYPES,
   type RelationshipType,
-  addBinaryFile,
+  addModelBinaries,
   addSmartArtRelationships,
   compileMapping,
-  contentTypesDesc,
   createThemeXml,
   dropDanglingPassthroughRels,
-  deriveContentTypes,
   DOCX_PARTS,
+  finalizeContentTypes,
   findAndReplaceImagePlaceholders,
   formatId,
   hasPlaceholders,
@@ -179,24 +178,8 @@ export function compileDocument(
   const xmlifiedFileMapping = xmlifyContext(ctx);
   const files = compileMapping(xmlifiedFileMapping, overrides);
 
-  // Media files
-  const mediaArray = ctx.media.array;
-  for (const mediaData of mediaArray) {
-    addBinaryFile(files, `word/media/${mediaData.fileName}`, mediaData.data, mediaLevel);
-    if (mediaData.type === "svg") {
-      addBinaryFile(
-        files,
-        `word/media/${mediaData.fallback.fileName}`,
-        mediaData.fallback.data,
-        mediaLevel,
-      );
-    }
-  }
-
-  // OLE embedding binaries (word/embeddings/oleObjectN.bin)
-  for (const embedding of ctx.embeddings.array) {
-    addBinaryFile(files, `word/embeddings/${embedding.fileName}`, embedding.data, mediaLevel);
-  }
+  // Media + OLE embedding binaries (word/media/*, word/embeddings/*)
+  addModelBinaries(files, "word", ctx.media.array, ctx.embeddings.array, mediaLevel);
 
   // Font files — only fonts carrying binary data produce a .odttf part.
   // Round-tripped fonts (rawOdttf) keep their original obfuscated bytes.
@@ -207,26 +190,33 @@ export function compileDocument(
     files[filePath] = font.rawOdttf ? font.data : obfuscate(font.data, font.fontKey);
   }
 
-  // Raw passthrough parts (word/theme/*, customXml/*, unknown extensions, …).
-  // The compiler output above wins over a passthrough copy at the same path —
-  // media/embeddings/fonts absorbed into the model are re-emitted under their
-  // pinned source paths, so only what the model missed actually passes through.
-  const passthroughSkipped = new Set<string>();
-  for (const part of ctx._options.rawParts ?? []) {
-    if (files[part.path] !== undefined) {
-      passthroughSkipped.add(part.path);
-      continue;
-    }
-    files[part.path] = toUint8Array(part.data);
-  }
-
   // [Content_Types].xml is serialized last: parts register their media/fonts
-  // during stringify (run by xmlifyContext above), so backfilling <Default>
-  // extensions from `ctx` now sees the complete set. Building it inside
-  // xmlifyContext's object literal evaluated it before header/footer/font media
-  // was registered, leaving jpg/gif/odttf without a covering Default.
+  // during stringify (run by xmlifyContext above), so deriving it now sees the
+  // complete set. Building it inside xmlifyContext's object literal evaluated
+  // it before header/footer/font media was registered, leaving jpg/gif/odttf
+  // without a covering Default.
   files["[Content_Types].xml"] = encoder.encode(
-    buildContentTypesData(ctx, files, passthroughSkipped),
+    finalizeContentTypes(
+      files,
+      {
+        resolve: DOCX_CONTENT_TYPE_RESOLVER,
+        mediaContentTypes: DOCX_MEDIA_CONTENT_TYPES,
+        source: ctx._options.contentTypes,
+        rawParts: ctx._options.rawParts,
+        overrides: [
+          ...ctx.altChunks.array.map((ac) => ({
+            path: `word/${ac.path}`,
+            contentType: ac.contentType ?? "application/xhtml+xml",
+          })),
+          ...ctx.subDocs.array.map((sd) => ({
+            path: `word/${sd.path}`,
+            contentType:
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
+          })),
+        ],
+      },
+      ctx,
+    ),
   );
 
   // Guard: drop passthrough rels whose target part never made it into the
@@ -287,66 +277,6 @@ interface XmlifyedFileMapping {
  */
 function mergedCommentChildren(ctx: DocxWriteContext): CommentOptions[] {
   return [...(ctx._options.comments ?? []), ...ctx.comments.entries];
-}
-
-/**
- * Serialize [Content_Types].xml from the part registry, then backfill media/
- * font/embedding `<Default>` entries from the parts actually written.
- *
- * Must run after every part has been stringified (parts call `ctx.addMedia`
- * during stringify), so call this once `xmlifyContext` has finished — not from
- * inside its object literal, where ContentTypes would evaluate before the
- * later-defined header/footer/font parts have registered their media.
- */
-/**
- * Derive [Content_Types].xml from the parts actually written to the package.
- *
- * The file set is the single source of truth: every part the resolver knows
- * becomes an Override, every other file falls through to an extension Default,
- * and altChunk/sub-document parts — whose content type is data-driven, not
- * path-determinable — are injected as explicit overrides.
- *
- * Round-trip no longer passes the source [Content_Types] through: the compiler
- * regenerates every part path (altChunks get a fresh uniqueId), so deriving
- * from the written files is what keeps declarations and parts in sync.
- */
-function buildContentTypesData(
-  ctx: DocxWriteContext,
-  files: Zippable,
-  passthroughSkipped: ReadonlySet<string>,
-): string {
-  const overrides = [
-    ...ctx.altChunks.array.map((ac) => ({
-      path: `word/${ac.path}`,
-      contentType: ac.contentType ?? "application/xhtml+xml",
-    })),
-    ...ctx.subDocs.array.map((sd) => ({
-      path: `word/${sd.path}`,
-      contentType:
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
-    })),
-  ];
-  const input = deriveContentTypes(Object.keys(files), {
-    resolve: DOCX_CONTENT_TYPE_RESOLVER,
-    mediaContentTypes: DOCX_MEDIA_CONTENT_TYPES,
-    overrides,
-    source: ctx._options.contentTypes,
-    verbatimPaths: new Set((ctx._options.rawParts ?? []).map((p) => p.path)),
-  });
-  // Passthrough parts whose extension has no covering Default would leave the
-  // package invalid (an undeclared part — Word refuses to open). Only those
-  // borrow their source content-type declaration as a per-part Override;
-  // extensions already covered (xml/rels/media) stay as derived above.
-  const coveredExt = new Set(input.defaults.map((d) => d.extension.toLowerCase()));
-  for (const part of ctx._options.rawParts ?? []) {
-    if (part.contentType === undefined || passthroughSkipped.has(part.path)) continue;
-    const dot = part.path.lastIndexOf(".");
-    const slash = part.path.lastIndexOf("/");
-    const ext = dot > slash ? part.path.slice(dot + 1).toLowerCase() : undefined;
-    if (ext && coveredExt.has(ext)) continue;
-    input.overrides.push({ partName: `/${part.path}`, contentType: part.contentType });
-  }
-  return XML_DECL + (contentTypesDesc.stringify(input, ctx) ?? "");
 }
 
 function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
@@ -994,7 +924,7 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
             const rels = [
               ...(e
                 ? [
-                    `<Relationship Id="${escapeXml(e.relationshipId)}" Type=RELATIONSHIP_TYPES.package Target="../embeddings/${escapeXml(e.fileName)}"/>`,
+                    `<Relationship Id="${escapeXml(e.relationshipId)}" Type="${PACKAGE_RELATIONSHIP}" Target="../embeddings/${escapeXml(e.fileName)}"/>`,
                   ]
                 : []),
               ...(chartData.userShapes
