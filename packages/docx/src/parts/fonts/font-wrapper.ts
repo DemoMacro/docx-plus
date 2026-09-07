@@ -1,4 +1,4 @@
-import { Relationships, toUint8Array, uniqueUuid } from "@office-open/core";
+import { RELATIONSHIP_TYPES, Relationships, toUint8Array, uniqueUuid } from "@office-open/core";
 import type { Guid } from "@office-open/core";
 
 /**
@@ -63,11 +63,7 @@ export class FontWrapper implements ViewWrapper {
           ? font.odttfPath.slice(5)
           : font.odttfPath
         : `fonts/${font.name}.odttf`;
-      this.relationships.addRelationship(
-        relIdx,
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/font",
-        target,
-      );
+      this.relationships.addRelationship(relIdx, RELATIONSHIP_TYPES.font, target);
     }
   }
 }

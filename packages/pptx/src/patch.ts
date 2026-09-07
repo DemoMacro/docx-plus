@@ -1,4 +1,5 @@
 import {
+  RELATIONSHIP_TYPES,
   PPTX_NS,
   OoxmlMimeType,
   appendOverride,
@@ -41,17 +42,13 @@ const encoder = new TextEncoder();
  */
 const TARGET_RE =
   /^ppt\/(?:slides\/slide\d+|slideMasters\/slideMaster\d+|slideLayouts\/slideLayout\d+|notesSlides\/notesSlide\d+)\.xml$/;
-const HYPERLINK_REL_TYPE =
-  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink";
+const HYPERLINK_REL_TYPE = RELATIONSHIP_TYPES.hyperlink;
 const SLIDE_PART_CONTENT_TYPE =
   "application/vnd.openxmlformats-officedocument.presentationml.slide+xml";
-const SLIDE_REL_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide";
-const SLIDE_LAYOUT_REL_TYPE =
-  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout";
-const COMMENTS_REL_TYPE =
-  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments";
-const COMMENT_AUTHORS_REL_TYPE =
-  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/commentAuthors";
+const SLIDE_REL_TYPE = RELATIONSHIP_TYPES.slide;
+const SLIDE_LAYOUT_REL_TYPE = RELATIONSHIP_TYPES.slideLayout;
+const COMMENTS_REL_TYPE = RELATIONSHIP_TYPES.comments;
+const COMMENT_AUTHORS_REL_TYPE = RELATIONSHIP_TYPES.commentAuthors;
 const COMMENTS_CONTENT_TYPE =
   "application/vnd.openxmlformats-officedocument.presentationml.comments+xml";
 const COMMENT_AUTHORS_CONTENT_TYPE =
@@ -276,8 +273,7 @@ const removePart = (xmlMap: Map<string, Element>, partPath: string): void => {
   if (contentTypes) removeOverride(contentTypes, `/${partPath}`);
 };
 
-const NOTES_SLIDE_REL_TYPE =
-  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide";
+const NOTES_SLIDE_REL_TYPE = RELATIONSHIP_TYPES.notesSlide;
 
 /**
  * Remove slides by 0-based index (positions in the deck as it entered the

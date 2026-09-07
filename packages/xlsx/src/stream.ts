@@ -20,6 +20,7 @@
  */
 
 import {
+  RELATIONSHIP_TYPES,
   Relationships,
   ZipStreamWriter,
   appPropertiesDesc,
@@ -207,28 +208,12 @@ export function streamWorkbook(
   const wbRels = new Relationships();
   let rid = 1;
   for (let i = 0; i < sheets.length; i++) {
-    wbRels.addRelationship(
-      rid++,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet",
-      `worksheets/sheet${i + 1}.xml`,
-    );
+    wbRels.addRelationship(rid++, RELATIONSHIP_TYPES.worksheet, `worksheets/sheet${i + 1}.xml`);
   }
-  wbRels.addRelationship(
-    rid++,
-    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles",
-    "styles.xml",
-  );
-  wbRels.addRelationship(
-    rid++,
-    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme",
-    "theme/theme1.xml",
-  );
+  wbRels.addRelationship(rid++, RELATIONSHIP_TYPES.styles, "styles.xml");
+  wbRels.addRelationship(rid++, RELATIONSHIP_TYPES.theme, "theme/theme1.xml");
   if (hasVolTypes) {
-    wbRels.addRelationship(
-      rid++,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/volTypes",
-      "volTypes.xml",
-    );
+    wbRels.addRelationship(rid++, RELATIONSHIP_TYPES.volTypes, "volTypes.xml");
   }
   writeString("xl/_rels/workbook.xml.rels", OOXML_XML_DECLARATION + wbRels.serialize());
 

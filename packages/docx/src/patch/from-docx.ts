@@ -1,4 +1,4 @@
-import { IMAGE_MEDIA_CONTENT_TYPES, TargetModeType } from "@office-open/core";
+import { RELATIONSHIP_TYPES, IMAGE_MEDIA_CONTENT_TYPES, TargetModeType } from "@office-open/core";
 import {
   DOCX_NS,
   OoxmlMimeType,
@@ -45,12 +45,10 @@ import type { ViewWrapper } from "../context";
 /** Reusable TextEncoder (stateless, safe to share). */
 const encoder = new TextEncoder();
 
-const COMMENTS_REL_TYPE =
-  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments";
+const COMMENTS_REL_TYPE = RELATIONSHIP_TYPES.comments;
 const COMMENTS_CONTENT_TYPE =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml";
-const HYPERLINK_REL_TYPE =
-  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink";
+const HYPERLINK_REL_TYPE = RELATIONSHIP_TYPES.hyperlink;
 /**
  * Rendered hyperlink ids start here so they can never collide with the real
  * rIdN ids of the part's relationships — including the media entries the
@@ -609,7 +607,7 @@ export const patchDocument = async <T extends OutputType = OutputType>({
       appendRelationship(
         relationshipsJson,
         index + i,
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+        RELATIONSHIP_TYPES.image,
         `media/${fileName}`,
       );
     }

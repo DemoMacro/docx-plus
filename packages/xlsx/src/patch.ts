@@ -12,6 +12,7 @@
  * @module
  */
 import {
+  RELATIONSHIP_TYPES,
   OoxmlMimeType,
   appendContentType,
   appendOverride,
@@ -75,12 +76,9 @@ export interface PatchWorkbookOptions<T extends OutputType = OutputType> extends
 
 const WORKSHEET_CONTENT_TYPE =
   "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml";
-const WORKSHEET_REL_TYPE =
-  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet";
-const COMMENTS_REL_TYPE =
-  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments";
-const VML_REL_TYPE =
-  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing";
+const WORKSHEET_REL_TYPE = RELATIONSHIP_TYPES.worksheet;
+const COMMENTS_REL_TYPE = RELATIONSHIP_TYPES.comments;
+const VML_REL_TYPE = RELATIONSHIP_TYPES.vmlDrawing;
 const COMMENTS_CONTENT_TYPE =
   "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml";
 const VML_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.vmlDrawing";

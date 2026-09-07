@@ -7,7 +7,7 @@
  * @module
  */
 
-import { toUint8Array, uniqueId } from "@office-open/core";
+import { RELATIONSHIP_TYPES, toUint8Array, uniqueId } from "@office-open/core";
 import type { CustomDescriptor } from "@office-open/core/descriptor";
 import { attr, escapeXml, findChild } from "@office-open/xml";
 import type { Element } from "@office-open/xml";
@@ -25,8 +25,7 @@ import type { BodyContext, DocxReadContext } from "../context";
 
 // ── AltChunk (pure string — registers relationships + altChunks) ──
 
-const ALTCHUNK_REL_TYPE =
-  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/aFChunk";
+const ALTCHUNK_REL_TYPE = RELATIONSHIP_TYPES.aFChunk;
 
 function wrapHtmlDocument(fragment: string): string {
   if (/<(!DOCTYPE|html|HTML)/i.test(fragment)) {
@@ -107,8 +106,7 @@ export const altChunkDesc: CustomDescriptor<AltChunkOptions, BodyContext> = {
 
 // ── SubDoc (pure string — registers relationships + subDocs) ──
 
-const SUBDOC_REL_TYPE =
-  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/subDocument";
+const SUBDOC_REL_TYPE = RELATIONSHIP_TYPES.subDocument;
 
 export const subDocDesc: CustomDescriptor<SubDocOptions, BodyContext> = {
   kind: "custom",

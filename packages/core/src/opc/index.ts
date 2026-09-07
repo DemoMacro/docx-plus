@@ -1,4 +1,5 @@
 export {
+  RELATIONSHIP_TYPES,
   Relationships,
   TargetModeType,
   buildRootRelationships,

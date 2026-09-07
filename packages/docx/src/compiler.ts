@@ -10,6 +10,7 @@
  */
 
 import {
+  RELATIONSHIP_TYPES,
   type RelationshipType,
   addBinaryFile,
   addSmartArtRelationships,
@@ -69,12 +70,10 @@ import {
 const encoder = new TextEncoder();
 
 /** Relationship type for OLE embedding parts (word|ppt/embeddings/*). */
-const OLE_OBJECT_RELATIONSHIP =
-  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject";
+const OLE_OBJECT_RELATIONSHIP = RELATIONSHIP_TYPES.oleObject;
 
 /** Relationship type for native-format embedding parts (embedded xlsx/docx). */
-const PACKAGE_RELATIONSHIP =
-  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/package";
+const PACKAGE_RELATIONSHIP = RELATIONSHIP_TYPES.package;
 
 /** Re-emit the relationship type the source used for an embedding part — a
  *  native OPC package (xlsx/docx) stays a package rel, an OLE compound binary
@@ -147,8 +146,7 @@ function documentSourceRids(
 const DOCX_CONTENT_TYPE_RESOLVER = resolverFromRegistry(DOCX_PARTS);
 
 /** Chart part → user-shapes part relationship (c:userShapes bridge). */
-const CHART_USER_SHAPES_REL =
-  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chartUserShapes";
+const CHART_USER_SHAPES_REL = RELATIONSHIP_TYPES.chartUserShapes;
 
 /** Extension → MIME for media/font/embedding Default entries. Declared only
  * for extensions actually present in the package. */
@@ -473,7 +471,7 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
   for (const [i, ref] of footnoteMedia.referenced.entries()) {
     ctx.footNotes.relationships.addRelationship(
       footnoteRelationshipCount + i,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+      RELATIONSHIP_TYPES.image,
       `media/${ref.fileName}`,
     );
   }
@@ -503,7 +501,7 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
             for (const [i, ref] of commentMedia.referenced.entries()) {
               ctx.comments.relationships.addRelationship(
                 commentRelationshipCount + i,
-                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+                RELATIONSHIP_TYPES.image,
                 `media/${ref.fileName}`,
               );
             }
@@ -573,7 +571,7 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
             const sourceRid = sourceRidFor(
               ctx._options.passthroughRelationships,
               "word/document.xml",
-              "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart",
+              RELATIONSHIP_TYPES.chart,
               chartTarget,
             );
             entries.push({
@@ -641,7 +639,7 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
               for (const [i, ref] of endnoteMedia.referenced.entries()) {
                 ctx.endnotes.relationships.addRelationship(
                   endnoteRelCount + i,
-                  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+                  RELATIONSHIP_TYPES.image,
                   `media/${ref.fileName}`,
                 );
               }
@@ -740,7 +738,7 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
         for (const [i, ref] of footerMedia.referenced.entries()) {
           entry.relationships.addRelationship(
             footerRelCount + i,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+            RELATIONSHIP_TYPES.image,
             `media/${ref.fileName}`,
           );
         }
@@ -798,7 +796,7 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
         for (const [i, ref] of headerMedia.referenced.entries()) {
           entry.relationships.addRelationship(
             headerRelCount + i,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+            RELATIONSHIP_TYPES.image,
             `media/${ref.fileName}`,
           );
         }
@@ -834,11 +832,7 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
           const numberingMedia = findAndReplaceImagePlaceholders(numberingXml, ctx.media.array, 1);
           const numberingRels = new Relationships();
           for (const [i, ref] of numberingMedia.referenced.entries()) {
-            numberingRels.addRelationship(
-              1 + i,
-              "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
-              `media/${ref.fileName}`,
-            );
+            numberingRels.addRelationship(1 + i, RELATIONSHIP_TYPES.image, `media/${ref.fileName}`);
           }
           return {
             Numbering: { data: numberingMedia.xml, path: "word/numbering.xml" },
@@ -861,12 +855,12 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
           const sourceRid = sourceRidFor(
             ctx._options.passthroughRelationships,
             "word/document.xml",
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+            RELATIONSHIP_TYPES.image,
             target,
           );
           ctx.document.relationships.addRelationship(
             sourceRid ?? documentRelationshipCount + i,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+            RELATIONSHIP_TYPES.image,
             target,
           );
         }
@@ -894,12 +888,12 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
           const sourceRid = sourceRidFor(
             ctx._options.passthroughRelationships,
             "word/document.xml",
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart",
+            RELATIONSHIP_TYPES.chart,
             target,
           );
           ctx.document.relationships.addRelationship(
             sourceRid ?? chartOffset + i,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart",
+            RELATIONSHIP_TYPES.chart,
             target,
           );
         }
@@ -916,8 +910,7 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
           0,
           {
             pathPrefix: "",
-            styleRelType:
-              "http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramQuickStyle",
+            styleRelType: RELATIONSHIP_TYPES.diagramQuickStyle,
             // The drawing part is an Office render cache, present only when the
             // source carried it — Word never emits it for a fresh SmartArt.
             hasDrawing: (key) =>
@@ -929,10 +922,10 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
           sourceRidFor(
             ctx._options.passthroughRelationships,
             "word/document.xml",
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/fontTable",
+            RELATIONSHIP_TYPES.fontTable,
             "fontTable.xml",
           ) ?? ctx.document.relationships.nextRelationshipId,
-          "http://schemas.openxmlformats.org/officeDocument/2006/relationships/fontTable",
+          RELATIONSHIP_TYPES.fontTable,
           "fontTable.xml",
         );
         ctx.addPassthroughDocumentRelationships();
@@ -950,7 +943,7 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
           const rels = new Relationships();
           rels.addRelationship(
             1,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/attachedTemplate",
+            RELATIONSHIP_TYPES.attachedTemplate,
             ctx._settingsOptions.attachedTemplate,
             TargetModeType.EXTERNAL,
           );
@@ -1001,7 +994,7 @@ function xmlifyContext(ctx: DocxWriteContext): XmlifyedFileMapping {
             const rels = [
               ...(e
                 ? [
-                    `<Relationship Id="${escapeXml(e.relationshipId)}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/package" Target="../embeddings/${escapeXml(e.fileName)}"/>`,
+                    `<Relationship Id="${escapeXml(e.relationshipId)}" Type=RELATIONSHIP_TYPES.package Target="../embeddings/${escapeXml(e.fileName)}"/>`,
                   ]
                 : []),
               ...(chartData.userShapes

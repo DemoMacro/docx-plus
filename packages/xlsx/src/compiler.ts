@@ -8,6 +8,7 @@
  */
 
 import {
+  RELATIONSHIP_TYPES,
   Relationships,
   TargetModeType,
   appPropertiesDesc,
@@ -77,7 +78,7 @@ import { XlsxWriteContext } from "./context";
 
 const XML_DECL = OOXML_XML_DECLARATION;
 
-const IMAGE_REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image";
+const IMAGE_REL = RELATIONSHIP_TYPES.image;
 
 /**
  * Replace `{fileName}` media placeholders in compiled part XML with
@@ -119,8 +120,7 @@ function bindMediaPlaceholders(
 const XLSX_CONTENT_TYPE_RESOLVER = resolverFromRegistry(XLSX_PARTS);
 
 /** Chart part → user-shapes part relationship (c:userShapes bridge). */
-const CHART_USER_SHAPES_REL =
-  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chartUserShapes";
+const CHART_USER_SHAPES_REL = RELATIONSHIP_TYPES.chartUserShapes;
 const PKG_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships";
 
 /** Extension → MIME for image and VML Default entries. Declared only for
@@ -335,11 +335,7 @@ export function compileWorkbook(
   // Connections — xl/connections.xml (single part, workbook-level relationship)
   if (options.connections && options.connections.length > 0) {
     const cRid = ctx.workbookRels.nextRelationshipId;
-    ctx.workbookRels.addRelationship(
-      cRid,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/connections",
-      "connections.xml",
-    );
+    ctx.workbookRels.addRelationship(cRid, RELATIONSHIP_TYPES.connections, "connections.xml");
     mapping["Connections"] = {
       data: XML_DECL + connectionsDesc.stringify({ connections: options.connections }, ctx),
       path: "xl/connections.xml",
@@ -349,11 +345,7 @@ export function compileWorkbook(
   // Metadata — xl/metadata.xml (single part, workbook-level relationship)
   if (options.metadata && hasMetadataContent(options.metadata)) {
     const mRid = ctx.workbookRels.nextRelationshipId;
-    ctx.workbookRels.addRelationship(
-      mRid,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sheetMetadata",
-      "metadata.xml",
-    );
+    ctx.workbookRels.addRelationship(mRid, RELATIONSHIP_TYPES.sheetMetadata, "metadata.xml");
     mapping["Metadata"] = {
       data: XML_DECL + metadataDesc.stringify(options.metadata, ctx),
       path: "xl/metadata.xml",
@@ -363,11 +355,7 @@ export function compileWorkbook(
   // XML mappings — xl/xmlMaps.xml (single part, workbook-level relationship)
   if (options.xmlMaps) {
     const xRid = ctx.workbookRels.nextRelationshipId;
-    ctx.workbookRels.addRelationship(
-      xRid,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/xmlMaps",
-      "xmlMaps.xml",
-    );
+    ctx.workbookRels.addRelationship(xRid, RELATIONSHIP_TYPES.xmlMaps, "xmlMaps.xml");
     mapping["XmlMaps"] = {
       data: XML_DECL + mapInfoDesc.stringify(options.xmlMaps, ctx),
       path: "xl/xmlMaps.xml",
@@ -378,11 +366,7 @@ export function compileWorkbook(
   // relationship; sml.xsd declares volTypes as a part root, never a workbook child)
   if (options.volTypes && options.volTypes.length > 0) {
     const vRid = ctx.workbookRels.nextRelationshipId;
-    ctx.workbookRels.addRelationship(
-      vRid,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/volTypes",
-      "volTypes.xml",
-    );
+    ctx.workbookRels.addRelationship(vRid, RELATIONSHIP_TYPES.volTypes, "volTypes.xml");
     mapping["VolTypes"] = {
       data: XML_DECL + buildVolTypesXml(options.volTypes),
       path: "xl/volTypes.xml",
@@ -398,7 +382,7 @@ export function compileWorkbook(
       const elRid = ctx.workbookRels.nextRelationshipId;
       ctx.workbookRels.addRelationship(
         elRid,
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/externalLink",
+        RELATIONSHIP_TYPES.externalLink,
         `externalLinks/externalLink${elIdx}.xml`,
       );
 
@@ -410,7 +394,7 @@ export function compileWorkbook(
         const elRels = new Relationships();
         elRels.addRelationship(
           1,
-          "http://schemas.openxmlformats.org/officeDocument/2006/relationships/externalLinkPath",
+          RELATIONSHIP_TYPES.externalLinkPath,
           elOpts.externalBook.target,
           TargetModeType.EXTERNAL,
         );
@@ -446,7 +430,7 @@ export function compileWorkbook(
   if (ctx.sharedStrings.count > 0) {
     ctx.workbookRels.addRelationship(
       ctx.workbookRels.nextRelationshipId,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings",
+      RELATIONSHIP_TYPES.sharedStrings,
       "sharedStrings.xml",
     );
     const ssXml = sharedStringsDesc.stringify(ctx.sharedStrings.toDescriptorOptions(), ctx);
@@ -519,11 +503,7 @@ export function compileWorkbook(
       path: "xl/calcChain.xml",
     };
     const calcChainRid = ctx.workbookRels.nextRelationshipId;
-    ctx.workbookRels.addRelationship(
-      calcChainRid,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain",
-      "calcChain.xml",
-    );
+    ctx.workbookRels.addRelationship(calcChainRid, RELATIONSHIP_TYPES.calcChain, "calcChain.xml");
   }
 
   if (options.revisionLog) {
@@ -789,11 +769,7 @@ function compileWorksheetPart(
   if (hasExternalHyperlinks) {
     for (const hl of hlOpts) {
       if (hl.url === undefined) continue;
-      wsRels!.add(
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
-        hl.url,
-        "External",
-      );
+      wsRels!.add(RELATIONSHIP_TYPES.hyperlink, hl.url, "External");
     }
   }
 
@@ -874,7 +850,7 @@ function compileWorksheetPart(
 
       drawingRels.addRelationship(
         rid,
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart",
+        RELATIONSHIP_TYPES.chart,
         `../charts/chart${state.globalChartIdx + 1}.xml`,
       );
 
@@ -953,12 +929,7 @@ function compileWorksheetPart(
     for (const h of ctx.hyperlinks.slice(hyperlinkBase)) {
       let hlinkRid = hlinkRidByUrl.get(h.url);
       if (hlinkRid === undefined) {
-        drawingRels.addRelationship(
-          rid,
-          "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
-          h.url,
-          "External",
-        );
+        drawingRels.addRelationship(rid, RELATIONSHIP_TYPES.hyperlink, h.url, "External");
         hlinkRid = rid;
         hlinkRidByUrl.set(h.url, hlinkRid);
         rid++;
@@ -984,7 +955,7 @@ function compileWorksheetPart(
 
     // Insert drawing reference at its CT_Worksheet sequence position.
     const drawingRid = wsRels!.add(
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing",
+      RELATIONSHIP_TYPES.drawing,
       `../drawings/drawing${drawingIdx}.xml`,
     );
     sheetXml = editSheetTailMarker(
@@ -1013,13 +984,10 @@ function compileWorksheetPart(
     };
 
     // Worksheet rels: comments → comments XML, legacyDrawing → VML file
-    wsRels!.add(
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments",
-      `../comments${commentsIdx}.xml`,
-    );
+    wsRels!.add(RELATIONSHIP_TYPES.comments, `../comments${commentsIdx}.xml`);
 
     const vmlRid = wsRels!.add(
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing",
+      RELATIONSHIP_TYPES.vmlDrawing,
       `../drawings/vmlDrawing${commentsIdx}.vml`,
     );
 
@@ -1098,7 +1066,7 @@ function compileWorksheetPart(
         const cacheDefRels = new Relationships();
         cacheDefRels.addRelationship(
           1,
-          "http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotCacheRecords",
+          RELATIONSHIP_TYPES.pivotCacheRecords,
           "pivotCacheRecords1.xml",
         );
 
@@ -1134,7 +1102,7 @@ function compileWorksheetPart(
         const wbPivotRid = ctx.workbookRels.nextRelationshipId;
         ctx.workbookRels.addRelationship(
           wbPivotRid,
-          "http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotCacheDefinition",
+          RELATIONSHIP_TYPES.pivotCacheDefinition,
           `pivotCache/pivotCacheDefinition${cacheIdx}.xml`,
         );
         ctx.pivotCacheRefs.push({ cacheId, rId: `rId${wbPivotRid}` });
@@ -1152,7 +1120,7 @@ function compileWorksheetPart(
       const ptRels = new Relationships();
       ptRels.addRelationship(
         1,
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotCacheDefinition",
+        RELATIONSHIP_TYPES.pivotCacheDefinition,
         `../pivotCache/pivotCacheDefinition${cacheIdx}.xml`,
       );
       mapping[`PivotTableRels${pivotIdx}`] = {
@@ -1161,10 +1129,7 @@ function compileWorksheetPart(
       };
 
       // Worksheet rels → pivotTable
-      wsRels!.add(
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotTable",
-        `../pivotTables/pivotTable${pivotIdx}.xml`,
-      );
+      wsRels!.add(RELATIONSHIP_TYPES.pivotTable, `../pivotTables/pivotTable${pivotIdx}.xml`);
     }
   }
 
@@ -1187,10 +1152,7 @@ function compileWorksheetPart(
       };
 
       // Worksheet rels → table
-      const tblRid = wsRels!.add(
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/table",
-        `../tables/table${tableIdx}.xml`,
-      );
+      const tblRid = wsRels!.add(RELATIONSHIP_TYPES.table, `../tables/table${tableIdx}.xml`);
 
       wsTableParts.push({ rId: `rId${tblRid}` });
       state.allTableParts.push({ rId: `rId${tblRid}` });
@@ -1206,7 +1168,7 @@ function compileWorksheetPart(
         path: `xl/queryTables/queryTable${state.globalQueryTableIdx}.xml`,
       };
       wsRels!.add(
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/queryTable",
+        RELATIONSHIP_TYPES.queryTable,
         `../queryTables/queryTable${state.globalQueryTableIdx}.xml`,
       );
     }
@@ -1220,7 +1182,7 @@ function compileWorksheetPart(
       path: `xl/tables/tableSingleCells${state.globalSingleXmlCellsIdx}.xml`,
     };
     wsRels!.add(
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/tableSingleCells",
+      RELATIONSHIP_TYPES.tableSingleCells,
       `../tables/tableSingleCells${state.globalSingleXmlCellsIdx}.xml`,
     );
   }
@@ -1317,11 +1279,7 @@ function compileChartsheets(
     // Chartsheet relationships: drawing (required)
     const csRels = new Relationships();
     const csDrawingIdx = i + 1;
-    csRels.addRelationship(
-      1,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing",
-      `../drawings/drawing${csDrawingIdx}.xml`,
-    );
+    csRels.addRelationship(1, RELATIONSHIP_TYPES.drawing, `../drawings/drawing${csDrawingIdx}.xml`);
 
     // Round-trip: re-emit chartsheet relationships the model did not absorb
     // (printerSettings above all) — same contract as worksheet rels.
@@ -1336,7 +1294,7 @@ function compileChartsheets(
     const csDrawingRels = new Relationships();
     csDrawingRels.addRelationship(
       1,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart",
+      RELATIONSHIP_TYPES.chart,
       `../charts/chart${csChartGlobalIdx + 1}.xml`,
     );
 
@@ -1437,11 +1395,9 @@ function compileRevisionLogs(
   ctx: XlsxWriteContext,
   mapping: Record<string, { data: string; path: string }>,
 ): void {
-  const REV_HEADERS_REL =
-    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/revisionHeaders";
-  const REV_LOG_REL =
-    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/revisionLog";
-  const USERS_REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/users";
+  const REV_HEADERS_REL = RELATIONSHIP_TYPES.revisionHeaders;
+  const REV_LOG_REL = RELATIONSHIP_TYPES.revisionLog;
+  const USERS_REL = RELATIONSHIP_TYPES.users;
 
   // xl/revisionHeaders.xml — target of an implicit relationship from the workbook.
   mapping["RevisionHeaders"] = {
@@ -1488,36 +1444,16 @@ function buildWorkbookRelationships(
 ): void {
   let rid = 1;
   for (let i = 0; i < wsCount; i++) {
-    rels.addRelationship(
-      rid++,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet",
-      `worksheets/sheet${i + 1}.xml`,
-    );
+    rels.addRelationship(rid++, RELATIONSHIP_TYPES.worksheet, `worksheets/sheet${i + 1}.xml`);
   }
   for (let i = 0; i < csCount; i++) {
-    rels.addRelationship(
-      rid++,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chartsheet",
-      `chartsheets/sheet${i + 1}.xml`,
-    );
+    rels.addRelationship(rid++, RELATIONSHIP_TYPES.chartsheet, `chartsheets/sheet${i + 1}.xml`);
   }
   for (let i = 0; i < dsCount; i++) {
-    rels.addRelationship(
-      rid++,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/dialogsheet",
-      `dialogSheets/sheet${i + 1}.xml`,
-    );
+    rels.addRelationship(rid++, RELATIONSHIP_TYPES.dialogsheet, `dialogSheets/sheet${i + 1}.xml`);
   }
-  rels.addRelationship(
-    rid++,
-    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles",
-    "styles.xml",
-  );
-  rels.addRelationship(
-    rid++,
-    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme",
-    "theme/theme1.xml",
-  );
+  rels.addRelationship(rid++, RELATIONSHIP_TYPES.styles, "styles.xml");
+  rels.addRelationship(rid++, RELATIONSHIP_TYPES.theme, "theme/theme1.xml");
 }
 
 function hasMetadataContent(metadata: MetadataOptions): boolean {

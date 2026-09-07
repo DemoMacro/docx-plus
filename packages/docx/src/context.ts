@@ -7,7 +7,12 @@
  * @module
  */
 
-import { Relationships, buildRootRelationships, type RelationshipType } from "@office-open/core";
+import {
+  RELATIONSHIP_TYPES,
+  Relationships,
+  buildRootRelationships,
+  type RelationshipType,
+} from "@office-open/core";
 import { ChartCollection } from "@office-open/core/chart";
 import type { HyperlinkTarget, ReadContext, WriteContext } from "@office-open/core/descriptor";
 import { SmartArtCollection } from "@office-open/core/smartart";
@@ -439,17 +444,11 @@ export class DocxWriteContext implements WriteContext {
     this.webSettings = options.webSettings ?? undefined;
 
     if (options.glossary) {
-      this.registerDocumentRel(
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/glossaryDocument",
-        "glossary/document.xml",
-      );
+      this.registerDocumentRel(RELATIONSHIP_TYPES.glossaryDocument, "glossary/document.xml");
     }
 
     if (this.webSettings) {
-      this.registerDocumentRel(
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/webSettings",
-        "webSettings.xml",
-      );
+      this.registerDocumentRel(RELATIONSHIP_TYPES.webSettings, "webSettings.xml");
     }
   }
 
@@ -529,7 +528,7 @@ export class DocxWriteContext implements WriteContext {
     header.partName = this.nextPartName(this._headers, partName, "header");
     this.document.relationships.addRelationship(
       header.referenceId,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/header",
+      RELATIONSHIP_TYPES.header,
       header.partName,
     );
   }
@@ -539,7 +538,7 @@ export class DocxWriteContext implements WriteContext {
     footer.partName = this.nextPartName(this._footers, partName, "footer");
     this.document.relationships.addRelationship(
       footer.referenceId,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer",
+      RELATIONSHIP_TYPES.footer,
       footer.partName,
     );
   }
@@ -565,62 +564,35 @@ export class DocxWriteContext implements WriteContext {
   }
 
   private addDefaultRelationships(): void {
-    this.registerDocumentRel(
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles",
-      "styles.xml",
-    );
+    this.registerDocumentRel(RELATIONSHIP_TYPES.styles, "styles.xml");
     if (this._hasNumbering) {
-      this.registerDocumentRel(
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering",
-        "numbering.xml",
-      );
+      this.registerDocumentRel(RELATIONSHIP_TYPES.numbering, "numbering.xml");
     }
     if (this._hasFootnotes) {
-      this.registerDocumentRel(
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/footnotes",
-        "footnotes.xml",
-      );
+      this.registerDocumentRel(RELATIONSHIP_TYPES.footnotes, "footnotes.xml");
     }
     if (this._hasEndnotes) {
-      this.registerDocumentRel(
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/endnotes",
-        "endnotes.xml",
-      );
+      this.registerDocumentRel(RELATIONSHIP_TYPES.endnotes, "endnotes.xml");
     }
-    this.registerDocumentRel(
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings",
-      "settings.xml",
-    );
+    this.registerDocumentRel(RELATIONSHIP_TYPES.settings, "settings.xml");
     // Comments is an optional part — only wire the document→comments relationship
     // when the document actually carries comments. Emitting it unconditionally
     // produces an orphan comments.xml that Word rejects as an OPC violation
     // (empty part with no [Content_Types] Override when content types are
     // passed through from the source on round-trip).
     if (this._options.comments?.length || this._hasCommentSugar) {
-      this.registerDocumentRel(
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments",
-        "comments.xml",
-      );
+      this.registerDocumentRel(RELATIONSHIP_TYPES.comments, "comments.xml");
     }
     // Word 2013+ comment infrastructure — same conditional rule as comments:
     // emit the part and its relationship only when the document carries them.
     if (this._options.people?.length) {
-      this.registerDocumentRel(
-        "http://schemas.microsoft.com/office/2011/relationships/people",
-        "people.xml",
-      );
+      this.registerDocumentRel(RELATIONSHIP_TYPES.peopleMs, "people.xml");
     }
     if (this._options.commentsExtended?.length) {
-      this.registerDocumentRel(
-        "http://schemas.microsoft.com/office/2011/relationships/commentsExtended",
-        "commentsExtended.xml",
-      );
+      this.registerDocumentRel(RELATIONSHIP_TYPES.commentsExtendedMs, "commentsExtended.xml");
     }
     if (this._options.bibliography) {
-      this.registerDocumentRel(
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/bibliography",
-        "bibliography.xml",
-      );
+      this.registerDocumentRel(RELATIONSHIP_TYPES.bibliography, "bibliography.xml");
     }
 
     // Theme — always present: fresh-compile generates a default theme, round-trip
@@ -630,7 +602,7 @@ export class DocxWriteContext implements WriteContext {
       (r) => r.source === "word/document.xml" && r.relationshipType.endsWith("/theme"),
     );
     this.registerDocumentRel(
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme",
+      RELATIONSHIP_TYPES.theme,
       themeRel ? themeRel.target : "theme/theme1.xml",
     );
   }

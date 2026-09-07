@@ -10,7 +10,13 @@
  * @module
  */
 
-import { encodeBase64, hpsMeasureValue, imageTypeFromPath, toUint8Array } from "@office-open/core";
+import {
+  RELATIONSHIP_TYPES,
+  encodeBase64,
+  hpsMeasureValue,
+  imageTypeFromPath,
+  toUint8Array,
+} from "@office-open/core";
 import type { DataType } from "@office-open/core";
 import { TargetModeType } from "@office-open/core";
 import { buildUserShapesData, chartSpaceDesc } from "@office-open/core/chart";
@@ -1213,8 +1219,7 @@ export function stringifyChildDispatch(
       // One relationship per hyperlink element — Word emits a distinct rel
       // per reference even when the URL repeats (sharing would collapse the
       // source's per-reference entries on round-trip).
-      const relType =
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink";
+      const relType = RELATIONSHIP_TYPES.hyperlink;
       const linkId = `rId${ctx.viewWrapper.relationships.add(relType, hl.url, TargetModeType.EXTERNAL)}`;
       const attrs = [`r:id="${linkId}"`];
       pushHlAttrs(attrs);

@@ -1,5 +1,6 @@
 import type { PassthroughRelationship } from "@office-open/core";
 import {
+  RELATIONSHIP_TYPES,
   appPropertiesDesc,
   collectPassthroughParts,
   contentTypesDesc,
@@ -119,12 +120,9 @@ function parseRootRels(doc: ParsedArchive): {
   // URIs (camelCase …/extendedProperties, the …/officedocument/… core form)
   // exist in the wild — the canonical spelling wins, the losing part flows
   // through the passthrough pipeline untouched.
-  const canonicalCore =
-    "http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties";
-  const canonicalApp =
-    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties";
-  const canonicalCustom =
-    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/custom-properties";
+  const canonicalCore = RELATIONSHIP_TYPES.metadataCoreProperties;
+  const canonicalApp = RELATIONSHIP_TYPES.extendedProperties;
+  const canonicalCustom = RELATIONSHIP_TYPES.customProperties;
   let coreProps: string | undefined;
   let appProps: string | undefined;
   let customProps: string | undefined;

@@ -8,6 +8,7 @@
  */
 
 import {
+  RELATIONSHIP_TYPES,
   IMAGE_MEDIA_CONTENT_TYPES,
   Relationships,
   addBinaryFile,
@@ -202,7 +203,7 @@ function wirePartHyperlinks(
   if (keys.length === 0) return xml;
   const keySet = new Set(keys);
   const matched = hyperlinks.filter((h) => keySet.has(h.key));
-  const SLIDE_REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide";
+  const SLIDE_REL = RELATIONSHIP_TYPES.slide;
   // Parts that resolve an existing rel (slides, notes) are round-trip owners —
   // each hyperlink keeps its own relationship there even when targets repeat
   // (source files may legally carry several). Fresh parts (master, layout,
@@ -241,12 +242,7 @@ function wirePartHyperlinks(
     if (hlink.slide !== undefined) continue;
     const id = cursor++;
     idByKey.set(hlink.key, id);
-    add(
-      id,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
-      hlink.url ?? "",
-      "External",
-    );
+    add(id, RELATIONSHIP_TYPES.hyperlink, hlink.url ?? "", "External");
   }
   const replacement = new Map<string, string>();
   for (const [key, id] of idByKey) replacement.set(`hlink:${key}`, `rId${id}`);
@@ -360,14 +356,14 @@ function buildMasterMap(
       const layoutRelEntries: RelEntry[] = [
         {
           id: 1,
-          type: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster",
+          type: RELATIONSHIP_TYPES.slideMaster,
           target: `../slideMasters/slideMaster${mi + 1}.xml`,
         },
       ];
       if (themeOverride) {
         layoutRelEntries.push({
           id: 2,
-          type: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/themeOverride",
+          type: RELATIONSHIP_TYPES.themeOverride,
           target: `../theme/themeOverride${globalLayoutIndex + 1}.xml`,
         });
       }
@@ -402,14 +398,11 @@ function buildMasterMap(
     for (const [li, layout] of layouts.entries()) {
       masterRels.addRelationship(
         li + 1,
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout",
+        RELATIONSHIP_TYPES.slideLayout,
         `../slideLayouts/slideLayout${layout.index + 1}.xml`,
       );
     }
-    masterRels.add(
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme",
-      `../theme/theme${themeIndex + 1}.xml`,
-    );
+    masterRels.add(RELATIONSHIP_TYPES.theme, `../theme/theme${themeIndex + 1}.xml`);
     // Media referenced by master shapes gets the same image-relationship
     // wiring slides/layouts use (master pictures otherwise lose their rel).
     // Registered before the passthrough loop so its kind ownership test sees
@@ -418,7 +411,7 @@ function buildMasterMap(
     for (const [idx, mediaItem] of masterMediaData.entries()) {
       masterRels.addRelationship(
         masterImageOffset + idx,
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+        RELATIONSHIP_TYPES.image,
         `../media/${mediaItem.fileName}`,
       );
     }
@@ -433,7 +426,7 @@ function buildMasterMap(
       for (const [ili, imgLink] of masterImgLinks.entries()) {
         masterRels.addRelationship(
           imgLinkOffset + ili,
-          "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+          RELATIONSHIP_TYPES.image,
           imgLink.url,
           "External",
         );
@@ -504,7 +497,7 @@ function buildSlideRels(masters: MasterInfo[], slides: SlideOptions[]): Relation
       buildRels([
         {
           id: 1,
-          type: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout",
+          type: RELATIONSHIP_TYPES.slideLayout,
           target: `../slideLayouts/slideLayout${layout.index + 1}.xml`,
         },
       ]),
@@ -522,17 +515,12 @@ function promoteLayoutToSourceId(
 ): void {
   if (!sourcePassthrough) return;
   const sourceLayout = sourcePassthrough.find(
-    (r) =>
-      r.relationshipType ===
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout",
+    (r) => r.relationshipType === RELATIONSHIP_TYPES.slideLayout,
   );
   if (!sourceLayout) return;
   const numeric = /^rId(\d+)$/.exec(sourceLayout.rId);
   if (!numeric) return;
-  rels.renameEntryByType(
-    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout",
-    Number(numeric[1]),
-  );
+  rels.renameEntryByType(RELATIONSHIP_TYPES.slideLayout, Number(numeric[1]));
 }
 
 /** Reserve the captured ids whose rels a claim will re-emit. A captured rel
@@ -637,8 +625,7 @@ export function buildCommentData(
 const PPTX_CONTENT_TYPE_RESOLVER = resolverFromRegistry(PPTX_PARTS);
 
 /** Chart part → user-shapes part relationship (c:userShapes bridge). */
-const CHART_USER_SHAPES_REL =
-  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chartUserShapes";
+const CHART_USER_SHAPES_REL = RELATIONSHIP_TYPES.chartUserShapes;
 
 /** Extension → MIME for media Default entries (image/video/audio). Declared
  * only for extensions actually present in the package. */
@@ -667,14 +654,14 @@ function initPresRels(masters: MasterInfo[], slideCount: number): Relationships 
   for (let mi = 0; mi < masters.length; mi++) {
     rels.addRelationship(
       mi + 1,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster",
+      RELATIONSHIP_TYPES.slideMaster,
       `slideMasters/slideMaster${mi + 1}.xml`,
     );
   }
   for (let i = 0; i < slideCount; i++) {
     rels.addRelationship(
       masters.length + i + 1,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide",
+      RELATIONSHIP_TYPES.slide,
       `slides/slide${i + 1}.xml`,
     );
   }
@@ -1070,7 +1057,7 @@ export function compilePresentation(
     for (const [idx, mediaItem] of layoutMediaData.entries()) {
       layoutRels.addRelationship(
         layoutImageOffset + idx,
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+        RELATIONSHIP_TYPES.image,
         `../media/${mediaItem.fileName}`,
       );
     }
@@ -1089,7 +1076,7 @@ export function compilePresentation(
       for (const [ili, imgLink] of layoutImgLinks.entries()) {
         layoutRels.addRelationship(
           imgLinkOffset + ili,
-          "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+          RELATIONSHIP_TYPES.image,
           imgLink.url,
           "External",
         );
@@ -1109,7 +1096,7 @@ export function compilePresentation(
       for (const [oli, oleLink] of layoutOleLinks.entries()) {
         layoutRels.addRelationship(
           oleLinkOffset + oli,
-          "http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject",
+          RELATIONSHIP_TYPES.oleObject,
           oleLink.url,
           "External",
         );
@@ -1165,7 +1152,7 @@ export function compilePresentation(
       notesMasterRId = presRels.idByKind("notesMaster")!;
     } else {
       notesMasterRId = presRels.add(
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesMaster",
+        RELATIONSHIP_TYPES.notesMaster,
         "notesMasters/notesMaster1.xml",
       );
     }
@@ -1180,7 +1167,7 @@ export function compilePresentation(
     const notesMasterRels = new Relationships();
     notesMasterRels.addRelationship(
       1,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme",
+      RELATIONSHIP_TYPES.theme,
       `../theme/theme${notesMasterThemeIndex}.xml`,
     );
     // Media referenced by notes-master shapes gets slide-style image wiring.
@@ -1189,7 +1176,7 @@ export function compilePresentation(
     for (const [idx, mediaItem] of notesMasterMediaData.entries()) {
       notesMasterRels.addRelationship(
         notesMasterImageOffset + idx,
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+        RELATIONSHIP_TYPES.image,
         `../media/${mediaItem.fileName}`,
       );
     }
@@ -1223,7 +1210,7 @@ export function compilePresentation(
       handoutMasterRId = presRels.idByKind("handoutMaster")!;
     } else {
       handoutMasterRId = presRels.add(
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/handoutMaster",
+        RELATIONSHIP_TYPES.handoutMaster,
         "handoutMasters/handoutMaster1.xml",
       );
     }
@@ -1239,7 +1226,7 @@ export function compilePresentation(
     const handoutMasterRels = new Relationships();
     handoutMasterRels.addRelationship(
       1,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme",
+      RELATIONSHIP_TYPES.theme,
       `../theme/theme${handoutMasterThemeIndex}.xml`,
     );
     // Media referenced by handout-master shapes gets slide-style image wiring.
@@ -1248,7 +1235,7 @@ export function compilePresentation(
     for (const [idx, mediaItem] of handoutMediaData.entries()) {
       handoutMasterRels.addRelationship(
         handoutImageOffset + idx,
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+        RELATIONSHIP_TYPES.image,
         `../media/${mediaItem.fileName}`,
       );
     }
@@ -1278,10 +1265,7 @@ export function compilePresentation(
 
   // Comment Authors
   if (commentAuthorEntries && !presRels.hasRelationshipKind("commentAuthors")) {
-    presRels.add(
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/commentAuthors",
-      "commentAuthors.xml",
-    );
+    presRels.add(RELATIONSHIP_TYPES.commentAuthors, "commentAuthors.xml");
   }
 
   // Structure-owned presentation rels not claimable by passthrough
@@ -1291,28 +1275,16 @@ export function compilePresentation(
   // default theme) regardless of how many masters or theme parts exist —
   // extra masters reference their themes through their own rels.
   if (!presRels.hasRelationshipKind("presProps")) {
-    presRels.add(
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/presProps",
-      "presProps.xml",
-    );
+    presRels.add(RELATIONSHIP_TYPES.presProps, "presProps.xml");
   }
   if (!presRels.hasRelationshipKind("viewProps")) {
-    presRels.add(
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/viewProps",
-      "viewProps.xml",
-    );
+    presRels.add(RELATIONSHIP_TYPES.viewProps, "viewProps.xml");
   }
   if (!presRels.hasRelationshipKind("theme")) {
-    presRels.add(
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme",
-      "theme/theme1.xml",
-    );
+    presRels.add(RELATIONSHIP_TYPES.theme, "theme/theme1.xml");
   }
   if (!presRels.hasRelationshipKind("tableStyles")) {
-    presRels.add(
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/tableStyles",
-      "tableStyles.xml",
-    );
+    presRels.add(RELATIONSHIP_TYPES.tableStyles, "tableStyles.xml");
   }
 
   // Presentation XML
@@ -1323,7 +1295,7 @@ export function compilePresentation(
   for (const [idx, mediaItem] of mediaData.entries()) {
     presRels.addRelationship(
       presImageOffset + idx,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+      RELATIONSHIP_TYPES.image,
       `../media/${mediaItem.fileName}`,
     );
   }
@@ -1401,7 +1373,7 @@ export function compilePresentation(
     for (const [idx, mediaItem] of slideMediaData.entries()) {
       currentSlideRels.addRelationship(
         slideImageOffset + idx,
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+        RELATIONSHIP_TYPES.image,
         `../media/${mediaItem.fileName}`,
       );
     }
@@ -1425,7 +1397,7 @@ export function compilePresentation(
         for (const [ci, chartKey] of allChartKeys.entries()) {
           currentSlideRels.addRelationship(
             slideChartOffset + ci,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart",
+            RELATIONSHIP_TYPES.chart,
             `../charts/chart${getChartGlobalIndex(chartKey, charts.array, descCtx.charts) + 1}.xml`,
           );
         }
@@ -1459,8 +1431,7 @@ export function compilePresentation(
             saGlobalStart,
             {
               pathPrefix: "../",
-              styleRelType:
-                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramQuickStyle",
+              styleRelType: RELATIONSHIP_TYPES.diagramQuickStyle,
             },
           );
         }
@@ -1495,7 +1466,7 @@ export function compilePresentation(
         for (const [li, imgLink] of slideImgLinks.entries()) {
           currentSlideRels.addRelationship(
             imgLinkOffset + li,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+            RELATIONSHIP_TYPES.image,
             imgLink.url,
             "External",
           );
@@ -1517,7 +1488,7 @@ export function compilePresentation(
         for (const [oli, oleLink] of slideOleLinks.entries()) {
           currentSlideRels.addRelationship(
             oleLinkOffset + oli,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject",
+            RELATIONSHIP_TYPES.oleObject,
             oleLink.url,
             "External",
           );
@@ -1538,21 +1509,21 @@ export function compilePresentation(
         for (const [mi, mediaRef] of slideMediaRefs.entries()) {
           currentSlideRels.addRelationship(
             mediaOffset + mi,
-            "http://schemas.microsoft.com/office/2007/relationships/media",
+            RELATIONSHIP_TYPES.mediaMs,
             `../media/${mediaRef.fileName}`,
           );
         }
         for (const [ai, audioRef] of slideAudioRefs.entries()) {
           currentSlideRels.addRelationship(
             audioOffset + ai,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/audio",
+            RELATIONSHIP_TYPES.audio,
             `../media/${audioRef.fileName}`,
           );
         }
         for (const [vi, videoRef] of slideVideoRefs.entries()) {
           currentSlideRels.addRelationship(
             videoOffset + vi,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/video",
+            RELATIONSHIP_TYPES.video,
             `../media/${videoRef.fileName}`,
           );
         }
@@ -1566,7 +1537,7 @@ export function compilePresentation(
         for (const [oi, oleRef] of slideOleRefs.entries()) {
           currentSlideRels.addRelationship(
             oleOffset + oi,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject",
+            RELATIONSHIP_TYPES.oleObject,
             `../embeddings/${oleRef.fileName}`,
           );
         }
@@ -1582,14 +1553,11 @@ export function compilePresentation(
       slideCommentEntries[i] &&
       !currentSlideRels.hasRelationshipKind("comments") &&
       !currentSlideRels.hasRelationship(
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments",
+        RELATIONSHIP_TYPES.comments,
         `../comments/comment${i + 1}.xml`,
       )
     ) {
-      currentSlideRels.add(
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments",
-        `../comments/comment${i + 1}.xml`,
-      );
+      currentSlideRels.add(RELATIONSHIP_TYPES.comments, `../comments/comment${i + 1}.xml`);
     }
 
     const notesSlideIndex = notesSlideIndexMap.get(i);
@@ -1597,12 +1565,12 @@ export function compilePresentation(
       notesSlideIndex !== undefined &&
       !currentSlideRels.hasRelationshipKind("notesSlide") &&
       !currentSlideRels.hasRelationship(
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide",
+        RELATIONSHIP_TYPES.notesSlide,
         `../notesSlides/notesSlide${notesSlideIndex + 1}.xml`,
       )
     ) {
       currentSlideRels.add(
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide",
+        RELATIONSHIP_TYPES.notesSlide,
         `../notesSlides/notesSlide${notesSlideIndex + 1}.xml`,
       );
     }
@@ -1610,7 +1578,7 @@ export function compilePresentation(
     const slideSyncIndex = slideSyncIndexMap.get(i);
     if (slideSyncIndex !== undefined) {
       currentSlideRels.add(
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideSyncProperties",
+        RELATIONSHIP_TYPES.slideSyncProperties,
         `../slideSyncPr/slideSyncPr${slideSyncIndex + 1}.xml`,
       );
     }
@@ -1703,11 +1671,7 @@ export function compilePresentation(
   if (hasOutlineViewSlides) {
     const vpRels = new Relationships();
     for (let i = 0; i < slides.length; i++) {
-      vpRels.addRelationship(
-        i + 1,
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide",
-        `slides/slide${i + 1}.xml`,
-      );
+      vpRels.addRelationship(i + 1, RELATIONSHIP_TYPES.slide, `slides/slide${i + 1}.xml`);
     }
     files["ppt/_rels/viewProps.xml.rels"] = encoder.encode(XML_DECL + vpRels.serialize());
   }
@@ -1717,7 +1681,7 @@ export function compilePresentation(
     const presPropsRels = new Relationships();
     presPropsRels.addRelationship(
       htmlPublishInfo.rId,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
+      RELATIONSHIP_TYPES.hyperlink,
       htmlPublishInfo.target ?? "presentation.htm",
       "External",
     );
@@ -1732,16 +1696,8 @@ export function compilePresentation(
   for (let i = 0; i < notesOptions.length; i++) {
     const slideIdx = notesSlideToSlide.get(i) ?? 0;
     const nsRels = new Relationships();
-    nsRels.addRelationship(
-      1,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesMaster",
-      "../notesMasters/notesMaster1.xml",
-    );
-    nsRels.addRelationship(
-      2,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide",
-      `../slides/slide${slideIdx + 1}.xml`,
-    );
+    nsRels.addRelationship(1, RELATIONSHIP_TYPES.notesMaster, "../notesMasters/notesMaster1.xml");
+    nsRels.addRelationship(2, RELATIONSHIP_TYPES.slide, `../slides/slide${slideIdx + 1}.xml`);
     // Media referenced by notes shapes gets slide-style image wiring (notes
     // accept pictures just like slides do).
     const notesRaw = notesSlideDesc.stringify(notesOptions[i]!, descCtx) ?? "";
@@ -1750,7 +1706,7 @@ export function compilePresentation(
     for (const [idx, mediaItem] of notesMediaData.entries()) {
       nsRels.addRelationship(
         notesImageOffset + idx,
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+        RELATIONSHIP_TYPES.image,
         `../media/${mediaItem.fileName}`,
       );
     }

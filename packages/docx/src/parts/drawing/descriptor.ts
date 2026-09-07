@@ -17,7 +17,7 @@
  * @module
  */
 
-import { TargetModeType } from "@office-open/core";
+import { RELATIONSHIP_TYPES, TargetModeType } from "@office-open/core";
 import { convertToEmu, uniqueNumericIdCreator } from "@office-open/core";
 import type { CustomDescriptor, WriteContext } from "@office-open/core/descriptor";
 import type {
@@ -168,10 +168,9 @@ const CHART_URI = "http://schemas.openxmlformats.org/drawingml/2006/chart";
 const DGM_URI = "http://schemas.openxmlformats.org/drawingml/2006/diagram";
 const WPS_URI = "http://schemas.microsoft.com/office/word/2010/wordprocessingShape";
 const WPG_URI = "http://schemas.microsoft.com/office/word/2010/wordprocessingGroup";
-const HYPERLINK_REL =
-  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink";
-const IMAGE_REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image";
-const TEXT_BOX_REL = "http://schemas.microsoft.com/office/2006/relationships/txbx";
+const HYPERLINK_REL = RELATIONSHIP_TYPES.hyperlink;
+const IMAGE_REL = RELATIONSHIP_TYPES.image;
+const TEXT_BOX_REL = RELATIONSHIP_TYPES.txbxMs;
 // Blip extension URIs (a:extLst under a:blip).
 const SVG_BLIP_EXT_URI = "{96DAC541-7B7A-43D3-8B79-37D633B846F1}";
 const USE_LOCAL_DPI_EXT_URI = "{28A0092B-C50C-407E-A947-70E740481C1C}";

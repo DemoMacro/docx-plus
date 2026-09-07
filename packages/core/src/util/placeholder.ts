@@ -1,3 +1,4 @@
+import { RELATIONSHIP_TYPES } from "../opc/relationships";
 /**
  * Placeholder detection and replacement utilities for compiler post-processing.
  *
@@ -255,25 +256,25 @@ export function addSmartArtRelationships(
     const gi = globalStartIndex + i;
     addRel(
       baseOffset + i,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramData",
+      RELATIONSHIP_TYPES.diagramData,
       `${pathPrefix}diagrams/data${gi + 1}.xml`,
     );
     addRel(
       loOffset + i,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramLayout",
+      RELATIONSHIP_TYPES.diagramLayout,
       `${pathPrefix}diagrams/layout${gi + 1}.xml`,
     );
     addRel(qsOffset + i, styleRelType, `${pathPrefix}diagrams/quickStyle${gi + 1}.xml`);
     addRel(
       csOffset + i,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramColors",
+      RELATIONSHIP_TYPES.diagramColors,
       `${pathPrefix}diagrams/colors${gi + 1}.xml`,
     );
     if (hasDrawing === undefined || hasDrawing(keys[i]!)) {
       const drOffset = csOffset + count;
       addRel(
         drOffset + i,
-        "http://schemas.microsoft.com/office/2007/relationships/diagramDrawing",
+        RELATIONSHIP_TYPES.diagramDrawingMs,
         `${pathPrefix}diagrams/drawing${gi + 1}.xml`,
       );
     }
