@@ -29,7 +29,7 @@ import { commentAuthorsDesc, slideCommentsDesc } from "@parts/descriptors/commen
 import { textRunDesc } from "@parts/descriptors/text";
 import type { SlideCommentOptions, SlideOptions } from "@shared/file";
 
-import { buildCommentData, stringifySlide } from "./compiler";
+import { buildCommentData, stringifySlide } from "./compile/slides";
 import { PptxWriteContext } from "./context";
 
 /** Reusable TextEncoder (stateless, safe to share). */

@@ -15,7 +15,7 @@ import type { SlideOptions } from "@shared/file";
 import type { TransitionDirection, TransitionOptions } from "@shared/transition";
 import { buildTransition } from "@shared/transition";
 
-import { stringifySlide } from "../../compiler";
+import { stringifySlide } from "../../compile/slides";
 import type { PptxWriteContext } from "../../context";
 import { timingDesc } from "./animation";
 import { backgroundDesc } from "./background";
