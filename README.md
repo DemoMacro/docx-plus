@@ -1,10 +1,19 @@
 # office-open
 
-![GitHub](https://img.shields.io/github/license/DemoMacro/office-open)
+English | [简体中文](./README.zh-CN.md)
+
+[![npm downloads](https://img.shields.io/npm/dm/office-open)](https://www.npmjs.com/package/office-open)
+[![GitHub Stars](https://img.shields.io/github/stars/DemoMacro/office-open)](https://github.com/DemoMacro/office-open/stargazers)
+[![CI](https://github.com/DemoMacro/office-open/actions/workflows/default.yml/badge.svg)](https://github.com/DemoMacro/office-open/actions/workflows/default.yml)
+![GitHub License](https://img.shields.io/github/license/DemoMacro/office-open)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](https://www.contributor-covenant.org/version/2/1/code_of_conduct/)
 
 > AI-native Office documents for TypeScript and JavaScript.
 > Create Word, Excel, and PowerPoint files (.docx, .xlsx, .pptx) from plain JSON or fully typed APIs — generate, parse, and patch. Built for AI agents, LLM tool-calling, and hand-written code alike; no Microsoft Office required, opens in every major office suite.
+
+[Documentation](https://www.office-open.com) · [AI Integration](https://www.office-open.com/en/getting-started/ai-integration) · [Benchmarks](#performance) · [npm](https://www.npmjs.com/package/office-open)
+
+⭐ **If office-open speeds up your work, a star helps other developers find it.**
 
 ## Features
 
@@ -30,8 +39,6 @@ Highlights from the per-package benchmarks (ops/s, higher is better; Windows 11,
 | [@office-open/pptx](./packages/pptx/README.md#benchmark) | 50 fully-styled slides          | 73.8 ops/s   | PptxGenJS — 0.91 ops/s | **81×**  |
 | [@office-open/xlsx](./packages/xlsx/README.md#benchmark) | 100k rows × 20 cols (2M cells)  | 0.89 ops/s   | hucre — 0.46 ops/s     | **1.9×** |
 | [@office-open/xml](./packages/xml/README.md#benchmark)   | Parse complex OOXML             | 424k ops/s   | txml — 389k ops/s      | **1.1×** |
-
-Plain-data workbooks also stream through a constant-memory path — at 1M rows × 3 columns, peak RSS is +177 MB streamed vs +810 MB buffered. @office-open/xml keeps pace with `txml` — the fastest mainstream XML parser — while round-tripping full OOXML (namespaces, entities, attribute order); older general-purpose parsers (`xml-js`) trail by 4.5× or more.
 
 ## Packages
 
@@ -179,8 +186,11 @@ Then follow the workflow: code to the project standards, run `pnpm build && pnpm
 ## Support & Community
 
 - [Documentation](https://www.office-open.com) — guides, API reference, and AI integration docs
+- [Discussions](https://github.com/DemoMacro/office-open/discussions) — questions, ideas, and show-and-tell
 - [Changelog](https://github.com/DemoMacro/office-open/releases) — release notes
 - [Report Issues](https://github.com/DemoMacro/office-open/issues) — bug reports and feature requests
+
+If office-open is useful to you, a [⭐ star](https://github.com/DemoMacro/office-open/stargazers) helps other developers find it.
 
 ## Sponsors
 

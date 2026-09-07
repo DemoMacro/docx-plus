@@ -31,6 +31,9 @@ src/
   parts/    — One module per OOXML XML part (types + descriptor co-located)
   shared/   — Types used by 2+ parts
   compiler.ts    — compileDocument/Presentation/Workbook()
+  compile/       — Compile phases extracted from compiler.ts (one concern per
+                   file: notes, headers/footers, drawings…); files import
+                   siblings as `./x`, everything else as `../`
   context.ts     — XxxWriteContext + XxxReadContext
   generate.ts    — generateDocument/Presentation/Workbook() entry
   parse.ts       — parseDocument/Presentation/Workbook() entry
