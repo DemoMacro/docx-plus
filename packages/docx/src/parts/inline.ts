@@ -174,9 +174,10 @@ export function stringifyRunInline(opts: RunOptions, ctx: BodyContext): string {
 
   // Pre-scan children for commentReference — a styled reference carries the
   // CommentReference style in its own properties; only an unstyled fresh one
-  // gets the conventional default.
+  // gets the conventional default. The scan is pointless when a style is
+  // already set (the default can never apply).
   let commentRefStyle = false;
-  if (opts.children) {
+  if (opts.children && !opts.style) {
     for (const child of opts.children) {
       if (typeof child === "object" && child !== null && "commentReference" in child) {
         commentRefStyle = true;

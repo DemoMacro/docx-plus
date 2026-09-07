@@ -770,79 +770,10 @@ const FRESH_COMPATIBILITY: CompatibilityOptions = {
 
 function stringifyCompatibility(opts: CompatibilityOptions): string {
   const p: string[] = [];
-  // Individual compat on/off elements (XSD order)
-  if (opts.useSingleBorderforContiguousCells)
-    p.push(onOff("w:useSingleBorderforContiguousCells", true));
-  if (opts.wordPerfectJustification) p.push(onOff("w:wpJustification", true));
-  if (opts.noTabStopForHangingIndent) p.push(onOff("w:noTabHangInd", true));
-  if (opts.noLeading) p.push(onOff("w:noLeading", true));
-  if (opts.spaceForUnderline) p.push(onOff("w:spaceForUL", true));
-  if (opts.noColumnBalance) p.push(onOff("w:noColumnBalance", true));
-  if (opts.balanceSingleByteDoubleByteWidth)
-    p.push(onOff("w:balanceSingleByteDoubleByteWidth", true));
-  if (opts.noExtraLineSpacing) p.push(onOff("w:noExtraLineSpacing", true));
-  if (opts.doNotLeaveBackslashAlone) p.push(onOff("w:doNotLeaveBackslashAlone", true));
-  if (opts.underlineTrailingSpaces) p.push(onOff("w:ulTrailSpace", true));
-  if (opts.doNotExpandShiftReturn) p.push(onOff("w:doNotExpandShiftReturn", true));
-  if (opts.spacingInWholePoints) p.push(onOff("w:spacingInWholePoints", true));
-  if (opts.lineWrapLikeWord6) p.push(onOff("w:lineWrapLikeWord6", true));
-  if (opts.printBodyTextBeforeHeader) p.push(onOff("w:printBodyTextBeforeHeader", true));
-  if (opts.printColorsBlack) p.push(onOff("w:printColBlack", true));
-  if (opts.spaceWidth) p.push(onOff("w:wpSpaceWidth", true));
-  if (opts.showBreaksInFrames) p.push(onOff("w:showBreaksInFrames", true));
-  if (opts.subFontBySize) p.push(onOff("w:subFontBySize", true));
-  if (opts.suppressBottomSpacing) p.push(onOff("w:suppressBottomSpacing", true));
-  if (opts.suppressTopSpacing) p.push(onOff("w:suppressTopSpacing", true));
-  if (opts.suppressSpacingAtTopOfPage) p.push(onOff("w:suppressSpacingAtTopOfPage", true));
-  if (opts.suppressTopSpacingWP) p.push(onOff("w:suppressTopSpacingWP", true));
-  if (opts.suppressSpBfAfterPgBrk) p.push(onOff("w:suppressSpBfAfterPgBrk", true));
-  if (opts.swapBordersFacingPages) p.push(onOff("w:swapBordersFacingPages", true));
-  if (opts.convertMailMergeEsc) p.push(onOff("w:convMailMergeEsc", true));
-  if (opts.truncateFontHeightsLikeWP6) p.push(onOff("w:truncateFontHeightsLikeWP6", true));
-  if (opts.macWordSmallCaps) p.push(onOff("w:mwSmallCaps", true));
-  if (opts.usePrinterMetrics) p.push(onOff("w:usePrinterMetrics", true));
-  if (opts.doNotSuppressParagraphBorders) p.push(onOff("w:doNotSuppressParagraphBorders", true));
-  if (opts.wrapTrailSpaces) p.push(onOff("w:wrapTrailSpaces", true));
-  if (opts.footnoteLayoutLikeWW8) p.push(onOff("w:footnoteLayoutLikeWW8", true));
-  if (opts.shapeLayoutLikeWW8) p.push(onOff("w:shapeLayoutLikeWW8", true));
-  if (opts.alignTablesRowByRow) p.push(onOff("w:alignTablesRowByRow", true));
-  if (opts.forgetLastTabAlignment) p.push(onOff("w:forgetLastTabAlignment", true));
-  if (opts.adjustLineHeightInTable) p.push(onOff("w:adjustLineHeightInTable", true));
-  if (opts.autoSpaceLikeWord95) p.push(onOff("w:autoSpaceLikeWord95", true));
-  if (opts.noSpaceRaiseLower) p.push(onOff("w:noSpaceRaiseLower", true));
-  if (opts.doNotUseHTMLParagraphAutoSpacing)
-    p.push(onOff("w:doNotUseHTMLParagraphAutoSpacing", true));
-  if (opts.layoutRawTableWidth) p.push(onOff("w:layoutRawTableWidth", true));
-  if (opts.layoutTableRowsApart) p.push(onOff("w:layoutTableRowsApart", true));
-  if (opts.useWord97LineBreakRules) p.push(onOff("w:useWord97LineBreakRules", true));
-  if (opts.doNotBreakWrappedTables) p.push(onOff("w:doNotBreakWrappedTables", true));
-  if (opts.doNotSnapToGridInCell) p.push(onOff("w:doNotSnapToGridInCell", true));
-  if (opts.selectFieldWithFirstOrLastCharacter)
-    p.push(onOff("w:selectFldWithFirstOrLastChar", true));
-  if (opts.applyBreakingRules) p.push(onOff("w:applyBreakingRules", true));
-  if (opts.doNotWrapTextWithPunctuation) p.push(onOff("w:doNotWrapTextWithPunct", true));
-  if (opts.doNotUseEastAsianBreakRules) p.push(onOff("w:doNotUseEastAsianBreakRules", true));
-  if (opts.useWord2002TableStyleRules) p.push(onOff("w:useWord2002TableStyleRules", true));
-  if (opts.growAutofit) p.push(onOff("w:growAutofit", true));
-  if (opts.useFELayout) p.push(onOff("w:useFELayout", true));
-  if (opts.useNormalStyleForList) p.push(onOff("w:useNormalStyleForList", true));
-  if (opts.doNotUseIndentAsNumberingTabStop)
-    p.push(onOff("w:doNotUseIndentAsNumberingTabStop", true));
-  if (opts.useAlternateEastAsianLineBreakRules)
-    p.push(onOff("w:useAltKinsokuLineBreakRules", true));
-  if (opts.allowSpaceOfSameStyleInTable) p.push(onOff("w:allowSpaceOfSameStyleInTable", true));
-  if (opts.doNotSuppressIndentation) p.push(onOff("w:doNotSuppressIndentation", true));
-  if (opts.doNotAutofitConstrainedTables) p.push(onOff("w:doNotAutofitConstrainedTables", true));
-  if (opts.autofitToFirstFixedWidthCell) p.push(onOff("w:autofitToFirstFixedWidthCell", true));
-  if (opts.underlineTabInNumberingList) p.push(onOff("w:underlineTabInNumList", true));
-  if (opts.displayHangulFixedWidth) p.push(onOff("w:displayHangulFixedWidth", true));
-  if (opts.splitPgBreakAndParaMark) p.push(onOff("w:splitPgBreakAndParaMark", true));
-  if (opts.doNotVerticallyAlignCellWithSp) p.push(onOff("w:doNotVertAlignCellWithSp", true));
-  if (opts.doNotBreakConstrainedForcedTable)
-    p.push(onOff("w:doNotBreakConstrainedForcedTable", true));
-  if (opts.ignoreVerticalAlignmentInTextboxes) p.push(onOff("w:doNotVertAlignInTxbx", true));
-  if (opts.useAnsiKerningPairs) p.push(onOff("w:useAnsiKerningPairs", true));
-  if (opts.cachedColumnBalance) p.push(onOff("w:cachedColBalance", true));
+  // Individual compat on/off elements (XSD order — same table drives parse)
+  for (const [key, tag] of COMPAT_FLAG_MAP) {
+    if (opts[key as keyof CompatibilityOptions]) p.push(onOff(tag, true));
+  }
   // Word 2010 extension flag — after the CT_Compat on/off elements
   if (opts.enableOpenTypeKerning) p.push("<w14:enableOpenTypeKerning/>");
   // compatSetting elements last (XSD order)

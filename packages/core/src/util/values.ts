@@ -9,6 +9,9 @@
  * @module
  */
 
+/** Full-string hex-digit scan for hexBinary/ST_LongHexNumber validation (native, zero-alloc). */
+const HEX_DIGITS = /^[0-9A-Fa-f]+$/;
+
 /**
  * A measurement value with optional sign and unit suffix.
  *
@@ -261,7 +264,7 @@ export const unsignedDecimalNumber = (val: number): number => {
  */
 export const hexBinary = (val: string, length: number): string => {
   const expectedLength = length * 2;
-  if (val.length !== expectedLength || isNaN(Number(`0x${val}`))) {
+  if (!HEX_DIGITS.test(val) || val.length !== expectedLength) {
     throw new Error(`Invalid hex value '${val}'. Expected ${expectedLength} digit hex value`);
   }
   return val;
@@ -432,7 +435,12 @@ export const stripColorHashPrefix = (color: string): string =>
 export const parseOnOff = (raw: string | number | boolean | undefined): boolean | undefined => {
   if (raw === undefined) return undefined;
   if (typeof raw === "boolean") return raw;
-  const s = String(raw).toLowerCase();
+  if (typeof raw === "number") {
+    if (raw === 1) return true;
+    if (raw === 0) return false;
+    return undefined;
+  }
+  const s = raw.toLowerCase();
   // Full ST_OnOff union across editions — the original 2006 enumeration
   // included the single-letter t/f Word 2007 wrote.
   if (s === "1" || s === "true" || s === "on" || s === "t") return true;

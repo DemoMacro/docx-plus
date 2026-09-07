@@ -455,13 +455,13 @@ export class DefaultStylesFactory {
       quickFormat: true,
     });
 
-    // heading 1-9 styles with proper formatting
+    // heading 1-9 styles with proper formatting (sz in points, spacing in twips)
     const headings = [
       {
         id: "Heading1",
         name: "heading 1",
         link: "Heading1Char",
-        sz: 48,
+        sz: 24,
         before: 480,
         after: 80,
         outlineLvl: 0,
@@ -470,7 +470,7 @@ export class DefaultStylesFactory {
         id: "Heading2",
         name: "heading 2",
         link: "Heading2Char",
-        sz: 40,
+        sz: 20,
         before: 160,
         after: 80,
         outlineLvl: 1,
@@ -479,7 +479,7 @@ export class DefaultStylesFactory {
         id: "Heading3",
         name: "heading 3",
         link: "Heading3Char",
-        sz: 32,
+        sz: 16,
         before: 160,
         after: 80,
         outlineLvl: 2,
@@ -488,7 +488,7 @@ export class DefaultStylesFactory {
         id: "Heading4",
         name: "heading 4",
         link: "Heading4Char",
-        sz: 28,
+        sz: 14,
         before: 80,
         after: 40,
         outlineLvl: 3,
@@ -497,7 +497,7 @@ export class DefaultStylesFactory {
         id: "Heading5",
         name: "heading 5",
         link: "Heading5Char",
-        sz: 24,
+        sz: 12,
         before: 80,
         after: 40,
         outlineLvl: 4,
@@ -587,9 +587,8 @@ export class DefaultStylesFactory {
           : { val: "595959", themeColor: "text1", themeTint: "A6" },
       };
       if (h.sz) {
-        const sizePt = h.sz / 2; // half-points → points
-        runProps.size = sizePt;
-        runProps.sizeComplexScript = sizePt;
+        runProps.size = h.sz;
+        runProps.sizeComplexScript = h.sz;
       }
       // heading 6-9 have bold
       if (outlineLvl >= 5) {

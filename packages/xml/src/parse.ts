@@ -10,6 +10,9 @@ const ENTITY_MAP: Record<string, string> = {
 // Matches the five named entities plus numeric character references
 // (&#65; decimal, &#x42; hex).
 const ENTITY_PATTERN = /&(?:amp|lt|gt|quot|apos|#x[0-9a-fA-F]+|#[0-9]+);/g;
+// "Contains a non-whitespace character" — same predicate as
+// `text.trim().length > 0` without allocating the trimmed copy.
+const HAS_CONTENT = /\S/;
 
 export function unescapeXml(str: string): string {
   // Fast path: entities all start with '&', and OOXML parts overwhelmingly
@@ -123,7 +126,9 @@ export function parse(xmlString: string, options?: ParseOptions): Element {
       if (trim) text = text.trim();
       if (ignoreText) continue;
       if (text.length > 0) {
-        if (captureSpaces || text.trim().length > 0 || isPreserveContext(stack)) {
+        // trim mode already guarantees non-whitespace past the length gate;
+        // otherwise test natively instead of allocating a trimmed copy.
+        if (captureSpaces || (trim ? true : HAS_CONTENT.test(text)) || isPreserveContext(stack)) {
           // Text-node hot path, inlined from addField("text"): one lookup of
           // the last child covers both the adjacent-merge case (same shape as
           // addField — a split CDATA/text run must reassemble) and the fresh

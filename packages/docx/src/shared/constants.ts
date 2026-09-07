@@ -112,15 +112,3 @@ export const NumberFormat = {
   UPPER_ROMAN: "upperRoman",
   VIETNAMESE_COUNTING: "vietnameseCounting",
 } as const;
-
-// ── Space type ──
-
-/**
- * XML space handling modes.
- *
- * @publicApi
- */
-export const SpaceType = {
-  DEFAULT: "default",
-  PRESERVE: "preserve",
-} as const;

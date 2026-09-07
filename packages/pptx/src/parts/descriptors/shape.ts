@@ -66,11 +66,6 @@ export function resetShapeIdCounter(value = 2): void {
   _nextShapeId = value;
 }
 
-/** Reset picture ID counter (useful for tests). */
-export function resetPictureIdCounter(value = 100): void {
-  _nextPictureId = value;
-}
-
 // ── Shape (p:sp) descriptor ──
 
 export const shapeDesc: CustomDescriptor<ShapeOptions> = {

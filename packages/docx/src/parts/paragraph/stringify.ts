@@ -456,17 +456,23 @@ export function stringifyParagraphProperties(
   // 10: shd
   if (options.shading) s += shadingStr(options.shading);
 
-  // 11: tabs
-  const tabDefs: TabStopDefinition[] = [
-    ...(options.rightTabStop !== undefined
-      ? [{ position: options.rightTabStop, type: "right" as const }]
-      : []),
-    ...(options.tabStops ? options.tabStops : []),
-    ...(options.leftTabStop !== undefined
-      ? [{ position: options.leftTabStop, type: "left" as const }]
-      : []),
-  ];
-  if (tabDefs.length > 0) s += tabStopsStr(tabDefs);
+  // 11: tabs — most paragraphs carry none; skip the assembly entirely
+  if (
+    options.rightTabStop !== undefined ||
+    options.leftTabStop !== undefined ||
+    options.tabStops !== undefined
+  ) {
+    const tabDefs: TabStopDefinition[] = [
+      ...(options.rightTabStop !== undefined
+        ? [{ position: options.rightTabStop, type: "right" as const }]
+        : []),
+      ...(options.tabStops ? options.tabStops : []),
+      ...(options.leftTabStop !== undefined
+        ? [{ position: options.leftTabStop, type: "left" as const }]
+        : []),
+    ];
+    if (tabDefs.length > 0) s += tabStopsStr(tabDefs);
+  }
 
   // 12-18: suppressAutoHyphens, kinsoku, wordWrap, overflowPunct, topLinePunct, autoSpaceDE, autoSpaceDN
   if (options.suppressAutoHyphens !== undefined)
