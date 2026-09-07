@@ -32,10 +32,6 @@ export class ParseContext {
 
 export interface MediaEntry extends BaseMediaEntry {
   key: string;
-  transformation: {
-    pixels: { x: number; y: number };
-    emus: { x: number; y: number };
-  };
 }
 
 export interface ChartEntry {
@@ -129,7 +125,6 @@ export class PptxWriteContext implements WriteContext {
       fileName,
       data,
       type,
-      transformation: { pixels: { x: 0, y: 0 }, emus: { x: 0, y: 0 } },
     }));
     return `{${entry.fileName}}`;
   }

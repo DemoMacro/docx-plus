@@ -7,13 +7,7 @@
  * @module
  */
 
-import {
-  convertEmuToPixels,
-  convertToEmu,
-  parseOnOff,
-  toUint8Array,
-  xsdPlaceholderType,
-} from "@office-open/core";
+import { parseOnOff, toUint8Array, xsdPlaceholderType } from "@office-open/core";
 import type { NonVisualDrawingPropertiesOptions, ShapeLockingOptions } from "@office-open/core";
 import type { CustomDescriptor, WriteContext, ReadContext } from "@office-open/core/descriptor";
 import { parse, stringify } from "@office-open/core/descriptor";
@@ -156,10 +150,6 @@ export const pictureDesc: CustomDescriptor<PictureOptions> = {
     const name = opts.name ?? `Picture ${id}`;
     pptx.registerShapeId(name, id);
 
-    // Geometry: number is already EMU, string is UniversalMeasure → EMU
-    const widthEmu = convertToEmu(opts.width ?? 0);
-    const heightEmu = convertToEmu(opts.height ?? 0);
-
     // A linked-only picture (external URL, no bytes) registers no media —
     // its slide carries one External image relationship instead. A byteless
     // picture with no link either (a broken source reference) registers none
@@ -167,19 +157,14 @@ export const pictureDesc: CustomDescriptor<PictureOptions> = {
     let mediaFileName: string | undefined;
     if (opts.data !== undefined) {
       const fileName = opts.fileName ?? `${name.replace(/\s+/g, "_")}.${opts.type}`;
-      // Register media with the PPTX context (content-deduplicated)
+      // Register media with the PPTX context (content-deduplicated). Identity
+      // fields only — the extent is emitted from opts per reference, never
+      // carried on the shared dedup entry.
       const mediaEntry = pptx.addImage(fileName, {
         key: fileName,
         type: opts.type,
         fileName,
         data: toUint8Array(opts.data ?? new Uint8Array(0), { encoding: "base64" }),
-        transformation: {
-          pixels: {
-            x: Math.round(convertEmuToPixels(widthEmu)),
-            y: Math.round(convertEmuToPixels(heightEmu)),
-          },
-          emus: { x: widthEmu, y: heightEmu },
-        },
       });
       mediaFileName = mediaEntry.fileName;
     }
@@ -456,7 +441,6 @@ function stringifySpPr(opts: ShapeOptions, ctx: WriteContext): string {
       data: raw,
       fileName,
       type: (blipFill.imageType ?? "png") as MediaEntry["type"],
-      transformation: { pixels: { x: 0, y: 0 }, emus: { x: 0, y: 0 } },
     });
   }
 

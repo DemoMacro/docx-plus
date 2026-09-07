@@ -408,7 +408,6 @@ function registerMediaFile(
     data: raw,
     fileName,
     type,
-    transformation: { pixels: { x: 0, y: 0 }, emus: { x: 0, y: 0 } },
   };
   return pptx.addImage(fileName, entry).fileName;
 }
