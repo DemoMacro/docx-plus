@@ -25,13 +25,22 @@ import type { TableRowPropertiesOptions } from "@parts/table/table-row/table-row
 import { WidthType } from "@parts/table/table-width";
 import { BorderStyle, type BorderOptions } from "@shared/border";
 
-import { stringifyParagraphProperties, stringifyRunProperties } from "../paragraph/stringify";
+import type { LanguageOptions } from "../paragraph/run/language";
+import {
+  languageStr,
+  stringifyParagraphProperties,
+  stringifyRunProperties,
+} from "../paragraph/stringify";
 import type { StylesOptions } from "./styles";
 
 // ── Style options interfaces ──
 
 export interface DefaultStylesOptions {
   document?: DocumentDefaultsOptions;
+  /** docDefaults `w:lang` injected into fresh documents — Word derives it from the
+   *  editing language. Defaults to `{ value: "en-US" }` (en-US Word install); a
+   *  zh-CN install writes `{ value: "en-US", eastAsia: "zh-CN", bidirectional: "ar-SA" }`. */
+  language?: LanguageOptions;
   title?: ParagraphStyleOptions;
   subtitle?: ParagraphStyleOptions;
   heading1?: ParagraphStyleOptions;
@@ -323,21 +332,23 @@ function headingOverride(
 
 /** Word's default `<w:rPrDefault>` — theme fonts, kern, 11pt, ligatures. Injected
  *  for fresh documents (no structured docDefaults provided) to mirror Word's
- *  Normal.dotx. On round-trip the structured form is used instead. */
-const WORD_DEFAULT_RPR_DEFAULT =
+ *  Normal.dotx; `language` stands in for Word's editing language (default: an
+ *  en-US install writes `<w:lang w:val="en-US"/>`). On round-trip the structured
+ *  form is used instead. */
+const wordDefaultRprDefault = (language?: LanguageOptions): string =>
   `<w:rPrDefault><w:rPr>` +
   `<w:rFonts w:asciiTheme="minorHAnsi" w:eastAsiaTheme="minorEastAsia" w:hAnsiTheme="minorHAnsi" w:cstheme="minorBidi"/>` +
   `<w:kern w:val="2"/>` +
   `<w:sz w:val="22"/><w:szCs w:val="24"/>` +
-  `<w:lang w:val="en-US" w:eastAsia="zh-CN" w:bidi="ar-SA"/>` +
+  languageStr(language ?? { value: "en-US" }) +
   `<w14:ligatures w14:val="standardContextual"/>` +
   `</w:rPr></w:rPrDefault>`;
 
-/** Word's default `<w:pPrDefault>` — widow/orphan control + 8pt after / 1.16 line.
- *  Injected for fresh documents only. */
+/** Word's default `<w:pPrDefault>` — 8pt after / 1.16 line. widowControl is not
+ *  written: ECMA-376 defaults it to on, matching Word's template bytes. Injected
+ *  for fresh documents only. */
 const WORD_DEFAULT_PPR_DEFAULT =
   `<w:pPrDefault><w:pPr>` +
-  `<w:widowControl/>` +
   `<w:spacing w:after="160" w:line="278" w:lineRule="auto"/>` +
   `</w:pPr></w:pPrDefault>`;
 
@@ -354,7 +365,11 @@ const WORD_DEFAULT_PPR_DEFAULT =
  *                mirror Word's Normal.dotx; on round-trip we omit the element
  *                to preserve the source's "this default category is absent".
  */
-export function stringifyDocDefaults(opts: DocumentDefaultsOptions, injectDefaults = true): string {
+export function stringifyDocDefaults(
+  opts: DocumentDefaultsOptions,
+  injectDefaults = true,
+  language?: LanguageOptions,
+): string {
   const children: string[] = [];
 
   // rPrDefault
@@ -364,7 +379,7 @@ export function stringifyDocDefaults(opts: DocumentDefaultsOptions, injectDefaul
   } else if (opts.run === null) {
     children.push(`<w:rPrDefault/>`);
   } else if (injectDefaults) {
-    children.push(WORD_DEFAULT_RPR_DEFAULT);
+    children.push(wordDefaultRprDefault(language));
   }
 
   // pPrDefault
@@ -417,7 +432,7 @@ export class DefaultStylesFactory {
       "mc:Ignorable": "w14 w15",
     };
 
-    importedStyles.push(stringifyDocDefaults(options.document ?? {}));
+    importedStyles.push(stringifyDocDefaults(options.document ?? {}, true, options.language));
 
     // Latent styles - complete list from Word's default template
     // Only include styles that are NOT explicitly defined below

@@ -323,7 +323,7 @@ function eastAsianLayoutStr(opts: EastAsianLayoutOptions): string {
   return `<w:eastAsianLayout${a}/>`;
 }
 
-function languageStr(opts: LanguageOptions): string {
+export function languageStr(opts: LanguageOptions): string {
   const a = attrsRaw({
     "w:val": opts.value,
     "w:eastAsia": opts.eastAsia,

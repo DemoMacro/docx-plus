@@ -5136,6 +5136,10 @@
         "intenseQuote": {
           "$ref": "#/definitions/ParagraphStyleOptions"
         },
+        "language": {
+          "$ref": "#/definitions/LanguageOptions",
+          "description": "docDefaults `w:lang` injected into fresh documents — Word derives it from the editing language. Defaults to `{ value: \"en-US\" }` (en-US Word install); a zh-CN install writes `{ value: \"en-US\", eastAsia: \"zh-CN\", bidirectional: \"ar-SA\" }`."
+        },
         "listParagraph": {
           "$ref": "#/definitions/ParagraphStyleOptions"
         },

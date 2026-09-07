@@ -399,6 +399,20 @@ describe("styles round-trip (generate → parse → generate)", () => {
     expect(rexml).not.toContain("pPrDefault");
   });
 
+  it("injects en-US docDefaults lang by default and honors the language option", () => {
+    // Fresh generation mirrors an en-US Word install (`<w:lang w:val="en-US"/>`,
+    // no eastAsia/bidi). A zh-CN install sets defaultStyles.language instead.
+    const fresh = stringifyDocDefaults({}, true);
+    expect(fresh).toContain('<w:lang w:val="en-US"/>');
+    expect(fresh.match(/<w:lang[^>]*>/)?.[0]).toBe('<w:lang w:val="en-US"/>');
+    const zh = stringifyDocDefaults({}, true, {
+      value: "en-US",
+      eastAsia: "zh-CN",
+      bidirectional: "ar-SA",
+    });
+    expect(zh).toContain('<w:lang w:val="en-US" w:eastAsia="zh-CN" w:bidi="ar-SA"/>');
+  });
+
   it("reflects visual-editor edits to default.document on generate", () => {
     // Fresh doc → parse → editor overrides default paragraph spacing → generate
     // must reflect the edit (not the original verbatim docDefaults).
