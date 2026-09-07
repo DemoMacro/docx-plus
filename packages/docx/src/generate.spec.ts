@@ -222,3 +222,70 @@ describe("picture media dedup", () => {
     expect(Object.keys(second).some((f) => f.startsWith("word/charts/"))).toBe(true);
   });
 });
+
+describe("chart and smartart placeholders in header/footer/notes parts", () => {
+  it("resolves {chart:key} in a header against the header's own rels", () => {
+    const files = compileDocument({
+      sections: [
+        {
+          headers: {
+            default: [
+              {
+                paragraph: {
+                  children: [
+                    {
+                      chart: {
+                        type: "column",
+                        series: [{ values: [1, 2, 3] }],
+                        transformation: { width: 5486400, height: 3200400 },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+          children: [{ paragraph: { children: ["Filler line for the body."] } }],
+        },
+      ],
+    });
+    const headerXml = new TextDecoder().decode(files["word/header1.xml"] as Uint8Array);
+    expect(headerXml).not.toMatch(/\{chart:/);
+    const headerRels = new TextDecoder().decode(files["word/_rels/header1.xml.rels"] as Uint8Array);
+    expect(headerRels).toContain('Target="charts/chart1.xml"');
+    expect(files["word/charts/chart1.xml"]).toBeDefined();
+  });
+
+  it("resolves {smartart:*:key} in a footer against the footer's own rels", () => {
+    const files = compileDocument({
+      sections: [
+        {
+          footers: {
+            default: [
+              {
+                paragraph: {
+                  children: [
+                    {
+                      smartArt: {
+                        nodes: [{ text: "Alpha" }, { text: "Beta" }],
+                        transformation: { width: 5486400, height: 3200400 },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+          children: [{ paragraph: { children: ["Filler line for the body."] } }],
+        },
+      ],
+    });
+    const footerXml = new TextDecoder().decode(files["word/footer1.xml"] as Uint8Array);
+    expect(footerXml).not.toMatch(/\{smartart/);
+    const footerRels = new TextDecoder().decode(files["word/_rels/footer1.xml.rels"] as Uint8Array);
+    for (const diagram of ["data1", "layout1", "quickStyle1", "colors1"]) {
+      expect(footerRels).toContain(`Target="diagrams/${diagram}.xml"`);
+    }
+    expect(files["word/diagrams/data1.xml"]).toBeDefined();
+  });
+});

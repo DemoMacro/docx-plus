@@ -25,10 +25,10 @@ import {
 
 import type { PartCtxFactory } from "../compiler";
 import type { DocxWriteContext } from "../context";
-import { XML_DECL, registerPartMedia, resolvePartMedia } from "./shared";
+import { XML_DECL, registerPartMedia, resolvePartCharts, resolvePartMedia } from "./shared";
 
-/** Stringify one header/footer part and wire its media/embedding
- * relationships. Images get per-part relationship IDs starting at
+/** Stringify one header/footer part and wire its media/embedding/chart/
+ * SmartArt relationships. Images get per-part relationship IDs starting at
  * nextRelationshipId, mirroring the document part; the placeholder pass uses
  * referenced-local positions, so body r:embed and .rels stay aligned. */
 function compileHeaderFooterPart(
@@ -54,9 +54,15 @@ function compileHeaderFooterPart(
   const relCount = entry.relationships.nextRelationshipId;
   const resolved = resolvePartMedia(xmlData, ctx, relCount);
   registerPartMedia(entry.relationships, ctx, resolved);
+  const resolvedXml = resolvePartCharts(
+    resolved.xml,
+    ctx,
+    entry.relationships,
+    resolved.embeddingOffset + resolved.embeddingRefs.length,
+  );
   return {
     part: {
-      data: replaceNumberingPlaceholders(resolved.xml, ctx.numbering.concreteNumbering),
+      data: replaceNumberingPlaceholders(resolvedXml, ctx.numbering.concreteNumbering),
       path: `word/${partName}`,
     },
     rels: optionalRelsPart(entry.relationships, XML_DECL, `word/_rels/${partName}.rels`),

@@ -2,9 +2,10 @@
  * Notes compile phase: comments, footnotes, and endnotes parts.
  *
  * All three share the same wiring shape — stringify the part, resolve its
- * {fileName} media and {oleObjectN.bin} embedding placeholders, register the
- * matching relationships on the part's own rels, and replace numbering
- * placeholders. Collected here so the three stay symmetric.
+ * {fileName} media and {oleObjectN.bin} embedding placeholders, resolve
+ * {chart:}/{smartart:} placeholders, register the matching relationships on
+ * the part's own rels, and replace numbering placeholders. Collected here so
+ * the three stay symmetric.
  *
  * @module
  */
@@ -18,7 +19,7 @@ import {
 import type { PartCtxFactory } from "../compiler";
 import type { DocxWriteContext } from "../context";
 import { commentsDesc, endnotesDesc, footnotesDesc } from "../parts";
-import { XML_DECL, registerPartMedia, resolvePartMedia } from "./shared";
+import { XML_DECL, registerPartMedia, resolvePartCharts, resolvePartMedia } from "./shared";
 
 /**
  * Comments carried by the document: those the caller listed explicitly
@@ -63,8 +64,14 @@ export function compileNotesParts(
     const commentRelCount = ctx.comments.relationships.nextRelationshipId;
     const resolved = resolvePartMedia(commentXmlData, ctx, commentRelCount);
     registerPartMedia(ctx.comments.relationships, ctx, resolved);
+    const commentXml = resolvePartCharts(
+      resolved.xml,
+      ctx,
+      ctx.comments.relationships,
+      resolved.embeddingOffset + resolved.embeddingRefs.length,
+    );
     result.Comments = {
-      data: replaceNumberingPlaceholders(resolved.xml, ctx.numbering.concreteNumbering),
+      data: replaceNumberingPlaceholders(commentXml, ctx.numbering.concreteNumbering),
       path: "word/comments.xml",
     };
     result.CommentsRelationships = optionalRelsPart(
@@ -94,9 +101,15 @@ export function compileNotesParts(
   const footnoteRelCount = ctx.footNotes.relationships.nextRelationshipId;
   const footnoteResolved = resolvePartMedia(footnoteXmlData, ctx, footnoteRelCount);
   registerPartMedia(ctx.footNotes.relationships, ctx, footnoteResolved);
+  const footnoteXml = resolvePartCharts(
+    footnoteResolved.xml,
+    ctx,
+    ctx.footNotes.relationships,
+    footnoteResolved.embeddingOffset + footnoteResolved.embeddingRefs.length,
+  );
   if (ctx.hasFootnotes) {
     result.FootNotes = {
-      data: replaceNumberingPlaceholders(footnoteResolved.xml, ctx.numbering.concreteNumbering),
+      data: replaceNumberingPlaceholders(footnoteXml, ctx.numbering.concreteNumbering),
       path: "word/footnotes.xml",
     };
     if (ctx.footNotes.relationships.relationshipCount > 0) {
@@ -126,8 +139,14 @@ export function compileNotesParts(
     const endnoteRelCount = ctx.endnotes.relationships.nextRelationshipId;
     const resolved = resolvePartMedia(endnoteXmlData, ctx, endnoteRelCount);
     registerPartMedia(ctx.endnotes.relationships, ctx, resolved);
+    const endnoteXml = resolvePartCharts(
+      resolved.xml,
+      ctx,
+      ctx.endnotes.relationships,
+      resolved.embeddingOffset + resolved.embeddingRefs.length,
+    );
     result.Endnotes = {
-      data: replaceNumberingPlaceholders(resolved.xml, ctx.numbering.concreteNumbering),
+      data: replaceNumberingPlaceholders(endnoteXml, ctx.numbering.concreteNumbering),
       path: "word/endnotes.xml",
     };
     if (ctx.endnotes.relationships.relationshipCount > 0) {
