@@ -96,10 +96,11 @@ function scanAttrs(
   }
 }
 
-/** parseOnOff truthiness for on/off attribute values ("1"/"true"/"on"). */
+/** parseOnOff truthiness for on/off attribute values ("1"/"true"/"on" plus the
+ *  single-letter t/f Word 2007 wrote). */
 function isOn(value: string): boolean {
   const lower = value.length <= 5 ? value.toLowerCase() : value;
-  return lower === "1" || lower === "true" || lower === "on";
+  return lower === "1" || lower === "true" || lower === "on" || lower === "t";
 }
 
 /**
