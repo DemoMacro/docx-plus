@@ -17,7 +17,6 @@ import { createDataModel, definitionId } from "@office-open/core/smartart";
 import type { SmartArtRawParts } from "@office-open/core/smartart";
 import type { BackgroundRawMediaOptions } from "@parts/document/document-background/document-background";
 import type { ParagraphChild } from "@parts/paragraph/paragraph";
-import { createPictureData } from "@parts/paragraph/run/picture-run";
 import type { RunPropertiesOptions } from "@parts/paragraph/run/properties";
 import type { SmartArtOptions } from "@parts/paragraph/run/smartart-run";
 import type {
@@ -209,6 +208,10 @@ export function stringifyDrawingChild(child: ParagraphChild, ctx: BodyContext): 
     // authoring input (neither bytes nor a linked source).
     const rawData = toUint8Array(opts.data!, { encoding: "base64" }) as Uint8Array;
 
+    // The dedup entry carries media identity only — a byte-identical image
+    // reuses the first registrant's entry object, so per-reference placement
+    // fields (size, crop, cNvPr, blip hints) are re-applied onto the returned
+    // entry instead of baked into the `build` callback.
     let mediaData: MediaData;
     if (opts.type === "svg") {
       const fallbackData = toUint8Array(opts.fallback.data, { encoding: "base64" }) as Uint8Array;
@@ -221,50 +224,54 @@ export function stringifyDrawingChild(child: ParagraphChild, ctx: BodyContext): 
         (fileName) =>
           ({
             type: fallbackType,
-            ...createPictureData(fallbackData, opts.transformation, fileName),
+            data: fallbackData,
+            fileName,
+            transformation: { emus: { x: 0, y: 0 }, pixels: { x: 0, y: 0 } },
           }) as MediaData,
         opts.fallback.fileName,
       );
-      mediaData = ctx.file.media.addMedia(
-        rawData,
-        "svg",
-        (fileName) =>
-          ({
-            type: "svg" as const,
-            ...createPictureData(
-              rawData,
-              opts.transformation,
+      mediaData = {
+        ...ctx.file.media.addMedia(
+          rawData,
+          "svg",
+          (fileName) =>
+            ({
+              type: "svg" as const,
+              data: rawData,
               fileName,
-              opts.sourceRectangle,
-              opts.nonVisualProperties,
-            ),
-            useLocalDpi: opts.useLocalDpi,
-            compression: opts.compression,
-            fallback,
-          }) as MediaData,
-        opts.fileName,
-      );
+              fallback,
+              transformation: { emus: { x: 0, y: 0 }, pixels: { x: 0, y: 0 } },
+            }) as MediaData,
+          opts.fileName,
+        ),
+        transformation: createTransformation(opts.transformation),
+        sourceRectangle: opts.sourceRectangle,
+        nonVisualProperties: opts.nonVisualProperties,
+        useLocalDpi: opts.useLocalDpi,
+        compression: opts.compression,
+      };
     } else {
       const type = opts.type;
-      mediaData = ctx.file.media.addMedia(
-        rawData,
-        type,
-        (fileName) =>
-          ({
-            type,
-            ...createPictureData(
-              rawData,
-              opts.transformation,
+      mediaData = {
+        ...ctx.file.media.addMedia(
+          rawData,
+          type,
+          (fileName) =>
+            ({
+              type,
+              data: rawData,
               fileName,
-              opts.sourceRectangle,
-              opts.nonVisualProperties,
-            ),
-            useLocalDpi: opts.useLocalDpi,
-            compression: opts.compression,
-            sourceUrl: opts.sourceUrl,
-          }) as MediaData,
-        opts.fileName,
-      );
+              transformation: { emus: { x: 0, y: 0 }, pixels: { x: 0, y: 0 } },
+            }) as MediaData,
+          opts.fileName,
+        ),
+        transformation: createTransformation(opts.transformation),
+        sourceRectangle: opts.sourceRectangle,
+        nonVisualProperties: opts.nonVisualProperties,
+        useLocalDpi: opts.useLocalDpi,
+        compression: opts.compression,
+        sourceUrl: opts.sourceUrl,
+      };
     }
 
     // Build drawing XML via descriptor (zero XmlComponent instances)

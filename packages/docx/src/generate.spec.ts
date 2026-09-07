@@ -46,3 +46,43 @@ describe("chart embedding rels", () => {
     expect(xml).toContain('Target="../embeddings/Chart.xlsx"');
   });
 });
+
+describe("picture media dedup", () => {
+  it("keeps per-reference extent for byte-identical images", () => {
+    const bytes = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+    const emu = (px: number) => px * 9525;
+    const files = compileDocument({
+      sections: [
+        {
+          children: [
+            {
+              paragraph: {
+                children: [
+                  {
+                    picture: {
+                      type: "png",
+                      data: bytes,
+                      transformation: { width: emu(166), height: emu(150) },
+                    },
+                  },
+                  {
+                    picture: {
+                      type: "png",
+                      data: bytes,
+                      transformation: { width: emu(140), height: emu(93) },
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    });
+    const xml = new TextDecoder().decode(files["word/document.xml"] as Uint8Array);
+    const extents = [...xml.matchAll(/<wp:extent cx="(\d+)" cy="(\d+)"/g)].map(
+      (m) => `${m[1]}x${m[2]}`,
+    );
+    expect(extents).toEqual([`${emu(166)}x${emu(150)}`, `${emu(140)}x${emu(93)}`]);
+  });
+});

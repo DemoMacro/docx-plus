@@ -2,10 +2,12 @@
  * Content-deduplicated media collection for OOXML packages.
  *
  * Stores image entries keyed by file name. `addMedia` deduplicates by raw byte
- * content — byte-identical images referenced N times share one file, while
- * per-image metadata (transformation, extent, fallback) stays with each
- * reference in its own drawing XML and is passed via the `build` callback so it
- * never participates in the dedup key.
+ * content — byte-identical images referenced N times share one file AND one
+ * entry object. The `build` callback therefore must fill media-identity fields
+ * only (type/data/fileName, plus svg `fallback`); per-reference placement
+ * metadata (transformation/extent, crop, cNvPr, blip hints) is owned by the
+ * caller at stringify time — baking it into the entry would leak the first
+ * registrant's values onto every later reference of the same bytes.
  *
  * Lookup is O(1) amortized: a `WeakMap` memoizes the resolved entry per input
  * `Uint8Array` (the hot path — a single document reuses the same buffer object
@@ -55,9 +57,11 @@ export class Media<T extends BaseMediaEntry> {
   /**
    * Register media, reusing the existing entry when the bytes already exist.
    * Returns the canonical entry (shared across all identical references) —
-   * callers read `entry.fileName` for placeholders/relationship targets or use
-   * the whole entry (e.g. drawing XML). The `build` callback constructs the
-   * package-specific entry from the allocated file name.
+   * callers read `entry.fileName` for placeholders/relationship targets; any
+   * per-reference metadata must be applied onto the returned object (or kept
+   * alongside), never assumed to be reference-specific inside the entry. The
+   * `build` callback constructs the package-specific entry from the allocated
+   * file name and is invoked only when the bytes are new.
    *
    * Pass `fileName` to pin the name (round-trip scenarios preserving a source
    * file name); omit it to allocate the next sequential `imageN.ext`.
