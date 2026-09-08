@@ -1,3 +1,4 @@
+import type { GroupChildMediaData } from "@shared/media";
 import { describe, expect, it } from "vite-plus/test";
 
 import { compileDocument } from "./compiler";
@@ -139,6 +140,59 @@ describe("picture media dedup", () => {
     // reference must not inherit the first registrant's entry.
     expect(fallbackTargets.some((t) => t.endsWith("small.png"))).toBe(true);
     expect(fallbackTargets.some((t) => t.endsWith("large.png"))).toBe(true);
+  });
+
+  it("resolves the blip rel of a fresh picture child inside a wpg group", () => {
+    // A fresh-authored group picture carries no fileName — the media
+    // registration must adopt the allocated name so the {fileName} placeholder
+    // resolves (an unresolved placeholder emits r:embed="{undefined}").
+    const emu = (px: number) => px * 9525;
+    const files = compileDocument({
+      sections: [
+        {
+          children: [
+            {
+              paragraph: {
+                children: [
+                  {
+                    wpgGroup: {
+                      transformation: { width: emu(254), height: emu(128) },
+                      childOffsetX: 0,
+                      childOffsetY: 0,
+                      childExtentWidth: emu(254),
+                      childExtentHeight: emu(128),
+                      children: [
+                        // A fresh-authored child carries no fileName (the type
+                        // demands one, but fresh authoring can't know it) —
+                        // registration must allocate.
+                        {
+                          type: "png",
+                          data: new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 1, 2]),
+                          transformation: {
+                            offset: { pixels: { x: 0, y: 0 }, emus: { x: 0, y: 0 } },
+                            pixels: { x: 100, y: 100 },
+                            emus: { x: emu(100), y: emu(100) },
+                          },
+                        } as GroupChildMediaData,
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    });
+    const xml = new TextDecoder().decode(files["word/document.xml"] as Uint8Array);
+    const relsXml = new TextDecoder().decode(files["word/_rels/document.xml.rels"] as Uint8Array);
+    const embeds = [...xml.matchAll(/<a:blip r:embed="([^"]+)"/g)].map((m) => m[1]!);
+    expect(embeds).toHaveLength(1);
+    const targetOf = new Map(
+      [...relsXml.matchAll(/Id="([^"]+)"[^>]*Target="([^"]+)"/g)].map((m) => [m[1]!, m[2]!]),
+    );
+    // The embed id resolves to a media part, not the literal placeholder.
+    expect(targetOf.get(embeds[0]!)).toMatch(/^media\/image\d+\.png$/);
   });
 
   it("keeps background rawXml pristine across generate runs", () => {

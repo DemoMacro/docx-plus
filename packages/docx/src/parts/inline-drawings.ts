@@ -502,6 +502,16 @@ export function stringifyDrawingChild(child: ParagraphChild, ctx: BodyContext): 
     // Register pic children media so {fileName} placeholders resolve, recursing
     // into nested wpg groups. wps children carry shape data, not media.
     const registerMedia = (children: readonly GroupChildMediaData[]): void => {
+      // The build callback must adopt the allocated name onto the child (the
+      // child IS the entry — every other addMedia call site builds a fresh
+      // object carrying fileName); returning it bare leaves a fresh picture's
+      // fileName undefined and its {fileName} placeholder unresolved.
+      const adopt =
+        (m: MediaData): ((fileName: string) => MediaData) =>
+        (fileName) => {
+          m.fileName = fileName;
+          return m;
+        };
       for (const c of children) {
         if (c.type === "wps") continue;
         if (c.type === "wpg") {
@@ -539,18 +549,13 @@ export function stringifyDrawingChild(child: ParagraphChild, ctx: BodyContext): 
           // Register the raster fallback first so its file name is allocated,
           // then the SVG entry referencing it. Dedup applies to each independently.
           const fb = c.fallback;
-          const fbEntry = ctx.file.media.addMedia(
-            fb.data,
-            fb.type,
-            () => fb as MediaData,
-            fb.fileName,
-          );
+          const fbEntry = ctx.file.media.addMedia(fb.data, fb.type, adopt(fb), fb.fileName);
           fb.fileName = fbEntry.fileName;
-          const svgEntry = ctx.file.media.addMedia(c.data, "svg", () => c as MediaData, c.fileName);
+          const svgEntry = ctx.file.media.addMedia(c.data, "svg", adopt(c), c.fileName);
           c.fileName = svgEntry.fileName;
           continue;
         }
-        const entry = ctx.file.media.addMedia(c.data, c.type, () => c as MediaData, c.fileName);
+        const entry = ctx.file.media.addMedia(c.data, c.type, adopt(c), c.fileName);
         // Sync to the canonical entry: when these bytes dedupe against an earlier
         // image, addMedia returns that entry without invoking the build callback,
         // leaving c.fileName at the source basename — the {fileName} placeholder

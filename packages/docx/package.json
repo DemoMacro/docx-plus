@@ -1,6 +1,6 @@
 {
   "name": "@office-open/docx",
-  "version": "0.14.4",
+  "version": "0.14.5",
   "description": "AI-native Word (.docx) generation, parsing, and patching from plain JSON — fully typed TypeScript, 100% OOXML coverage, no Microsoft Office required",
   "keywords": [
     "ai",
